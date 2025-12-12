@@ -5,11 +5,10 @@ import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  Building2,
-  Home,
+  Upload,
+  FileSearch,
   Bookmark,
-  FileText,
-  Newspaper,
+  Clock,
   Settings,
   CreditCard,
 } from "lucide-react";
@@ -38,13 +37,13 @@ export default function DashboardSideBar() {
       ),
     },
     {
-      label: "GSA Leasing",
-      href: "/dashboard/gsa-leasing",
+      label: "Upload & Analyze",
+      href: "/dashboard/upload",
       icon: (
-        <Building2
+        <Upload
           className={cn(
             "h-5 w-5 flex-shrink-0",
-            pathname === "/dashboard/gsa-leasing"
+            pathname === "/dashboard/upload"
               ? "text-primary"
               : "text-neutral-700 dark:text-neutral-200"
           )}
@@ -52,13 +51,13 @@ export default function DashboardSideBar() {
       ),
     },
     {
-      label: "Broker Listing",
-      href: "/dashboard/broker-listing",
+      label: "My Analyses",
+      href: "/dashboard/my-proposals",
       icon: (
-        <Home
+        <FileSearch
           className={cn(
             "h-5 w-5 flex-shrink-0",
-            pathname === "/dashboard/broker-listing"
+            pathname === "/dashboard/my-proposals"
               ? "text-primary"
               : "text-neutral-700 dark:text-neutral-200"
           )}
@@ -80,27 +79,13 @@ export default function DashboardSideBar() {
       ),
     },
     {
-      label: "My Proposals",
-      href: "/dashboard/my-proposals",
+      label: "Deadlines",
+      href: "/dashboard/deadlines",
       icon: (
-        <FileText
+        <Clock
           className={cn(
             "h-5 w-5 flex-shrink-0",
-            pathname === "/dashboard/my-proposals"
-              ? "text-primary"
-              : "text-neutral-700 dark:text-neutral-200"
-          )}
-        />
-      ),
-    },
-    {
-      label: "Market News",
-      href: "/dashboard/market-news",
-      icon: (
-        <Newspaper
-          className={cn(
-            "h-5 w-5 flex-shrink-0",
-            pathname === "/dashboard/market-news"
+            pathname === "/dashboard/deadlines"
               ? "text-primary"
               : "text-neutral-700 dark:text-neutral-200"
           )}
@@ -170,11 +155,11 @@ export const Logo = () => {
       href="/dashboard"
       className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
     >
-      <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+      <div className="h-5 w-6 bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-500 dark:to-indigo-600 rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
       <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-medium text-black dark:text-white whitespace-pre"
+        className="font-semibold text-black dark:text-white whitespace-pre"
       >
         ProposalIQ
       </motion.span>
@@ -188,7 +173,7 @@ export const LogoIcon = () => {
       href="/dashboard"
       className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
     >
-      <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+      <div className="h-5 w-6 bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-500 dark:to-indigo-600 rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
     </Link>
   );
 };

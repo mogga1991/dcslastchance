@@ -1,24 +1,25 @@
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
-import { ThemeProvider } from "../components/provider";
+import { Providers } from "../components/provider";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+
 export const metadata: Metadata = {
-  title: "Next.js Starter Kit - Launch Your SAAS",
+  title: "Sentyr - AI-Powered RFP Analysis for Government Contractors",
   description:
-    "A modern, full-stack Next.js starter kit with authentication, payments, and dashboard. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
+    "AI-powered RFP/RFI/RFQ analysis platform that extracts requirements, evaluates criteria, and delivers bid/no-bid recommendations in minutes. Save 10+ hours per opportunity.",
   openGraph: {
-    title: "Next.js Starter Kit",
+    title: "Sentyr - AI-Powered RFP Analysis",
     description:
-      "A modern, full-stack Next.js starter kit with authentication, payments, and dashboard. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-    url: "nextstarter.xyz",
-    siteName: "Next.js Starter Kit",
+      "AI-powered RFP analysis that transforms complex solicitations into actionable intelligence for government contractors.",
+    url: "https://sentyr.ai",
+    siteName: "Sentyr",
     images: [
       {
         url: "https://jdj14ctwppwprnqu.public.blob.vercel-storage.com/nsk-w9fFwBBmLDLxrB896I4xqngTUEEovS.png",
         width: 1200,
         height: 630,
-        alt: "Next.js Starter Kit",
+        alt: "Sentyr - AI-Powered RFP Analysis",
       },
     ],
     locale: "en-US",
@@ -34,17 +35,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`font-[-apple-system,BlinkMacSystemFont]antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          forcedTheme="light"
-          disableTransitionOnChange
-        >
+        <Providers>
           {children}
           <Toaster />
           <Analytics />
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

@@ -37,6 +37,7 @@
     --color-popover: var(--popover);
     --color-card-foreground: var(--card-foreground);
     --color-card: var(--card);
+    --color-destructive-foreground: var(--destructive-foreground);
     --radius-sm: 8px;
     --radius-md: 10px;
     --radius-lg: 12px;
@@ -51,32 +52,32 @@
     --card-foreground: #000000;
     --popover: #ffffff;
     --popover-foreground: #000000;
-    --primary: #0071e3; /* Apple Blue */
+    --primary: #4f3af6; /* Brand Purple */
     --primary-foreground: #ffffff;
     --secondary: #f5f5f7; /* Apple Light Gray */
     --secondary-foreground: #1d1d1f;
     --muted: #f5f5f7;
     --muted-foreground: #86868b;
-    --accent: #0071e3; /* Apple Blue */
+    --accent: #4f3af6; /* Brand Purple */
     --accent-foreground: #ffffff;
     --destructive: #ff3b30; /* Apple Red */
     --destructive-foreground: #ffffff;
     --border: #e2e2e7; /* Lighter, more subtle border */
     --input: #f5f5f7;
-    --ring: #0071e3;
-    --chart-1: #0071e3; /* Apple Blue */
+    --ring: #4f3af6;
+    --chart-1: #4f3af6; /* Brand Purple */
     --chart-2: #34c759; /* Apple Green */
     --chart-3: #ff9500; /* Apple Orange */
     --chart-4: #ffcc00; /* Apple Yellow */
     --chart-5: #af52de; /* Apple Purple */
     --sidebar: #f5f5f7;
     --sidebar-foreground: #1d1d1f;
-    --sidebar-primary: #0071e3;
+    --sidebar-primary: #4f3af6;
     --sidebar-primary-foreground: #ffffff;
     --sidebar-accent: #e8e8ed;
     --sidebar-accent-foreground: #1d1d1f;
     --sidebar-border: #e2e2e7; /* Lighter border */
-    --sidebar-ring: #0071e3;
+    --sidebar-ring: #4f3af6;
     /* Apple Fonts */
     --font-apple-system:
         -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue",
@@ -124,4 +125,31 @@
     h6 {
         @apply font-medium tracking-tight;
     }
+}
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
 }

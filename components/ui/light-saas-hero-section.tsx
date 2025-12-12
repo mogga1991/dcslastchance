@@ -244,7 +244,7 @@ const GlassmorphicNavbar = () => {
                     <div className="flex items-center gap-2">
                         <Logo />
                         <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-                            ProposalIQ
+                            Sentyr
                         </span>
                     </div>
 

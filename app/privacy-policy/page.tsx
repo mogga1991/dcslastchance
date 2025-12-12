@@ -29,7 +29,7 @@ export default function PrivacyPolicy() {
                   1. Introduction
                 </h2>
                 <p className="leading-relaxed">
-                  Welcome to Nextjs Starter Kit (&aposwe,&apos &aposour,&apos or
+                  Welcome to Sentyr (&aposwe,&apos &aposour,&apos or
                   &aposus&apos). We are committed to protecting your personal
                   information and your right to privacy. This Privacy Policy
                   explains how we collect, use, disclose, and safeguard your
@@ -61,16 +61,16 @@ export default function PrivacyPolicy() {
 
                   <div>
                     <h3 className="text-lg font-medium mb-2">
-                      Pass Information
+                      Document Information
                     </h3>
                     <p className="leading-relaxed">
-                      When you create Apple Passes, we store:
+                      When you upload and analyze documents, we store:
                     </p>
                     <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
-                      <li>Pass content and metadata</li>
-                      <li>Pass templates and designs</li>
-                      <li>Pass usage analytics</li>
-                      <li>Pass installation data</li>
+                      <li>Document content and metadata</li>
+                      <li>Extracted data and analysis results</li>
+                      <li>Document processing analytics</li>
+                      <li>Analysis history and reports</li>
                     </ul>
                   </div>
 
@@ -102,7 +102,7 @@ export default function PrivacyPolicy() {
                 <ul className="list-disc list-inside space-y-1 ml-4">
                   <li>Provide and maintain our service</li>
                   <li>Create and manage your account</li>
-                  <li>Generate and distribute Apple Passes</li>
+                  <li>Analyze RFP/RFI/RFQ documents and provide intelligence</li>
                   <li>Send you important updates and notifications</li>
                   <li>Respond to your inquiries and support requests</li>
                   <li>Monitor and analyze usage patterns</li>

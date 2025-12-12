@@ -9,11 +9,10 @@ export default function HeroSection() {
         <div className="relative text-center">
           <p className="text-3xl">🔥</p>
           <h1 className="mx-auto mt-12 max-w-xl text-balance text-5xl font-medium">
-            Nextjs Starter Kit
+            Sentyr
           </h1>
           <p className="text-muted-foreground mx-auto mb-6 mt-4 text-balance text-xl">
-            This powerful starter kit is designed to help you launch your SAAS
-            application quickly and efficiently.
+            AI-powered RFP analysis that transforms complex solicitations into actionable intelligence for government contractors.
           </p>
           <div className="flex flex-col items-center gap-2 *:w-full sm:flex-row sm:justify-center sm:*:w-auto">
             <Button asChild variant="default" size="sm">

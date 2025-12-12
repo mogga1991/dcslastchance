@@ -51,7 +51,7 @@ export default async function UpgradePage() {
       badge: "Most Popular",
     },
     {
-      name: "ProposalIQ Only",
+      name: "Sentyr Only",
       price: "$129",
       period: "/month",
       commission: "No commission fees",

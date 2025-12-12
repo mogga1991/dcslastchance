@@ -18,7 +18,7 @@ export default function FooterSection() {
         <div className="flex flex-wrap justify-between gap-12">
           <div className="order-last flex items-center gap-3 md:order-first">
             <span className="text-muted-foreground block text-center text-sm">
-              © {new Date().getFullYear()} Exodus Labs, All rights reserved
+              © {new Date().getFullYear()} Sentyr, All rights reserved
             </span>
           </div>
 

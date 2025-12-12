@@ -1,9 +1,7 @@
-import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react";
-
+import { FileSearch, CreditCard, Clock, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
-  CardAction,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -15,86 +13,101 @@ export function SectionCards() {
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Total Revenue</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            $1,250.00
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +12.5%
+          <div className="flex items-center justify-between">
+            <CardDescription className="flex items-center gap-2">
+              <FileSearch className="h-4 w-4" />
+              Analyses This Month
+            </CardDescription>
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              80% Remaining
             </Badge>
-          </CardAction>
+          </div>
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            3 / 15
+          </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Trending up this month <IconTrendingUp className="size-4" />
+          <div className="line-clamp-1 flex gap-2 font-medium text-muted-foreground">
+            Pro Plan - Resets in 18 days
           </div>
           <div className="text-muted-foreground">
-            Visitors for the last 6 months
+            12 analyses remaining this period
           </div>
         </CardFooter>
       </Card>
+
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>New Customers</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            1,234
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingDown />
-              -20%
+          <div className="flex items-center justify-between">
+            <CardDescription className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Analysis Credits
+            </CardDescription>
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              Active
             </Badge>
-          </CardAction>
+          </div>
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            5
+          </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Down 20% this period <IconTrendingDown className="size-4" />
+          <div className="line-clamp-1 flex gap-2 font-medium text-muted-foreground">
+            Prepaid credit pack
           </div>
           <div className="text-muted-foreground">
-            Acquisition needs attention
+            Never expires - Use anytime
           </div>
         </CardFooter>
       </Card>
+
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Active Accounts</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            45,678
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +12.5%
+          <div className="flex items-center justify-between">
+            <CardDescription className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Upcoming Deadlines
+            </CardDescription>
+            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+              Next 7 Days
             </Badge>
-          </CardAction>
+          </div>
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            4
+          </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Strong user retention <IconTrendingUp className="size-4" />
+          <div className="line-clamp-1 flex gap-2 font-medium text-amber-600">
+            Next: Dec 15, 2024 (3 days)
           </div>
-          <div className="text-muted-foreground">Engagement exceed targets</div>
+          <div className="text-muted-foreground">
+            DHS Cybersecurity RFP
+          </div>
         </CardFooter>
       </Card>
+
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Growth Rate</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            4.5%
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +4.5%
+          <div className="flex items-center justify-between">
+            <CardDescription className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Avg. Bid Score
+            </CardDescription>
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              Strong Bid
             </Badge>
-          </CardAction>
+          </div>
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            72
+          </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Steady performance increase <IconTrendingUp className="size-4" />
+          <div className="line-clamp-1 flex gap-2 font-medium text-muted-foreground">
+            Last 30 days (8 analyses)
           </div>
-          <div className="text-muted-foreground">Meets growth projections</div>
+          <div className="text-muted-foreground">
+            Above 60 = Conditional Bid
+          </div>
         </CardFooter>
       </Card>
     </div>
