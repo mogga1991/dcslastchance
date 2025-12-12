@@ -9,10 +9,6 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Disable static page generation during build to avoid Clerk initialization errors
-  experimental: {
-    missingSuspenseWithCSRBailout: false,
-  },
   images: {
     remotePatterns: [
       {
