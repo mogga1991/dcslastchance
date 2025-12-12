@@ -1,6 +1,7 @@
 import FooterSection from "@/components/homepage/footer";
 import { HeroSection } from "@/components/ui/light-saas-hero-section";
 import ServicesSection from "@/components/homepage/services-section";
+import HeroHighlightSection from "@/components/homepage/hero-highlight-section";
 import Integrations from "@/components/homepage/integrations";
 // import { getSubscriptionDetails } from "@/lib/subscription";
 // import PricingTable from "./pricing/_component/pricing-table";
@@ -13,6 +14,7 @@ export default async function Home() {
     <>
       <HeroSection />
       <ServicesSection />
+      <HeroHighlightSection />
       <Integrations />
       {/* <PricingTable subscriptionDetails={subscriptionDetails} /> */}
       <FooterSection />

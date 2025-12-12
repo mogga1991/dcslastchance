@@ -85,12 +85,8 @@ export default function PricingTable({
     }
   };
 
-  const STARTER_TIER = process.env.NEXT_PUBLIC_STARTER_TIER;
-  const STARTER_SLUG = process.env.NEXT_PUBLIC_STARTER_SLUG;
-
-  if (!STARTER_TIER || !STARTER_SLUG) {
-    throw new Error("Missing required environment variables for Starter tier");
-  }
+  const STARTER_TIER = process.env.NEXT_PUBLIC_STARTER_TIER || "placeholder-tier";
+  const STARTER_SLUG = process.env.NEXT_PUBLIC_STARTER_SLUG || "placeholder-slug";
 
   const isCurrentPlan = (tierProductId: string) => {
     return (

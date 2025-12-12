@@ -381,20 +381,20 @@ const HeroSection = () => {
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
                     <div className="text-center">
-                        <div className="text-4xl md:text-5xl font-bold text-gray-900">10+</div>
-                        <div className="text-gray-600 mt-1">Hours Saved</div>
+                        <div className="text-4xl md:text-5xl font-bold text-gray-900">33M</div>
+                        <div className="text-gray-600 mt-1">businesses in the U.S.</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-4xl md:text-5xl font-bold text-gray-900">50+</div>
-                        <div className="text-gray-600 mt-1">Data Points</div>
+                        <div className="text-4xl md:text-5xl font-bold text-gray-900">$1.46B</div>
+                        <div className="text-gray-600 mt-1">SBA FY2025 in total new budget authority</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-4xl md:text-5xl font-bold text-gray-900">95%</div>
-                        <div className="text-gray-600 mt-1">Accuracy</div>
+                        <div className="text-4xl md:text-5xl font-bold text-gray-900">$6B</div>
+                        <div className="text-gray-600 mt-1">GSA spends in Commercial Real Estate rent payments</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-4xl md:text-5xl font-bold text-gray-900">100+</div>
-                        <div className="text-gray-600 mt-1">Agencies</div>
+                        <div className="text-4xl md:text-5xl font-bold text-gray-900">YES</div>
+                        <div className="text-gray-600 mt-1">the government buys everything</div>
                     </div>
                 </div>
             </div>

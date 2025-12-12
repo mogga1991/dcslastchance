@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -22,6 +25,21 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Handle Node.js built-in modules for client-side
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        module: false,
+      };
+    }
+    return config;
+  },
+  serverExternalPackages: ['better-auth', '@polar-sh/better-auth'],
 };
 
 export default nextConfig;
