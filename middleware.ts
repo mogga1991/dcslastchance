@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -9,30 +10,53 @@ const isPublicRoute = createRouteMatcher([
   '/privacy-policy',
   '/terms-of-service',
   '/api/public(.*)',
+  '/hero-demo',
 ])
 
-export default clerkMiddleware((auth, request) => {
-  const { userId } = auth()
-  const { pathname } = request.nextUrl
-
-  // Allow public routes
-  if (isPublicRoute(request)) {
-    return NextResponse.next()
-  }
-
-  // Redirect unauthenticated users to sign-in
-  if (!userId && pathname.startsWith('/dashboard')) {
-    const signInUrl = new URL('/sign-in', request.url)
-    signInUrl.searchParams.set('redirect_url', pathname)
-    return NextResponse.redirect(signInUrl)
-  }
-
-  // Redirect authenticated users away from auth pages
-  if (userId && (pathname === '/sign-in' || pathname === '/sign-up')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
+// Fallback middleware for when Clerk is not configured (build time)
+function fallbackMiddleware(request: NextRequest) {
   const response = NextResponse.next()
+
+  // Add security headers even when Clerk is not available
+  const securityHeaders = {
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "X-XSS-Protection": "1; mode=block",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+  };
+
+  Object.entries(securityHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+
+  return response
+}
+
+// Only use Clerk middleware if keys are available
+const middleware = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+  ? clerkMiddleware((auth, request) => {
+      const { userId } = auth()
+      const { pathname } = request.nextUrl
+
+      // Allow public routes
+      if (isPublicRoute(request)) {
+        return NextResponse.next()
+      }
+
+      // Redirect unauthenticated users to sign-in
+      if (!userId && pathname.startsWith('/dashboard')) {
+        const signInUrl = new URL('/sign-in', request.url)
+        signInUrl.searchParams.set('redirect_url', pathname)
+        return NextResponse.redirect(signInUrl)
+      }
+
+      // Redirect authenticated users away from auth pages
+      if (userId && (pathname === '/sign-in' || pathname === '/sign-up')) {
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+      }
+
+      const response = NextResponse.next()
 
   // Add comprehensive security headers
   const securityHeaders = {
@@ -77,8 +101,11 @@ export default clerkMiddleware((auth, request) => {
     response.headers.set(key, value);
   });
 
-  return response
-})
+      return response
+    })
+  : fallbackMiddleware
+
+export default middleware
 
 export const config = {
   matcher: [
