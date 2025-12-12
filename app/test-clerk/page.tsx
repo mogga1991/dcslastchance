@@ -2,6 +2,9 @@
 
 import { useUser } from "@clerk/nextjs";
 
+// Force dynamic rendering for pages using auth
+export const dynamic = 'force-dynamic';
+
 export default function TestClerk() {
   const { isLoaded, isSignedIn, user } = useUser();
 

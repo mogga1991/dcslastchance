@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, FileText, TrendingUp, Clock, CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
 
+// Force dynamic rendering for pages using auth
+export const dynamic = 'force-dynamic';
+
 export default function AnalysisPage() {
   const { analyses, loading: analysesLoading } = useAnalyses();
   const { totalCredits, loading: creditsLoading } = useCredits();

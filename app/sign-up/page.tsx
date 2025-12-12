@@ -3,6 +3,9 @@
 import SignUpBlock from "@/components/ui/sign-up-block";
 import { Suspense } from "react";
 
+// Force dynamic rendering for pages using auth
+export const dynamic = 'force-dynamic';
+
 function SignUpContent() {
   return (
     <div className="flex flex-col justify-center items-center w-full min-h-screen py-12 px-4">

@@ -3,6 +3,9 @@
 import SignInPage from "@/components/ui/signin-page";
 import { Suspense } from "react";
 
+// Force dynamic rendering for pages using auth
+export const dynamic = 'force-dynamic';
+
 export default function SignIn() {
   return (
     <Suspense
