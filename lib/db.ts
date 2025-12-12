@@ -1,10 +1,26 @@
 import { neon } from "@neondatabase/serverless";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is not set");
+// Initialize lazily to avoid build-time errors
+let _sql: ReturnType<typeof neon> | null = null;
+
+function getSQL() {
+  if (!_sql) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error("DATABASE_URL is not set");
+    }
+    _sql = neon(process.env.DATABASE_URL);
+  }
+  return _sql;
 }
 
-export const sql = neon(process.env.DATABASE_URL);
+export const sql = new Proxy({} as ReturnType<typeof neon>, {
+  apply: (target, thisArg, argumentsList) => {
+    return getSQL().apply(thisArg, argumentsList);
+  },
+  get: (target, prop) => {
+    return getSQL()[prop as keyof ReturnType<typeof neon>];
+  }
+});
 
 // Helper function to execute queries with error handling
 export async function query<T = any>(
