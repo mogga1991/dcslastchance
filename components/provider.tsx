@@ -9,17 +9,24 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <ClerkProvider>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="light"
-        enableSystem
-        forcedTheme="light"
-        disableTransitionOnChange
-      >
-        {children}
-      </ThemeProvider>
-    </ClerkProvider>
+  // Only use ClerkProvider if the publishable key is available
+  const hasClerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  const content = (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem
+      forcedTheme="light"
+      disableTransitionOnChange
+    >
+      {children}
+    </ThemeProvider>
   );
+
+  if (hasClerkKey) {
+    return <ClerkProvider>{content}</ClerkProvider>;
+  }
+
+  return content;
 }
