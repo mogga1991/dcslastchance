@@ -1,28 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/drizzle";
 import { organization, companyProfile, user } from "@/db/schema";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 import { eq } from "drizzle-orm";
-import { addCredits } from "@/lib/services";
 
 export async function POST(req: NextRequest) {
   try {
     // Get authenticated user
-    const result = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
 
-    if (!result?.session?.userId) {
+    if (!authUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = result.session.userId;
+    const userId = authUser.id;
     const data = await req.json();
 
+    // ✅ STEP 0: Ensure user exists in database (create if not exists)
+    const existingUser = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1);
+
+    if (existingUser.length === 0) {
+      // Create user record in database
+      await db
+        .insert(user)
+        .values({
+          id: userId,
+          email: authUser.email || '',
+          name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
+          role: 'contractor', // Default role
+          account_manager_id: data.account_manager_id || null, // Link to account manager
+        });
+    } else {
+      // Update existing user with account manager if provided
+      if (data.account_manager_id) {
+        await db
+          .update(user)
+          .set({
+            account_manager_id: data.account_manager_id,
+          })
+          .where(eq(user.id, userId));
+      }
+    }
+
     // ✅ STEP 1: Create Organization
-    // Use company_name if provided, otherwise generate from NAICS
-    const orgName = data.company_name || `${data.primary_naics} Company`;
+    const orgName = data.company_name || 'Unnamed Company';
 
     const [org] = await db
       .insert(organization)
@@ -32,38 +58,32 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    // ✅ STEP 2: Update User with organization_id and role
+    // ✅ STEP 2: Update User with organization_id
     await db
       .update(user)
       .set({
         organization_id: org.id,
-        role: "contractor", // Default role for self-signup
       })
       .where(eq(user.id, userId));
 
-    // ✅ STEP 3: Grant initial credits (3 free analyses)
-    await addCredits({
-      user_id: userId,
-      credit_type: "one_time",
-      total_credits: 3,
-    });
-
-    // ✅ STEP 4: Create company profile (linked to org)
+    // ✅ STEP 3: Create company profile (linked to org)
     const [profile] = await db
       .insert(companyProfile)
       .values({
         user_id: userId,
         organization_id: org.id, // Link to organization
-        primary_naics: data.primary_naics,
-        naics_codes: data.naics_codes || [],
+        business_type: data.business_type || "", // Agent, Broker, Owner, or None
+        user_type: data.user_type || "", // Government Contractor or Government Employee
+        primary_naics: "", // No longer collecting NAICS
+        naics_codes: [],
         core_competencies: data.core_competencies || [],
         keywords: data.keywords || [],
         service_areas: data.service_areas || [],
         certifications: data.certifications || [],
         set_asides: data.set_asides || [],
-        is_small_business: data.is_small_business ?? true,
-        employee_count: data.employee_count,
-        annual_revenue: data.annual_revenue?.toString(),
+        is_small_business: true, // Default to true
+        employee_count: null, // No longer collecting
+        annual_revenue: null, // No longer collecting
         preferred_agencies: data.preferred_agencies || [],
         excluded_agencies: data.excluded_agencies || [],
         min_contract_value: data.min_contract_value?.toString() || "0",
@@ -82,8 +102,7 @@ export async function POST(req: NextRequest) {
         id: org.id,
         name: org.name,
       },
-      credits_granted: 3,
-      message: "Profile created successfully! You have 3 free analyses to get started.",
+      message: "Profile created successfully!",
     });
   } catch (error) {
     console.error("Error creating company profile:", error);

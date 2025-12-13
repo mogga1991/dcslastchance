@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { createClient } from "@/lib/supabase/server";
 import {
   getCompanyProfile,
   createCompanyProfile,
@@ -9,11 +9,14 @@ import {
 // GET /api/profile - Get user's company profile
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!userId) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const userId = user.id;
 
     const profile = await getCompanyProfile(userId);
 
@@ -34,11 +37,14 @@ export async function GET(request: NextRequest) {
 // POST /api/profile - Create company profile
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!userId) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const userId = user.id;
 
     // Check if profile already exists
     const existingProfile = await getCompanyProfile(userId);
@@ -79,11 +85,14 @@ export async function POST(request: NextRequest) {
 // PUT /api/profile - Update company profile
 export async function PUT(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!userId) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const userId = user.id;
 
     const body = await request.json();
 

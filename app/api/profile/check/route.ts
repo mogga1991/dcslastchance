@@ -1,21 +1,19 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db/drizzle";
 import { companyProfile } from "@/db/schema";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 import { eq } from "drizzle-orm";
 
 export async function GET() {
   try {
-    const result = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!result?.session?.userId) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = result.session.userId;
+    const userId = user.id;
 
     // Check if user has a company profile
     const [profile] = await db

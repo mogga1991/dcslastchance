@@ -78,6 +78,8 @@ export interface SAMResponse {
 
 /**
  * GSA Lease Opportunity Filters (as used on GSA.gov)
+ *
+ * Updated to include RLP (Real Property Lease) and all government office space lease opportunities
  */
 export const GSA_LEASE_FILTERS = {
   // Department: General Services Administration
@@ -89,13 +91,24 @@ export const GSA_LEASE_FILTERS = {
   // NAICS Code: 531120 - Lessors of Nonresidential Buildings (except Miniwarehouses)
   naicsCode: "531120",
 
-  // Notice Types
+  // Product Service Codes (PSC) for Real Property Leasing
+  // These are the primary codes used by GSA for RLP and office space leases
+  pscCodes: [
+    "Y1DA", // Lease of Real Estate (Office, Warehouse, etc.) - PRIMARY for RLP
+    "Z2DA", // Real Property Leasing (Short Term)
+    "Z1DA", // Maintenance of Real Property
+    "X1AA", // Lease/Rental of Office Buildings
+  ],
+
+  // Notice Types - Include all relevant types for lease opportunities
   noticeTypes: [
     "o", // Combined Synopsis/Solicitation
     "p", // Presolicitation
     "k", // Solicitation
     "r", // Sources Sought
     "s", // Special Notice
+    "i", // Intent to Bundle Requirements (DoD-Funded)
+    "g", // Sale of Surplus Property
   ],
 
   // Response Date: >= today
@@ -126,14 +139,37 @@ export async function fetchGSALeaseOpportunities(
 
   const baseUrl = "https://api.sam.gov/opportunities/v2/search";
 
+  // Calculate default date range (last 90 days to today)
+  const today = new Date();
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setDate(today.getDate() - 90);
+
+  const formatDate = (date: Date) => {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
+
   // Build query parameters based on GSA lease filters
   const queryParams = new URLSearchParams({
     api_key: apiKey,
 
+    // Required date parameters
+    postedFrom: params.postedFrom || formatDate(ninetyDaysAgo),
+    postedTo: params.postedTo || formatDate(today),
+
     // GSA-specific filters
     deptname: GSA_LEASE_FILTERS.department,
     subtier: GSA_LEASE_FILTERS.subTier,
+
+    // IMPORTANT: PSC codes are the primary filter for RLP and office space leases
+    // This captures Real Property Lease opportunities that NAICS code alone would miss
+    psc: GSA_LEASE_FILTERS.pscCodes.join(","),
+
+    // NAICS code as secondary filter
     ncode: GSA_LEASE_FILTERS.naicsCode,
+
     ptype: GSA_LEASE_FILTERS.noticeTypes.join(","),
 
     // Response date filter (opportunities due today or later)
@@ -144,8 +180,6 @@ export async function fetchGSALeaseOpportunities(
     offset: String(params.offset || 0),
 
     // Optional filters
-    ...(params.postedFrom && { postedFrom: params.postedFrom }),
-    ...(params.postedTo && { postedTo: params.postedTo }),
     ...(params.state && { state: params.state }),
     ...(params.city && { city: params.city }),
   });

@@ -1,16 +1,17 @@
-import { db } from "@/db/drizzle";
-import { account, session, subscription, user, verification } from "@/db/schema";
-import {
-  checkout,
-  polar,
-  portal,
-  usage,
-  webhooks,
-} from "@polar-sh/better-auth";
-import { Polar } from "@polar-sh/sdk";
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { nextCookies } from "better-auth/next-js";
+// DISABLED: Using Supabase Auth instead
+// import { db } from "@/db/drizzle";
+// import { account, session, subscription, user, verification } from "@/db/schema";
+// import {
+//   checkout,
+//   polar,
+//   portal,
+//   usage,
+//   webhooks,
+// } from "@polar-sh/better-auth";
+// import { Polar } from "@polar-sh/sdk";
+// import { betterAuth } from "better-auth";
+// import { drizzleAdapter } from "better-auth/adapters/drizzle";
+// import { nextCookies } from "better-auth/next-js";
 
 // Utility function to safely parse dates
 function safeParseDate(value: string | Date | null | undefined): Date | null {
@@ -19,11 +20,16 @@ function safeParseDate(value: string | Date | null | undefined): Date | null {
   return new Date(value);
 }
 
-const polarClient = new Polar({
-  accessToken: process.env.POLAR_ACCESS_TOKEN,
-  server: "sandbox",
-});
+// DISABLED: Using Supabase Auth instead
+// const polarClient = new Polar({
+//   accessToken: process.env.POLAR_ACCESS_TOKEN,
+//   server: "sandbox",
+// });
 
+// Dummy export to prevent import errors during transition
+export const auth = null as any;
+
+/* DISABLED: Using Supabase Auth instead
 export const auth = betterAuth({
   trustedOrigins: [`${process.env.NEXT_PUBLIC_APP_URL}`],
   allowedDevOrigins: [`${process.env.NEXT_PUBLIC_APP_URL}`],
@@ -172,3 +178,4 @@ export const auth = betterAuth({
     nextCookies(),
   ],
 });
+*/

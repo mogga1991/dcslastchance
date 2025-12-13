@@ -403,7 +403,7 @@ export const getAnalysisById = AnalysisService.getById;
 export const createAnalysis = AnalysisService.create;
 export const updateAnalysis = AnalysisService.update;
 
-export const getCredits = CreditService.getTransactionHistory;
-export const getTotalCredits = CreditService.checkCredits;
-export const consumeCredit = CreditService.useCredit;
-export const addCredits = CreditService.addCredits;
+export const getCredits = CreditService.getTransactionHistory.bind(CreditService);
+export const getTotalCredits = CreditService.checkCredits.bind(CreditService);
+export const consumeCredit = CreditService.useCredit.bind(CreditService);
+export const addCredits = CreditService.addCredits.bind(CreditService);

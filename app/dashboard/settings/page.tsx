@@ -14,69 +14,66 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { authClient } from "@/lib/auth-client";
-import { ExternalLink, Settings2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { createClient } from "@/lib/supabase/client";
+import { Upload } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-interface User {
+interface UserData {
   id: string;
-  name: string;
   email: string;
-  image?: string | null;
-}
-
-interface OrderItem {
-  label: string;
-  amount: number;
-}
-
-interface Order {
-  id: string;
-  product?: {
-    name: string;
-  };
-  createdAt: string;
-  totalAmount: number;
-  currency: string;
-  status: string;
-  subscription?: {
-    status: string;
-    endedAt?: string;
-  };
-  items: OrderItem[];
-}
-
-interface OrdersResponse {
-  result: {
-    items: Order[];
+  user_metadata: {
+    name?: string;
+    full_name?: string;
+    avatar_url?: string;
+    country?: string;
+    state?: string;
   };
 }
+
+const US_STATES = [
+  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+  "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho",
+  "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana",
+  "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
+  "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada",
+  "New Hampshire", "New Jersey", "New Mexico", "New York",
+  "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon",
+  "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
+  "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
+  "West Virginia", "Wisconsin", "Wyoming"
+];
 
 function SettingsContent() {
-  const [user, setUser] = useState<User | null>(null);
-  const [orders, setOrders] = useState<OrdersResponse | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState("profile");
+  const [currentTab, setCurrentTab] = useState("basics");
+  const [saving, setSaving] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const supabase = createClient();
 
   // Profile form states
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [country, setCountry] = useState("United States");
+  const [state, setState] = useState("");
 
   // Profile picture upload states
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-
-  const { data: organizations } = authClient.useListOrganizations();
 
   // Handle URL tab parameter
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab && ["profile", "organization", "billing"].includes(tab)) {
+    if (tab && ["basics", "account", "billing"].includes(tab)) {
       setCurrentTab(tab);
     }
   }, [searchParams]);
@@ -84,47 +81,27 @@ function SettingsContent() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Get user session
-        const session = await authClient.getSession();
-        if (session.data?.user) {
-          setUser(session.data.user);
-          setName(session.data.user.name || "");
-          setEmail(session.data.user.email || "");
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+          router.push("/sign-in");
+          return;
         }
 
-        // Try to fetch orders and customer state with better error handling
-        try {
-          const ordersResponse = await authClient.customer.orders.list({});
-
-          if (ordersResponse.data) {
-            setOrders(ordersResponse.data as unknown as OrdersResponse);
-          } else {
-            console.log("No orders found or customer not created yet");
-            setOrders(null);
-          }
-        } catch (orderError) {
-          console.log(
-            "Orders fetch failed - customer may not exist in Polar yet:",
-            orderError,
-          );
-          setOrders(null);
-        }
-
-        try {
-          const { data: customerState } = await authClient.customer.state();
-          console.log("customerState", customerState);
-        } catch (customerError) {
-          console.log("Customer state fetch failed:", customerError);
-        }
+        setUser(user as UserData);
+        setFullName(user.user_metadata?.full_name || user.user_metadata?.name || "");
+        setCountry(user.user_metadata?.country || "United States");
+        setState(user.user_metadata?.state || "");
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching user data:", error);
+        toast.error("Failed to load user data");
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [organizations]);
+  }, [router, supabase]);
 
   const handleTabChange = (value: string) => {
     setCurrentTab(value);
@@ -134,19 +111,43 @@ function SettingsContent() {
   };
 
   const handleUpdateProfile = async () => {
+    setSaving(true);
     try {
-      await authClient.updateUser({
-        name,
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          full_name: fullName,
+          name: fullName,
+          country: country,
+          state: state,
+        }
       });
+
+      if (error) throw error;
+
       toast.success("Profile updated successfully");
-    } catch {
+
+      // Refresh user data
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUser(user as UserData);
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
       toast.error("Failed to update profile");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size (max 1MB)
+      if (file.size > 1024 * 1024) {
+        toast.error("Image must be less than 1MB");
+        return;
+      }
+
       setProfileImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -157,48 +158,61 @@ function SettingsContent() {
   };
 
   const handleUploadProfilePicture = async () => {
-    if (!profileImage) return;
+    if (!profileImage || !user) return;
 
-    setUploadingImage(true);
+    setSaving(true);
     try {
-      const formData = new FormData();
-      formData.append("file", profileImage);
+      // Upload to Supabase Storage
+      const fileExt = profileImage.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
 
-      // Upload to your R2 storage endpoint
-      const response = await fetch("/api/upload-image", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        const { url } = await response.json();
-
-        // Update user profile with new image URL
-        await authClient.updateUser({
-          name,
-          image: url,
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, profileImage, {
+          cacheControl: '3600',
+          upsert: false
         });
 
-        setUser((prev) => (prev ? { ...prev, image: url } : null));
-        setImagePreview(null);
-        setProfileImage(null);
-        toast.success("Profile picture updated successfully");
-      } else {
-        throw new Error("Upload failed");
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Update user metadata
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          avatar_url: publicUrl,
+        }
+      });
+
+      if (updateError) throw updateError;
+
+      toast.success("Profile picture updated successfully");
+      setImagePreview(null);
+      setProfileImage(null);
+
+      // Refresh user data
+      const { data: { user: updatedUser } } = await supabase.auth.getUser();
+      if (updatedUser) {
+        setUser(updatedUser as UserData);
       }
-    } catch {
-      toast.error("Failed to upload profile picture");
+    } catch (error: any) {
+      console.error("Error uploading profile picture:", error);
+      toast.error(error.message || "Failed to upload profile picture");
     } finally {
-      setUploadingImage(false);
+      setSaving(false);
     }
   };
+
   if (loading) {
     return (
       <div className="flex flex-col gap-6 p-6">
         {/* Header Skeleton */}
         <div>
           <Skeleton className="h-9 w-32 mb-2 bg-gray-200 dark:bg-gray-800" />
-          <Skeleton className="h-5 w-80 bg-gray-200 dark:bg-gray-800" />
         </div>
 
         {/* Tabs Skeleton */}
@@ -209,67 +223,19 @@ function SettingsContent() {
             <Skeleton className="h-10 w-16 bg-gray-200 dark:bg-gray-800" />
           </div>
 
-          <div className="space-y-6">
-            {/* Profile Information Card Skeleton */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Skeleton className="h-5 w-5 rounded bg-gray-200 dark:bg-gray-800" />
-                  <Skeleton className="h-6 w-40 bg-gray-200 dark:bg-gray-800" />
-                </div>
-                <Skeleton className="h-4 w-72 bg-gray-200 dark:bg-gray-800" />
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <Skeleton className="h-20 w-20 rounded-full bg-gray-200 dark:bg-gray-800" />
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <Skeleton className="h-8 w-24 bg-gray-200 dark:bg-gray-800" />
-                      <Skeleton className="h-8 w-12 bg-gray-200 dark:bg-gray-800" />
-                      <Skeleton className="h-8 w-16 bg-gray-200 dark:bg-gray-800" />
-                    </div>
-                    <Skeleton className="h-4 w-48 bg-gray-200 dark:bg-gray-800" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-20 bg-gray-200 dark:bg-gray-800" />
-                    <Skeleton className="h-10 w-full bg-gray-200 dark:bg-gray-800" />
-                  </div>
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-12 bg-gray-200 dark:bg-gray-800" />
-                    <Skeleton className="h-10 w-full bg-gray-200 dark:bg-gray-800" />
-                  </div>
-                </div>
-
-                <Skeleton className="h-10 w-28 bg-gray-200 dark:bg-gray-800" />
-              </CardContent>
-            </Card>
-
-            {/* Change Password Card Skeleton */}
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-36 bg-gray-200 dark:bg-gray-800" />
-                <Skeleton className="h-4 w-64 bg-gray-200 dark:bg-gray-800" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-32 bg-gray-200 dark:bg-gray-800" />
-                  <Skeleton className="h-10 w-full bg-gray-200 dark:bg-gray-800" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-28 bg-gray-200 dark:bg-gray-800" />
-                  <Skeleton className="h-10 w-full bg-gray-200 dark:bg-gray-800" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-40 bg-gray-200 dark:bg-gray-800" />
-                  <Skeleton className="h-10 w-full bg-gray-200 dark:bg-gray-800" />
-                </div>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-40 bg-gray-200 dark:bg-gray-800" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-20 w-20 rounded-full bg-gray-200 dark:bg-gray-800" />
                 <Skeleton className="h-10 w-32 bg-gray-200 dark:bg-gray-800" />
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+              <Skeleton className="h-10 w-full bg-gray-200 dark:bg-gray-800" />
+              <Skeleton className="h-10 w-full bg-gray-200 dark:bg-gray-800" />
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -280,9 +246,6 @@ function SettingsContent() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage your account settings and preferences
-        </p>
       </div>
 
       <Tabs
@@ -291,65 +254,68 @@ function SettingsContent() {
         className="w-full max-w-4xl"
       >
         <TabsList>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
+          <TabsTrigger value="basics">Basics</TabsTrigger>
+          <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="billing">Billing & Subscription</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile" className="space-y-6">
-          {/* Profile Information */}
+        <TabsContent value="basics" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings2 className="h-5 w-5" />
-                Profile Information
-              </CardTitle>
-              <CardDescription>
-                Update your personal information and profile settings
-              </CardDescription>
+              <CardTitle>Profile information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Avatar Upload */}
               <div className="flex items-center gap-4">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src={imagePreview || user?.image || ""} />
-                  <AvatarFallback>
-                    {name
+                <Avatar className="h-16 w-16">
+                  <AvatarImage
+                    src={imagePreview || user?.user_metadata?.avatar_url || ""}
+                    alt="Profile picture"
+                  />
+                  <AvatarFallback className="bg-blue-100 text-blue-700">
+                    {fullName
                       .split(" ")
                       .map((n) => n[0])
-                      .join("")}
+                      .join("")
+                      .toUpperCase() || user?.email?.[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <Button
-                      variant="outline"
+                      variant="default"
                       size="sm"
+                      className="gap-2"
                       onClick={() =>
                         document.getElementById("profile-image-input")?.click()
                       }
-                      disabled={uploadingImage}
+                      disabled={saving}
                     >
-                      {uploadingImage ? "Uploading..." : "Change Photo"}
+                      <Upload className="h-4 w-4" />
+                      Upload photo
                     </Button>
                     {profileImage && (
-                      <Button
-                        size="sm"
-                        onClick={handleUploadProfilePicture}
-                        disabled={uploadingImage}
-                      >
-                        Save
-                      </Button>
-                    )}
-                    {imagePreview && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setImagePreview(null);
-                          setProfileImage(null);
-                        }}
-                      >
-                        Cancel
-                      </Button>
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleUploadProfilePicture}
+                          disabled={saving}
+                        >
+                          {saving ? "Saving..." : "Save"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setImagePreview(null);
+                            setProfileImage(null);
+                          }}
+                          disabled={saving}
+                        >
+                          Cancel
+                        </Button>
+                      </>
                     )}
                   </div>
                   <input
@@ -359,193 +325,120 @@ function SettingsContent() {
                     onChange={handleImageChange}
                     className="hidden"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    JPG, GIF or PNG. 1MB max.
-                  </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+              {/* Full Name */}
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full name</Label>
+                <Input
+                  id="fullName"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Sarah Mitchell"
+                  className="bg-gray-50 dark:bg-gray-900"
+                />
+              </div>
+
+              {/* Email (disabled) */}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={user?.email || ""}
+                  disabled
+                  className="bg-gray-50 dark:bg-gray-900"
+                />
+              </div>
+
+              {/* Country */}
+              <div className="space-y-2">
+                <Label htmlFor="country">Country</Label>
+                <Select value={country} onValueChange={setCountry}>
+                  <SelectTrigger className="bg-gray-50 dark:bg-gray-900">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="United States">🇺🇸 United States</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* State */}
+              <div className="space-y-2">
+                <Label htmlFor="state">State</Label>
+                <Select value={state} onValueChange={setState}>
+                  <SelectTrigger className="bg-gray-50 dark:bg-gray-900">
+                    <SelectValue placeholder="Select a state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {US_STATES.map((stateName) => (
+                      <SelectItem key={stateName} value={stateName}>
+                        {stateName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button onClick={handleUpdateProfile} disabled={saving}>
+                {saving ? "Saving..." : "Save information"}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="account" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Password & Security</CardTitle>
+              <CardDescription>
+                Manage your password and security settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <div className="flex items-center gap-2">
                   <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
                     type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
+                    value={user?.email || ""}
                     disabled
+                    className="bg-gray-50 dark:bg-gray-900"
                   />
+                  {user?.email && (
+                    <Badge variant="outline" className="bg-green-50 text-green-700">
+                      Verified
+                    </Badge>
+                  )}
                 </div>
               </div>
 
-              <Button onClick={handleUpdateProfile}>Save Changes</Button>
+              <div className="pt-4 border-t">
+                <Button variant="outline">Change Password</Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-6">
-          <div className="space-y-4 mt-2">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-medium">Billing History</h3>
-                <p className="text-sm text-muted-foreground">
-                  View your past and upcoming invoices
-                </p>
+          <Card>
+            <CardHeader>
+              <CardTitle>Billing & Subscription</CardTitle>
+              <CardDescription>
+                Manage your subscription and billing information
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No active subscription</p>
+                <Button className="mt-4" asChild>
+                  <a href="/dashboard/upgrade">Upgrade Plan</a>
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  try {
-                    await authClient.customer.portal();
-                  } catch (error) {
-                    console.error("Failed to open customer portal:", error);
-                    // You could add a toast notification here
-                  }
-                }}
-                disabled={orders === null}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Manage Subscription
-              </Button>
-            </div>
-            {orders?.result?.items && orders.result.items.length > 0 ? (
-              <div className="space-y-4">
-                {(orders.result.items || []).map((order) => (
-                  <Card key={order.id} className="overflow-hidden">
-                    <CardContent className="px-4">
-                      <div className="flex flex-col gap-3">
-                        {/* Header Row */}
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <div className="flex justify-center gap-2">
-                              <h4 className="font-medium text-base">
-                                {order.product?.name || "Subscription"}
-                              </h4>
-                              <div className="flex items-center gap-2">
-                                {order.subscription?.status === "paid" ? (
-                                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 text-xs">
-                                    Paid
-                                  </Badge>
-                                ) : order.subscription?.status ===
-                                  "canceled" ? (
-                                  <Badge
-                                    variant="destructive"
-                                    className="text-xs"
-                                  >
-                                    Canceled
-                                  </Badge>
-                                ) : order.subscription?.status ===
-                                  "refunded" ? (
-                                  <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 text-xs">
-                                    Refunded
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="outline" className="text-xs">
-                                    {order.subscription?.status}
-                                  </Badge>
-                                )}
-
-                                {order.subscription?.status === "canceled" && (
-                                  <span className="text-xs text-muted-foreground">
-                                    • Canceled on{" "}
-                                    {order.subscription.endedAt
-                                      ? new Date(
-                                          order.subscription.endedAt,
-                                        ).toLocaleDateString("en-US", {
-                                          month: "short",
-                                          day: "numeric",
-                                        })
-                                      : "N/A"}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {new Date(order.createdAt).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                },
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="text-right">
-                            <div className="font-medium text-base">
-                              ${(order.totalAmount / 100).toFixed(2)}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {order.currency?.toUpperCase()}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Order Items */}
-                        {order.items?.length > 0 && (
-                          <div className="mt-2 pt-3 border-t">
-                            <ul className="space-y-1.5 text-sm">
-                              {order.items.map((item, index: number) => (
-                                <li
-                                  key={`${order.id}-${item.label}-${index}`}
-                                  className="flex justify-between"
-                                >
-                                  <span className="text-muted-foreground truncate max-w-[200px]">
-                                    {item.label}
-                                  </span>
-                                  <span className="font-medium">
-                                    ${(item.amount / 100).toFixed(2)}
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.5"
-                      className="h-10 w-10 text-muted-foreground mb-4"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                    </svg>
-                    <h3 className="mt-4 text-lg font-semibold">
-                      No orders found
-                    </h3>
-                    <p className="mb-4 mt-2 text-sm text-muted-foreground">
-                      {orders === null
-                        ? "Unable to load billing history. This may be because your account is not yet set up for billing."
-                        : "You don't have any orders yet. Your billing history will appear here."}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
@@ -559,7 +452,6 @@ export default function SettingsPage() {
         <div className="flex flex-col gap-6 p-6">
           <div>
             <div className="h-9 w-32 mb-2 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-md" />
-            <div className="h-5 w-80 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-md" />
           </div>
         </div>
       }

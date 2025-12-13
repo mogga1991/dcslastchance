@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db/drizzle";
@@ -58,11 +58,10 @@ export async function checkRateLimit(
  */
 export async function verifyAuth() {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
 
-    if (!session?.session?.userId) {
+    if (!authUser) {
       return {
         authenticated: false,
         userId: null,
@@ -72,8 +71,8 @@ export async function verifyAuth() {
 
     return {
       authenticated: true,
-      userId: session.session.userId,
-      user: session.user,
+      userId: authUser.id,
+      user: authUser,
       error: null,
     };
   } catch (error) {

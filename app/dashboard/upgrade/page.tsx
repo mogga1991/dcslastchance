@@ -1,15 +1,13 @@
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 
 export default async function UpgradePage() {
-  const result = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!result?.session?.userId) {
+  if (!user) {
     redirect("/sign-in");
   }
 

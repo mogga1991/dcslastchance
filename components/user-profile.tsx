@@ -8,7 +8,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { authClient } from "@/lib/auth-client";
+import { createClient } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -30,40 +30,45 @@ export default function UserProfile({ mini }: { mini?: boolean }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const supabase = createClient();
 
   const fetchUserData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const result = await authClient.getSession();
+      const { data: { user } } = await supabase.auth.getUser();
 
-      if (!result.data?.user) {
+      if (!user) {
         router.push("/sign-in");
         return;
       }
 
-      setUserInfo(result.data?.user);
+      // Map Supabase user to UserInfo
+      setUserInfo({
+        id: user.id,
+        name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+        image: user.user_metadata?.avatar_url || null,
+        email: user.email || '',
+        emailVerified: !!user.email_confirmed_at,
+        createdAt: new Date(user.created_at),
+        updatedAt: new Date(user.updated_at || user.created_at),
+      });
     } catch (error) {
       console.error("Error fetching user data:", error);
       setError("Failed to load user profile. Please try refreshing the page.");
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [router, supabase]);
 
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
 
   const handleSignOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.push("/sign-in"); // redirect to login page
-        },
-      },
-    });
+    await supabase.auth.signOut();
+    router.push("/sign-in");
   };
 
   if (error) {
@@ -82,9 +87,9 @@ export default function UserProfile({ mini }: { mini?: boolean }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div
-          className={`flex gap-2 justify-start items-center w-full rounded ${mini ? "" : "px-4 pt-2 pb-3"}`}
+          className={`flex gap-3 justify-start items-center w-full rounded cursor-pointer hover:bg-slate-700/30 transition-colors ${mini ? "" : "px-4 py-3"}`}
         >
-          <Avatar>
+          <Avatar className="h-10 w-10">
             {loading ? (
               <div className="flex items-center justify-center w-full h-full">
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -102,11 +107,13 @@ export default function UserProfile({ mini }: { mini?: boolean }) {
             )}
           </Avatar>
           {mini ? null : (
-            <div className="flex items-center gap-2">
-              <p className="font-medium text-md">
+            <div className="flex flex-col flex-1 min-w-0">
+              <p className="font-medium text-sm text-white truncate">
                 {loading ? "Loading..." : userInfo?.name || "User"}
               </p>
-              {loading && <Loader2 className="h-3 w-3 animate-spin" />}
+              <p className="text-xs text-white/60 truncate">
+                {loading ? "" : userInfo?.email || ""}
+              </p>
             </div>
           )}
         </div>

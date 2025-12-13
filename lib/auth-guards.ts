@@ -2,7 +2,7 @@
  * Authentication and Authorization Guards
  *
  * Provides security helpers for API routes to enforce:
- * 1. User authentication (Clerk)
+ * 1. User authentication (Supabase)
  * 2. Organization membership validation
  * 3. Role-based access control (RBAC)
  *
@@ -12,7 +12,7 @@
  *   await requireRole(session.userId, ['admin', 'account_manager']);
  */
 
-import { auth } from "@clerk/nextjs/server";
+import { createClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
 import { sql } from "./db";
 
@@ -41,7 +41,7 @@ export interface UserRecord {
 // ============================================
 
 /**
- * Requires user to be authenticated via Clerk
+ * Requires user to be authenticated via Supabase
  * Throws 401 error if not authenticated
  *
  * @example
@@ -51,13 +51,16 @@ export interface UserRecord {
  * }
  */
 export async function requireAuth(request?: NextRequest): Promise<AuthSession> {
-  const { userId } = await auth();
+  const supabase = await createClient();
+  const { data: { user: authUser } } = await supabase.auth.getUser();
 
-  if (!userId) {
+  if (!authUser) {
     throw new AuthError("Unauthorized", 401);
   }
 
-  // Fetch user details including org and role
+  const userId = authUser.id;
+
+  // Fetch user details including org and role from database
   const userResult = await sql<UserRecord>`
     SELECT id, email, role, organization_id, account_manager_id
     FROM "user"
@@ -68,7 +71,12 @@ export async function requireAuth(request?: NextRequest): Promise<AuthSession> {
   const user = userResult[0];
 
   if (!user) {
-    throw new AuthError("User not found", 404);
+    // User exists in Supabase but not in our database - return basic session
+    return {
+      userId: authUser.id,
+      organizationId: undefined,
+      role: undefined,
+    };
   }
 
   return {
