@@ -1,13 +1,52 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+const publicRoutes = [
+  '/',
+  '/sign-in',
+  '/sign-up',
+  '/auth/callback',
+  '/api/auth',
+  '/api/payments/webhooks',
+  '/privacy-policy',
+  '/terms-of-service',
+  '/api/public',
+  '/hero-demo',
+]
+
+function isPublicRoute(pathname: string): boolean {
+  return publicRoutes.some(route => pathname.startsWith(route))
+}
+
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
   // Create response
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
+
+  // Check for Supabase session cookies
+  const accessToken = request.cookies.get('sb-access-token')
+  const hasSession = !!accessToken
+
+  // Allow public routes
+  if (isPublicRoute(pathname)) {
+    // Redirect authenticated users away from auth pages
+    if (hasSession && (pathname === '/sign-in' || pathname === '/sign-up')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+    return response
+  }
+
+  // Redirect unauthenticated users to sign-in
+  if (!hasSession && pathname.startsWith('/dashboard')) {
+    const signInUrl = new URL('/sign-in', request.url)
+    signInUrl.searchParams.set('redirect_url', pathname)
+    return NextResponse.redirect(signInUrl)
+  }
 
   // Add comprehensive security headers
   const securityHeaders = {

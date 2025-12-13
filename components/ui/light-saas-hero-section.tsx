@@ -266,10 +266,10 @@ const GlassmorphicNavbar = () => {
 
                     {/* Auth Buttons */}
                     <div className="hidden md:flex items-center space-x-2">
-                        <a href="#" className="px-5 py-2 text-gray-700 font-medium rounded-full hover:bg-white/50 transition-colors">
-                            Coming Soon
+                        <a href="/sign-in" className="px-5 py-2 text-gray-700 font-medium rounded-full hover:bg-white/50 transition-colors">
+                            Sign in
                         </a>
-                        <a href="#" className="px-5 py-2 bg-indigo-600 text-white font-medium rounded-full shadow-md hover:bg-indigo-700 transition-colors">
+                        <a href="/sign-up" className="px-5 py-2 bg-indigo-600 text-white font-medium rounded-full shadow-md hover:bg-indigo-700 transition-colors">
                             Get Started
                         </a>
                     </div>
@@ -306,10 +306,10 @@ const GlassmorphicNavbar = () => {
                                 Resources
                             </a>
                             <div className="border-t border-gray-200 pt-3 flex flex-col space-y-3">
-                                <a href="#" className="px-4 py-3 text-center text-gray-700 font-medium rounded-lg bg-white/50">
-                                    Coming Soon
+                                <a href="/sign-in" className="px-4 py-3 text-center text-gray-700 font-medium rounded-lg bg-white/50">
+                                    Sign in
                                 </a>
-                                <a href="#" className="px-4 py-3 text-center bg-indigo-600 text-white font-medium rounded-lg shadow-md">
+                                <a href="/sign-up" className="px-4 py-3 text-center bg-indigo-600 text-white font-medium rounded-lg shadow-md">
                                     Get Started
                                 </a>
                             </div>
@@ -367,7 +367,7 @@ const HeroSection = () => {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-                    <a href="#" className="px-8 py-4 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:bg-indigo-700 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-xl">
+                    <a href="/sign-up" className="px-8 py-4 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:bg-indigo-700 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-xl">
                         Get Started
                     </a>
                     <button className="px-8 py-4 bg-white/80 backdrop-blur-sm text-gray-900 font-semibold rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-2 hover:border-gray-300">
