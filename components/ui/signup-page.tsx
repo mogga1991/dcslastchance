@@ -260,8 +260,18 @@ const SignUp = () => {
         setIsLoading(false);
       } else if (data.user) {
         console.log('Signup successful! User:', data.user.id);
-        // Redirect to dashboard
-        router.push('/dashboard');
+        console.log('Session created:', data.session ? 'Yes' : 'No');
+
+        // Check if email confirmation is required
+        if (!data.session) {
+          console.warn('No session created - email confirmation is enabled');
+          setError('Please check your email to confirm your account before signing in.');
+          setIsLoading(false);
+        } else {
+          // Session created - email confirmation is disabled
+          console.log('Redirecting to dashboard...');
+          router.push('/dashboard');
+        }
       } else {
         console.warn('No error but no user returned');
         setError('Signup completed but no user data returned. Please try signing in.');
