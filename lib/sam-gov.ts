@@ -131,7 +131,7 @@ export async function fetchGSALeaseOpportunities(
     city?: string;
   } = {}
 ): Promise<SAMResponse> {
-  const apiKey = process.env.SAM_API_KEY;
+  const apiKey = process.env.SAM_API_KEY || process.env.VITE_SAMGOV_API_KEY;
 
   if (!apiKey) {
     throw new Error("SAM_API_KEY is not configured in environment variables");
@@ -228,7 +228,7 @@ export async function fetchAllOpportunities(
     noticeTypes?: string[];
   } = {}
 ): Promise<SAMResponse> {
-  const apiKey = process.env.SAM_API_KEY;
+  const apiKey = process.env.SAM_API_KEY || process.env.VITE_SAMGOV_API_KEY;
 
   if (!apiKey) {
     throw new Error("SAM_API_KEY is not configured in environment variables");
@@ -309,7 +309,7 @@ export async function fetchAllOpportunities(
  * Fetches a single opportunity by notice ID
  */
 export async function fetchOpportunityById(noticeId: string): Promise<SAMOpportunity> {
-  const apiKey = process.env.SAM_API_KEY;
+  const apiKey = process.env.SAM_API_KEY || process.env.VITE_SAMGOV_API_KEY;
 
   if (!apiKey) {
     throw new Error("SAM_API_KEY is not configured in environment variables");

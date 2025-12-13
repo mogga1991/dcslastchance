@@ -84,7 +84,7 @@ export default function GSAMap({ opportunities, selectedOpportunity }: GSAMapPro
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+    const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || process.env.VITE_MAPBOX_ACCESS_TOKEN;
     if (!token) {
       console.error("Mapbox access token not found");
       return;
