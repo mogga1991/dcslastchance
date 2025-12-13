@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import ProposalProcessFlow from "./proposal-process-flow";
 
 interface Proposal {
   id: string;
@@ -213,6 +214,9 @@ export default function MyProposalsClient() {
           New Proposal
         </Button>
       </div>
+
+      {/* Process Flow */}
+      <ProposalProcessFlow />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">

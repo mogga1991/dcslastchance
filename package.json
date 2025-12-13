@@ -17,6 +17,7 @@
     "@hookform/resolvers": "^5.0.1",
     "@icons-pack/react-simple-icons": "^12.7.0",
     "@neondatabase/serverless": "^1.0.2",
+    "@number-flow/react": "^0.5.10",
     "@parse/node-apn": "^7.0.1",
     "@polar-sh/better-auth": "^1.0.1",
     "@polar-sh/sdk": "^0.41.5",

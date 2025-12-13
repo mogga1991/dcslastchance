@@ -79,44 +79,52 @@ const AnimatedStatsSection: React.FC = () => {
   return (
     <div className="w-full bg-white h-full py-12 md:py-20">
       <div className="container mx-auto px-4">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Platform Performance Metrics
+          </h2>
+          <p className="text-lg text-gray-600">
+            Real-time data from our enterprise intelligence platform serving government contractors and commercial organizations.
+          </p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 min-h-[600px]">
           <div className="md:col-span-2">
             <BentoCard
-              title="Total Revenue"
-              value="$1,234,567"
-              subtitle="15% increase from last month"
+              title="Federal Contract Opportunities Tracked"
+              value="$700B+"
+              subtitle="Annual procurement spend monitored across all federal agencies"
               colors={["#3B82F6", "#60A5FA", "#93C5FD"]}
               delay={0.2}
             />
           </div>
           <BentoCard
-            title="New Users"
-            value={1234}
-            subtitle="Daily signups"
+            title="Analysis Time Saved"
+            value="10+ hrs"
+            subtitle="Per RFP analysis vs manual review"
             colors={["#60A5FA", "#34D399", "#93C5FD"]}
             delay={0.4}
           />
           <BentoCard
-            title="Conversion Rate"
-            value="3.45%"
-            subtitle="0.5% increase from last week"
+            title="Extraction Accuracy"
+            value="95%+"
+            subtitle="AI-powered requirement extraction confidence"
             colors={["#F59E0B", "#A78BFA", "#FCD34D"]}
             delay={0.6}
           />
           <div className="md:col-span-2">
             <BentoCard
-              title="Active Projects"
-              value={42}
-              subtitle="8 completed this month"
+              title="Data Points Extracted Per Document"
+              value="50+"
+              subtitle="From requirements to evaluation criteria to competitive intelligence"
               colors={["#3B82F6", "#A78BFA", "#FBCFE8"]}
               delay={0.8}
             />
           </div>
           <div className="md:col-span-3">
             <BentoCard
-              title="Customer Satisfaction"
-              value="4.8/5"
-              subtitle="Based on 1,000+ reviews from verified customers across all product categories"
+              title="Multi-Vertical Coverage"
+              value="6+ Industries"
+              subtitle="Federal contracting • Commercial RE • Grants • Legal • BD • Supply Chain"
               colors={["#EC4899", "#F472B6", "#3B82F6"]}
               delay={1}
             />

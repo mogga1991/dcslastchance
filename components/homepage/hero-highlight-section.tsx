@@ -20,10 +20,11 @@ export default function HeroHighlightSection() {
         }}
         className="text-2xl px-4 md:text-4xl lg:text-5xl font-bold text-neutral-700 dark:text-white max-w-4xl leading-relaxed lg:leading-snug text-center mx-auto"
       >
-        Imagine skipping marketing. The customers tell you what they want.{" "}
+        Government contracting is the only market where{" "}
         <Highlight className="text-black dark:text-white">
-          Everything is a signal, from need, to message, to sale.
-        </Highlight>
+          customers publish exactly what they need, what they'll pay, and when they'll decide.
+        </Highlight>{" "}
+        Our AI reads the signals. You win the contracts.
       </motion.h1>
     </HeroHighlight>
   );
