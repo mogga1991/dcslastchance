@@ -105,6 +105,90 @@ const STATUS_COLORS = {
   pending: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
 };
 
+// Demo placeholder data
+const DEMO_TEAM_MEMBERS: TeamMember[] = [
+  {
+    id: "demo-1",
+    full_name: "Sarah Johnson",
+    email: "sarah.johnson@example.com",
+    role: "broker",
+    phone: "+1 (555) 123-4567",
+    status: "active",
+    last_login_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+    total_logins: 247,
+    listings_posted: 18,
+    ai_matches_found: 142,
+    discussions_active: 23,
+    deals_completed: 12,
+    total_earnings: 145000,
+    created_at: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(), // 6 months ago
+  },
+  {
+    id: "demo-2",
+    full_name: "Michael Chen",
+    email: "michael.chen@example.com",
+    role: "realtor",
+    phone: "+1 (555) 234-5678",
+    status: "active",
+    last_login_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
+    total_logins: 189,
+    listings_posted: 14,
+    ai_matches_found: 98,
+    discussions_active: 17,
+    deals_completed: 8,
+    total_earnings: 98500,
+    created_at: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString(), // 4 months ago
+  },
+  {
+    id: "demo-3",
+    full_name: "Emily Rodriguez",
+    email: "emily.rodriguez@example.com",
+    role: "salesman",
+    phone: "+1 (555) 345-6789",
+    status: "active",
+    last_login_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+    total_logins: 156,
+    listings_posted: 22,
+    ai_matches_found: 167,
+    discussions_active: 31,
+    deals_completed: 15,
+    total_earnings: 187500,
+    created_at: new Date(Date.now() - 210 * 24 * 60 * 60 * 1000).toISOString(), // 7 months ago
+  },
+  {
+    id: "demo-4",
+    full_name: "David Park",
+    email: "david.park@example.com",
+    role: "owner",
+    phone: "+1 (555) 456-7890",
+    status: "active",
+    last_login_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+    total_logins: 92,
+    listings_posted: 7,
+    ai_matches_found: 54,
+    discussions_active: 12,
+    deals_completed: 5,
+    total_earnings: 62000,
+    created_at: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(), // 3 months ago
+  },
+  {
+    id: "demo-5",
+    full_name: "Jennifer Williams",
+    email: "jennifer.williams@example.com",
+    role: "broker",
+    phone: "+1 (555) 567-8901",
+    status: "inactive",
+    last_login_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days ago
+    total_logins: 78,
+    listings_posted: 9,
+    ai_matches_found: 63,
+    discussions_active: 8,
+    deals_completed: 4,
+    total_earnings: 51200,
+    created_at: new Date(Date.now() - 150 * 24 * 60 * 60 * 1000).toISOString(), // 5 months ago
+  },
+];
+
 export default function AccountManager() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,6 +196,7 @@ export default function AccountManager() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [useDemoData, setUseDemoData] = useState(true); // Toggle for demo mode
 
   // Form states
   const [formData, setFormData] = useState({
@@ -122,8 +207,14 @@ export default function AccountManager() {
   });
 
   useEffect(() => {
-    fetchTeamMembers();
-  }, []);
+    if (useDemoData) {
+      // Use demo data for demonstration purposes
+      setTeamMembers(DEMO_TEAM_MEMBERS);
+      setLoading(false);
+    } else {
+      fetchTeamMembers();
+    }
+  }, [useDemoData]);
 
   const fetchTeamMembers = async () => {
     try {
