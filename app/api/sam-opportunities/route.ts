@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchGSALeaseOpportunities, fetchOpportunityById } from "@/lib/sam-gov";
+import { fetchGSALeaseOpportunities, fetchAllOpportunities, fetchOpportunityById } from "@/lib/sam-gov";
 
 /**
  * GET /api/sam-opportunities
  *
- * Fetches GSA lease contract opportunities from SAM.gov
+ * Fetches contract opportunities from SAM.gov
  *
  * Query Parameters:
+ * - mode: "leasing" for GSA leasing only, "all" for all opportunities (default: "leasing")
  * - limit: Number of records to return (default: 100, max: 100)
  * - offset: Pagination offset (default: 0)
  * - state: Filter by state code (e.g., "CA", "TX")
  * - city: Filter by city name
  * - postedFrom: Filter by posted date (YYYY-MM-DD)
  * - postedTo: Filter by posted date (YYYY-MM-DD)
+ * - department: Filter by department name (only for "all" mode)
  * - noticeId: Fetch a specific opportunity by ID
  */
 export async function GET(request: NextRequest) {
@@ -32,6 +34,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get mode parameter (default to "leasing" for backward compatibility)
+    const mode = searchParams.get("mode") || "leasing";
+
     // Fetch filtered opportunities
     const limit = Math.min(
       parseInt(searchParams.get("limit") || "100"),
@@ -42,15 +47,31 @@ export async function GET(request: NextRequest) {
     const city = searchParams.get("city") || undefined;
     const postedFrom = searchParams.get("postedFrom") || undefined;
     const postedTo = searchParams.get("postedTo") || undefined;
+    const department = searchParams.get("department") || undefined;
 
-    const data = await fetchGSALeaseOpportunities({
-      limit,
-      offset,
-      state,
-      city,
-      postedFrom,
-      postedTo,
-    });
+    let data;
+    if (mode === "all") {
+      // Fetch all opportunities
+      data = await fetchAllOpportunities({
+        limit,
+        offset,
+        state,
+        city,
+        postedFrom,
+        postedTo,
+        department,
+      });
+    } else {
+      // Fetch GSA leasing opportunities (default)
+      data = await fetchGSALeaseOpportunities({
+        limit,
+        offset,
+        state,
+        city,
+        postedFrom,
+        postedTo,
+      });
+    }
 
     return NextResponse.json(
       {

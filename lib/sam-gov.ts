@@ -210,6 +210,102 @@ export async function fetchGSALeaseOpportunities(
 }
 
 /**
+ * Fetches ALL contract opportunities from SAM.gov API (not just GSA leasing)
+ * Used for the main dashboard to show all opportunities
+ *
+ * @param params - Additional query parameters
+ * @returns Promise<SAMResponse>
+ */
+export async function fetchAllOpportunities(
+  params: {
+    limit?: number;
+    offset?: number;
+    postedFrom?: string;
+    postedTo?: string;
+    state?: string;
+    city?: string;
+    department?: string;
+    noticeTypes?: string[];
+  } = {}
+): Promise<SAMResponse> {
+  const apiKey = process.env.SAM_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("SAM_API_KEY is not configured in environment variables");
+  }
+
+  const baseUrl = "https://api.sam.gov/opportunities/v2/search";
+
+  // Calculate default date range (last 30 days to today)
+  const today = new Date();
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(today.getDate() - 30);
+
+  const formatDate = (date: Date) => {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
+
+  // Default notice types for all opportunities
+  const defaultNoticeTypes = params.noticeTypes || [
+    "o", // Combined Synopsis/Solicitation
+    "p", // Presolicitation
+    "k", // Solicitation
+    "r", // Sources Sought
+    "s", // Special Notice
+  ];
+
+  // Build query parameters for all opportunities
+  const queryParams = new URLSearchParams({
+    api_key: apiKey,
+
+    // Required date parameters
+    postedFrom: params.postedFrom || formatDate(thirtyDaysAgo),
+    postedTo: params.postedTo || formatDate(today),
+
+    ptype: defaultNoticeTypes.join(","),
+
+    // Response date filter (opportunities due today or later)
+    rdlfrom: new Date().toISOString().split('T')[0],
+
+    // Pagination
+    limit: String(params.limit || 100),
+    offset: String(params.offset || 0),
+
+    // Optional filters
+    ...(params.state && { state: params.state }),
+    ...(params.city && { city: params.city }),
+    ...(params.department && { deptname: params.department }),
+  });
+
+  try {
+    const response = await fetch(`${baseUrl}?${queryParams.toString()}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // Cache for 5 minutes to avoid rate limiting
+      next: { revalidate: 300 },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `SAM.gov API error: ${response.status} ${response.statusText} - ${errorText}`
+      );
+    }
+
+    const data: SAMResponse = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching SAM.gov opportunities:", error);
+    throw error;
+  }
+}
+
+/**
  * Fetches a single opportunity by notice ID
  */
 export async function fetchOpportunityById(noticeId: string): Promise<SAMOpportunity> {

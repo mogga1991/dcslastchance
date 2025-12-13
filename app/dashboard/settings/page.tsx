@@ -26,6 +26,7 @@ import { Upload } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
+import AccountManager from "./_components/account-manager";
 
 interface UserData {
   id: string;
@@ -73,7 +74,7 @@ function SettingsContent() {
   // Handle URL tab parameter
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab && ["basics", "account", "billing"].includes(tab)) {
+    if (tab && ["basics", "account", "team", "billing"].includes(tab)) {
       setCurrentTab(tab);
     }
   }, [searchParams]);
@@ -256,6 +257,7 @@ function SettingsContent() {
         <TabsList>
           <TabsTrigger value="basics">Basics</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="team">Account Manager</TabsTrigger>
           <TabsTrigger value="billing">Billing & Subscription</TabsTrigger>
         </TabsList>
 
@@ -420,6 +422,10 @@ function SettingsContent() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="team" className="space-y-6">
+          <AccountManager />
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-6">

@@ -12,6 +12,8 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AllOpportunitiesClient from "./_components/all-opportunities-client";
 
 export default async function Dashboard() {
   const supabase = await createClient();
@@ -78,8 +80,16 @@ export default async function Dashboard() {
           <SectionCards />
         </div>
 
-        {/* Recent Analyses */}
-        <Card>
+        {/* Tabs for Recent Analyses and All Opportunities */}
+        <Tabs defaultValue="analyses" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="analyses">Recent Analyses</TabsTrigger>
+            <TabsTrigger value="opportunities">All Opportunities</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="analyses" className="mt-6">
+            {/* Recent Analyses */}
+            <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -168,6 +178,13 @@ export default async function Dashboard() {
             </div>
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="opportunities" className="mt-6">
+            {/* All SAM.gov Opportunities with Map */}
+            <AllOpportunitiesClient />
+          </TabsContent>
+        </Tabs>
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
