@@ -1,3 +1,4 @@
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -28,21 +29,44 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  // Check for Supabase session cookies
-  const accessToken = request.cookies.get('sb-access-token')
-  const hasSession = !!accessToken
+  // Create Supabase client
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set(name, value)
+          )
+          response = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  // Get session
+  const { data: { session } } = await supabase.auth.getSession()
 
   // Allow public routes
   if (isPublicRoute(pathname)) {
     // Redirect authenticated users away from auth pages
-    if (hasSession && (pathname === '/sign-in' || pathname === '/sign-up')) {
+    if (session && (pathname === '/sign-in' || pathname === '/sign-up')) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
     return response
   }
 
   // Redirect unauthenticated users to sign-in
-  if (!hasSession && pathname.startsWith('/dashboard')) {
+  if (!session && pathname.startsWith('/dashboard')) {
     const signInUrl = new URL('/sign-in', request.url)
     signInUrl.searchParams.set('redirect_url', pathname)
     return NextResponse.redirect(signInUrl)
