@@ -39,7 +39,7 @@ export default function GSALeasingClient() {
   const fetchOpportunities = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/sam-opportunities?limit=100");
+      const response = await fetch("/api/opportunities?source=gsa_leasing&limit=100");
       const data = await response.json();
 
       if (data.success) {
