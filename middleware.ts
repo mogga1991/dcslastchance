@@ -1,76 +1,13 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const publicRoutes = [
-  '/',
-  '/sign-in',
-  '/sign-up',
-  '/auth/callback',
-  '/api/auth',
-  '/api/payments/webhooks',
-  '/privacy-policy',
-  '/terms-of-service',
-  '/api/public',
-  '/hero-demo',
-]
-
-function isPublicRoute(pathname: string): boolean {
-  return publicRoutes.some(route => pathname.startsWith(route))
-}
-
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
   // Create response
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
-
-  // Create Supabase client
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value)
-          )
-          response = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  // Get session
-  const { data: { session } } = await supabase.auth.getSession()
-
-  // Allow public routes
-  if (isPublicRoute(pathname)) {
-    // Redirect authenticated users away from auth pages
-    if (session && (pathname === '/sign-in' || pathname === '/sign-up')) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-    return response
-  }
-
-  // Redirect unauthenticated users to sign-in
-  if (!session && pathname.startsWith('/dashboard')) {
-    const signInUrl = new URL('/sign-in', request.url)
-    signInUrl.searchParams.set('redirect_url', pathname)
-    return NextResponse.redirect(signInUrl)
-  }
 
   // Add comprehensive security headers
   const securityHeaders = {
