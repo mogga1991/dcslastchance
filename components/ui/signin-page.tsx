@@ -444,20 +444,33 @@ const SignIn = () => {
     setIsLoading(true);
     setError("");
 
+    console.log('Starting sign in process...');
+
     try {
+      console.log('Calling supabase.auth.signInWithPassword with email:', email.trim());
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
 
+      console.log('Sign in response:', { data, error });
+
       if (error) {
+        console.error('Sign in error:', error);
         setError(error.message);
+        setIsLoading(false);
       } else if (data.user) {
+        console.log('Sign in successful! User:', data.user.id);
         router.push('/dashboard');
+      } else {
+        console.warn('No error but no user returned');
+        setError('Sign in completed but no user data returned.');
+        setIsLoading(false);
       }
     } catch (err: any) {
-      setError('An unexpected error occurred');
-    } finally {
+      console.error('Unexpected error during sign in:', err);
+      setError(err.message || 'An unexpected error occurred');
       setIsLoading(false);
     }
   };
