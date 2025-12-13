@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { useSignUp } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -33,7 +32,6 @@ interface FormErrors {
 }
 
 const SignUpBlock = () => {
-  const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
   const [formData, setFormData] = useState<SignUpFormData>({
     email: "",
@@ -93,42 +91,48 @@ const SignUpBlock = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm() || !isLoaded) return;
+    if (!validateForm()) return;
 
     setIsLoading(true);
     setErrors({});
 
     try {
-      // Create the account - with verification disabled, this should complete immediately
-      const result = await signUp.create({
-        emailAddress: formData.email.trim(),
-        password: formData.password,
+      const response = await fetch('/api/auth/sign-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email.trim(),
+          password: formData.password,
+        }),
       });
 
-      // Check if sign-up is complete (should be when verification is disabled)
-      if (result.status === "complete" && result.createdSessionId) {
-        // Sign-up complete, activate session and redirect to dashboard
-        await setActive({ session: result.createdSessionId });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Sign up failed');
+      }
+
+      // If session is returned, redirect to dashboard
+      if (data.session) {
         router.push("/dashboard");
-      } else if (result.status === "missing_requirements") {
-        // Still needs verification - redirect to sign-in
-        setErrors({
-          general: "Account created! Please sign in to continue."
-        });
-        setTimeout(() => {
-          router.push(`/sign-in?email=${encodeURIComponent(formData.email)}`);
-        }, 1500);
       } else {
-        // Unknown status
-        setErrors({
-          general: "Account created but session setup failed. Please try signing in."
-        });
+        // Account created but needs email verification
+        router.push(`/sign-in?email=${encodeURIComponent(formData.email)}&message=Check your email to verify your account`);
       }
     } catch (err: any) {
       console.error("Sign-up error:", err);
-      setErrors({
-        general: err.errors?.[0]?.message || "Failed to create account",
-      });
+
+      const errorMessage = err.message || "";
+
+      if (errorMessage.includes("already registered") || errorMessage.includes("exists")) {
+        setErrors({
+          general: "An account with this email already exists. Please sign in instead."
+        });
+      } else {
+        setErrors({
+          general: errorMessage || "Failed to create account",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -138,7 +142,6 @@ const SignUpBlock = () => {
     <Card className="w-full max-w-sm mx-auto flex flex-col gap-6">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
-        <CardDescription>Sign up to get started</CardDescription>
       </CardHeader>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -169,7 +172,7 @@ const SignUpBlock = () => {
             <Input
               id="password"
               type="password"
-              placeholder="Create a password"
+              placeholder="Create a password (min 8 characters)"
               value={formData.password}
               onChange={(e) => handleInputChange("password", e.target.value)}
               disabled={isLoading}
@@ -223,9 +226,6 @@ const SignUpBlock = () => {
               <p className="text-sm text-red-600 ml-6">{errors.agreeToTerms}</p>
             )}
           </div>
-
-          {/* Clerk Smart CAPTCHA element */}
-          <div id="clerk-captcha" />
         </CardContent>
 
         <CardFooter className="flex flex-col gap-4">

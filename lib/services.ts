@@ -1,369 +1,409 @@
-import { sql } from "./db";
+// ============================================================================
+// SENTYR.AI - DATA SERVICES
+// ============================================================================
 
-// ============================================
-// TYPES
-// ============================================
+import { query, queryOne, insert, update, remove } from './db';
+import type { User, CompanyProfile, Organization, Opportunity, Analysis, OpportunityMatch } from './db';
 
-export interface CompanyProfile {
-  id: string;
-  user_id: string;
-  organization_id?: string;
-  naics_codes?: string[];
-  primary_naics?: string;
-  core_competencies?: string[];
-  keywords?: string[];
-  service_areas?: string[];
-  certifications?: string[];
-  set_asides?: string[];
-  is_small_business?: boolean;
-  employee_count?: number;
-  annual_revenue?: number;
-  preferred_agencies?: string[];
-  excluded_agencies?: string[];
-  min_contract_value?: number;
-  max_contract_value?: number;
-  preferred_states?: string[];
-  remote_work_capable?: boolean;
-  current_contracts?: number;
-  max_concurrent_contracts?: number;
-  createdAt: string;
-  updatedAt: string;
-}
+// ============================================================================
+// USER SERVICE
+// ============================================================================
 
-export interface Analysis {
-  id: string;
-  user_id: string;
-  organization_id?: string;
-  opportunity_id?: string;
-  document_name?: string;
-  document_url?: string;
-  document_type?: string;
-  extracted_data: any;
-  bid_score?: number;
-  bid_recommendation?: string;
-  score_breakdown?: any;
-  ai_analysis?: any;
-  strengths?: string[];
-  weaknesses?: string[];
-  gaps?: string[];
-  recommended_actions?: string[];
-  compliance_matrix?: any;
-  status?: string;
-  decision?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export const UserService = {
+  async getById(id: string): Promise<User | null> {
+    return queryOne<User>('SELECT * FROM "user" WHERE "id" = $1', [id]);
+  },
 
-export interface AnalysisCredit {
-  id: string;
-  user_id: string;
-  organization_id?: string;
-  credit_type: "subscription" | "one_time" | "pack";
-  credits_remaining: number;
-  total_credits: number;
-  expires_at?: string;
-  created_at: string;
-}
+  async getByEmail(email: string): Promise<User | null> {
+    return queryOne<User>('SELECT * FROM "user" WHERE "email" = $1', [email]);
+  },
 
-// ============================================
-// COMPANY PROFILE SERVICES
-// ============================================
+  async updateCredits(userId: string, delta: number): Promise<User> {
+    const result = await query<User>(
+      `UPDATE "user"
+       SET "analysis_credits" = COALESCE("analysis_credits", 0) + $1,
+           "updatedAt" = NOW()
+       WHERE "id" = $2
+       RETURNING *`,
+      [delta, userId]
+    );
+    return result[0];
+  },
 
-export async function getCompanyProfile(userId: string): Promise<CompanyProfile | null> {
-  const result = await sql`
-    SELECT * FROM company_profile
-    WHERE user_id = ${userId}
-    LIMIT 1
-  `;
-  return result[0] || null;
-}
+  async setRole(userId: string, role: string): Promise<User> {
+    const result = await query<User>(
+      `UPDATE "user"
+       SET "role" = $1, "updatedAt" = NOW()
+       WHERE "id" = $2
+       RETURNING *`,
+      [role, userId]
+    );
+    return result[0];
+  },
 
-// NOTE: Use generic insert() helper from lib/db.ts instead
-// This function uses old schema fields and needs to be refactored
-export async function createCompanyProfile(data: Partial<CompanyProfile> & { user_id: string }): Promise<CompanyProfile> {
-  const result = await sql`
-    INSERT INTO company_profile (
-      user_id,
-      organization_id,
-      naics_codes,
-      core_competencies,
-      certifications,
-      set_asides
-    ) VALUES (
-      ${data.user_id},
-      ${data.organization_id || null},
-      ${data.naics_codes || []},
-      ${data.core_competencies || []},
-      ${data.certifications || []},
-      ${data.set_asides || []}
-    )
-    RETURNING *
-  `;
-  return result[0];
-}
+  async getCredits(userId: string): Promise<number> {
+    const user = await this.getById(userId);
+    return user?.analysis_credits || 0;
+  },
+};
 
-export async function updateCompanyProfile(
-  userId: string,
-  data: Partial<Omit<CompanyProfile, "id" | "user_id" | "created_at" | "updated_at">>
-): Promise<CompanyProfile> {
-  const updates: string[] = [];
-  const values: any[] = [];
-  let paramIndex = 1;
+// ============================================================================
+// ORGANIZATION SERVICE
+// ============================================================================
 
-  Object.entries(data).forEach(([key, value]) => {
-    if (value !== undefined) {
-      if (key === "contract_value_range") {
-        updates.push(`${key} = $${paramIndex}::jsonb`);
-        values.push(JSON.stringify(value));
-      } else if (Array.isArray(value)) {
-        updates.push(`${key} = $${paramIndex}::text[]`);
-        values.push(value);
-      } else {
-        updates.push(`${key} = $${paramIndex}`);
-        values.push(value);
-      }
+export const OrganizationService = {
+  async getById(id: string): Promise<Organization | null> {
+    return queryOne<Organization>('SELECT * FROM "organization" WHERE "id" = $1', [id]);
+  },
+
+  async getByOwnerId(ownerId: string): Promise<Organization | null> {
+    return queryOne<Organization>('SELECT * FROM "organization" WHERE "owner_id" = $1', [ownerId]);
+  },
+
+  async create(data: Partial<Organization>): Promise<Organization> {
+    return insert<Organization>('organization', data);
+  },
+
+  async update(id: string, data: Partial<Organization>): Promise<Organization> {
+    return update<Organization>('organization', id, data);
+  },
+};
+
+// ============================================================================
+// COMPANY PROFILE SERVICE
+// ============================================================================
+
+export const CompanyProfileService = {
+  async getByUserId(userId: string): Promise<CompanyProfile | null> {
+    return queryOne<CompanyProfile>(
+      'SELECT * FROM "company_profile" WHERE "user_id" = $1',
+      [userId]
+    );
+  },
+
+  async create(data: Partial<CompanyProfile>): Promise<CompanyProfile> {
+    return insert<CompanyProfile>('company_profile', data);
+  },
+
+  async update(userId: string, data: Partial<CompanyProfile>): Promise<CompanyProfile> {
+    const existing = await this.getByUserId(userId);
+    if (!existing) {
+      return this.create({ ...data, user_id: userId });
+    }
+    return update<CompanyProfile>('company_profile', existing.id, data);
+  },
+
+  async upsert(userId: string, data: Partial<CompanyProfile>): Promise<CompanyProfile> {
+    const existing = await this.getByUserId(userId);
+    if (existing) {
+      return update<CompanyProfile>('company_profile', existing.id, data);
+    }
+    return insert<CompanyProfile>('company_profile', { ...data, user_id: userId });
+  },
+};
+
+// ============================================================================
+// OPPORTUNITY SERVICE
+// ============================================================================
+
+export const OpportunityService = {
+  async getById(id: string): Promise<Opportunity | null> {
+    return queryOne<Opportunity>('SELECT * FROM "opportunity" WHERE "id" = $1', [id]);
+  },
+
+  async getActive(limit = 50): Promise<Opportunity[]> {
+    return query<Opportunity>(
+      `SELECT * FROM "opportunity"
+       WHERE "active" = true
+       AND ("response_deadline" IS NULL OR "response_deadline" > NOW())
+       ORDER BY "posted_date" DESC
+       LIMIT $1`,
+      [limit]
+    );
+  },
+
+  async search(filters: {
+    naics?: string;
+    agency?: string;
+    setAside?: string;
+    state?: string;
+    keyword?: string;
+  }): Promise<Opportunity[]> {
+    let whereClause = 'WHERE "active" = true';
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (filters.naics) {
+      whereClause += ` AND "naics_code" LIKE $${paramIndex}`;
+      params.push(filters.naics + '%');
       paramIndex++;
     }
-  });
-
-  values.push(userId);
-
-  const query = `
-    UPDATE company_profile
-    SET ${updates.join(", ")}, updated_at = NOW()
-    WHERE user_id = $${paramIndex}
-    RETURNING *
-  `;
-
-  const result = await sql(query, values);
-  return result[0];
-}
-
-// ============================================
-// ANALYSIS SERVICES
-// ============================================
-
-export async function getAnalyses(userId: string, limit = 10): Promise<Analysis[]> {
-  const result = await sql`
-    SELECT * FROM analysis
-    WHERE user_id = ${userId}
-    ORDER BY created_at DESC
-    LIMIT ${limit}
-  `;
-  return result;
-}
-
-export async function getAnalysisById(id: string, userId: string): Promise<Analysis | null> {
-  const result = await sql`
-    SELECT * FROM analysis
-    WHERE id = ${id} AND user_id = ${userId}
-    LIMIT 1
-  `;
-  return result[0] || null;
-}
-
-export async function createAnalysis(data: {
-  user_id: string;
-  organization_id?: string;
-  document_type?: string;
-  document_name?: string;
-  document_url?: string;
-  opportunity_id?: string;
-}): Promise<Analysis> {
-  const result = await sql`
-    INSERT INTO analysis (
-      user_id,
-      organization_id,
-      document_type,
-      document_name,
-      document_url,
-      opportunity_id,
-      status
-    ) VALUES (
-      ${data.user_id},
-      ${data.organization_id || null},
-      ${data.document_type || null},
-      ${data.document_name || null},
-      ${data.document_url || null},
-      ${data.opportunity_id || null},
-      'draft'
-    )
-    RETURNING *
-  `;
-  return result[0];
-}
-
-export async function updateAnalysis(
-  id: string,
-  userId: string,
-  data: Partial<Omit<Analysis, "id" | "user_id" | "created_at">>
-): Promise<Analysis> {
-  const updates: string[] = [];
-  const values: any[] = [];
-  let paramIndex = 1;
-
-  Object.entries(data).forEach(([key, value]) => {
-    if (value !== undefined) {
-      if (key === "extracted_data") {
-        updates.push(`${key} = $${paramIndex}::jsonb`);
-        values.push(JSON.stringify(value));
-      } else {
-        updates.push(`${key} = $${paramIndex}`);
-        values.push(value);
-      }
+    if (filters.agency) {
+      whereClause += ` AND "agency" ILIKE $${paramIndex}`;
+      params.push('%' + filters.agency + '%');
       paramIndex++;
     }
-  });
-
-  values.push(id, userId);
-
-  const query = `
-    UPDATE analysis
-    SET ${updates.join(", ")}, updated_at = NOW()
-    WHERE id = $${paramIndex} AND user_id = $${paramIndex + 1}
-    RETURNING *
-  `;
-
-  const result = await sql(query, values);
-  return result[0];
-}
-
-// ============================================
-// CREDITS SERVICES (Using credit_transaction table)
-// ============================================
-
-export async function getCredits(userId: string): Promise<AnalysisCredit[]> {
-  // Get credit balance from transactions
-  const result = await sql`
-    SELECT
-      id,
-      user_id,
-      type as credit_type,
-      balance_after as credits_remaining,
-      amount as total_credits,
-      "createdAt" as created_at
-    FROM credit_transaction
-    WHERE user_id = ${userId}
-    ORDER BY "createdAt" DESC
-    LIMIT 10
-  `;
-  return result.map((r: any) => ({
-    ...r,
-    expires_at: null,
-    organization_id: null,
-  }));
-}
-
-export async function getTotalCredits(userId: string): Promise<number> {
-  // Get the latest balance
-  const result = await sql`
-    SELECT balance_after
-    FROM credit_transaction
-    WHERE user_id = ${userId}
-    ORDER BY "createdAt" DESC
-    LIMIT 1
-  `;
-  return Number(result[0]?.balance_after || 0);
-}
-
-export async function consumeCredit(userId: string, creditType?: string): Promise<boolean> {
-  try {
-    // Get current balance
-    const currentBalance = await getTotalCredits(userId);
-
-    if (currentBalance <= 0) {
-      return false;
+    if (filters.setAside) {
+      whereClause += ` AND "set_aside" = $${paramIndex}`;
+      params.push(filters.setAside);
+      paramIndex++;
+    }
+    if (filters.state) {
+      whereClause += ` AND "pop_state" = $${paramIndex}`;
+      params.push(filters.state);
+      paramIndex++;
+    }
+    if (filters.keyword) {
+      whereClause += ` AND ("title" ILIKE $${paramIndex} OR "description" ILIKE $${paramIndex})`;
+      params.push('%' + filters.keyword + '%');
+      paramIndex++;
     }
 
-    // Create a debit transaction
-    await sql`
-      INSERT INTO credit_transaction (
-        user_id,
-        type,
-        amount,
-        balance_after,
-        description
-      ) VALUES (
-        ${userId},
-        'debit',
-        -1,
-        ${currentBalance - 1},
-        ${creditType ? `Analysis (${creditType})` : 'Analysis'}
-      )
-    `;
+    return query<Opportunity>(
+      `SELECT * FROM "opportunity" ${whereClause} ORDER BY "posted_date" DESC LIMIT 100`,
+      params
+    );
+  },
+
+  async upsertFromSAM(data: Partial<Opportunity>): Promise<Opportunity> {
+    if (data.notice_id) {
+      const existing = await queryOne<Opportunity>(
+        'SELECT * FROM "opportunity" WHERE "notice_id" = $1',
+        [data.notice_id]
+      );
+      if (existing) {
+        return update<Opportunity>('opportunity', existing.id, data);
+      }
+    }
+    return insert<Opportunity>('opportunity', data);
+  },
+};
+
+// ============================================================================
+// ANALYSIS SERVICE
+// ============================================================================
+
+export const AnalysisService = {
+  async getById(id: string): Promise<Analysis | null> {
+    return queryOne<Analysis>('SELECT * FROM "analysis" WHERE "id" = $1', [id]);
+  },
+
+  async getByUserId(userId: string): Promise<Analysis[]> {
+    return query<Analysis>(
+      'SELECT * FROM "analysis" WHERE "user_id" = $1 ORDER BY "createdAt" DESC',
+      [userId]
+    );
+  },
+
+  async create(data: Partial<Analysis>): Promise<Analysis> {
+    return insert<Analysis>('analysis', {
+      ...data,
+      extracted_data: data.extracted_data || {},
+      strengths: data.strengths || [],
+      weaknesses: data.weaknesses || [],
+      gaps: data.gaps || [],
+      status: data.status || 'processing',
+    });
+  },
+
+  async update(id: string, data: Partial<Analysis>): Promise<Analysis> {
+    return update<Analysis>('analysis', id, data);
+  },
+
+  async delete(id: string): Promise<any> {
+    return remove('analysis', id);
+  },
+
+  async getStats(userId: string) {
+    return queryOne<{ total: number; pursuing: number; avg_score: number }>(
+      `SELECT
+         COUNT(*)::int as total,
+         COUNT(*) FILTER (WHERE "decision" = 'pursuing')::int as pursuing,
+         COALESCE(AVG("bid_score"), 0)::int as avg_score
+       FROM "analysis"
+       WHERE "user_id" = $1`,
+      [userId]
+    );
+  },
+};
+
+// ============================================================================
+// OPPORTUNITY MATCH SERVICE
+// ============================================================================
+
+export const OpportunityMatchService = {
+  async getByUserId(userId: string, minScore = 0): Promise<any[]> {
+    return query(
+      `SELECT om.*,
+              o.title,
+              o.agency,
+              o.estimated_value,
+              o.response_deadline,
+              o.naics_code
+       FROM "opportunity_match" om
+       JOIN "opportunity" o ON o.id = om.opportunity_id
+       WHERE om.user_id = $1 AND om.overall_score >= $2
+       ORDER BY om.overall_score DESC`,
+      [userId, minScore]
+    );
+  },
+
+  async upsert(data: Partial<OpportunityMatch>): Promise<OpportunityMatch> {
+    const existing = await queryOne<OpportunityMatch>(
+      `SELECT * FROM "opportunity_match"
+       WHERE "user_id" = $1 AND "opportunity_id" = $2`,
+      [data.user_id, data.opportunity_id]
+    );
+    if (existing) {
+      return update<OpportunityMatch>('opportunity_match', existing.id, data);
+    }
+    return insert<OpportunityMatch>('opportunity_match', {
+      ...data,
+      strengths: data.strengths || [],
+      weaknesses: data.weaknesses || [],
+      gaps: data.gaps || [],
+    });
+  },
+
+  async setAction(id: string, action: string, notes?: string): Promise<OpportunityMatch> {
+    return update<OpportunityMatch>('opportunity_match', id, {
+      user_action: action,
+      notes,
+    });
+  },
+
+  async getTopMatches(userId: string, limit = 10, minScore = 60) {
+    return query(
+      `SELECT om.*,
+              o.title,
+              o.agency,
+              o.estimated_value,
+              o.response_deadline,
+              o.naics_code,
+              o.set_aside
+       FROM "opportunity_match" om
+       JOIN "opportunity" o ON o.id = om.opportunity_id
+       WHERE om.user_id = $1
+         AND om.overall_score >= $3
+         AND o.active = true
+       ORDER BY om.overall_score DESC
+       LIMIT $2`,
+      [userId, limit, minScore]
+    );
+  },
+
+  async getStats(userId: string) {
+    return queryOne(
+      `SELECT
+         COUNT(*)::int as total_matches,
+         COUNT(*) FILTER (WHERE overall_score >= 80)::int as excellent_matches,
+         COUNT(*) FILTER (WHERE overall_score >= 60 AND overall_score < 80)::int as good_matches,
+         COUNT(*) FILTER (WHERE overall_score < 60)::int as fair_matches,
+         COALESCE(AVG(overall_score), 0)::int as avg_score
+       FROM "opportunity_match"
+       WHERE user_id = $1`,
+      [userId]
+    );
+  },
+};
+
+// ============================================================================
+// CREDIT SERVICE
+// ============================================================================
+
+export const CreditService = {
+  async checkCredits(userId: string): Promise<number> {
+    const user = await UserService.getById(userId);
+    return user?.analysis_credits || 0;
+  },
+
+  async useCredit(userId: string, analysisId?: string): Promise<boolean> {
+    const credits = await this.checkCredits(userId);
+    if (credits < 1) {
+      throw new Error('Insufficient credits');
+    }
+
+    await UserService.updateCredits(userId, -1);
+
+    // Log the credit transaction
+    await insert('credit_transaction', {
+      user_id: userId,
+      type: 'usage',
+      amount: -1,
+      balance_after: credits - 1,
+      description: 'Analysis credit used',
+      reference_id: analysisId,
+    });
 
     return true;
-  } catch (error) {
-    console.error("Error consuming credit:", error);
-    return false;
-  }
-}
+  },
 
-export async function addCredits(data: {
-  user_id: string;
-  organization_id?: string;
-  credit_type: "subscription" | "one_time" | "pack";
-  total_credits: number;
-  expires_at?: Date;
-}): Promise<AnalysisCredit> {
-  // Get current balance
-  const currentBalance = await getTotalCredits(data.user_id);
+  async addCredits(userId: string, amount: number, description: string): Promise<void> {
+    const credits = await this.checkCredits(userId);
+    await UserService.updateCredits(userId, amount);
 
-  // Create a credit transaction
-  const result = await sql`
-    INSERT INTO credit_transaction (
-      user_id,
-      type,
+    await insert('credit_transaction', {
+      user_id: userId,
+      type: 'purchase',
       amount,
-      balance_after,
-      description
-    ) VALUES (
-      ${data.user_id},
-      'credit',
-      ${data.total_credits},
-      ${currentBalance + data.total_credits},
-      ${`Credit: ${data.credit_type}`}
-    )
-    RETURNING *
-  `;
+      balance_after: credits + amount,
+      description,
+    });
+  },
 
-  const transaction = result[0];
+  async getTransactionHistory(userId: string, limit = 50) {
+    return query(
+      `SELECT * FROM "credit_transaction"
+       WHERE user_id = $1
+       ORDER BY "createdAt" DESC
+       LIMIT $2`,
+      [userId, limit]
+    );
+  },
+};
 
-  return {
-    id: transaction.id,
-    user_id: transaction.user_id,
-    credit_type: data.credit_type,
-    credits_remaining: transaction.balance_after,
-    total_credits: transaction.amount,
-    expires_at: data.expires_at?.toISOString(),
-    created_at: transaction.createdAt,
-    organization_id: data.organization_id,
-  };
-}
-
-// ============================================
+// ============================================================================
 // DASHBOARD STATS
-// ============================================
+// ============================================================================
 
 export async function getDashboardStats(userId: string) {
-  const [analyses, credits] = await Promise.all([
-    sql`
-      SELECT
-        COUNT(*) as total_analyses,
-        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_analyses,
-        COUNT(CASE WHEN status = 'processing' THEN 1 END) as processing_analyses,
-        COUNT(CASE WHEN bid_recommendation = 'STRONG_BID' THEN 1 END) as strong_bids
-      FROM analysis
-      WHERE user_id = ${userId}
-    `,
-    getTotalCredits(userId),
+  const [analysisStats, matchStats, credits] = await Promise.all([
+    AnalysisService.getStats(userId),
+    OpportunityMatchService.getStats(userId),
+    CreditService.checkCredits(userId),
   ]);
 
   return {
-    total_analyses: Number(analyses[0].total_analyses),
-    completed_analyses: Number(analyses[0].completed_analyses),
-    processing_analyses: Number(analyses[0].processing_analyses),
-    strong_bids: Number(analyses[0].strong_bids),
+    analyses: {
+      total: analysisStats?.total || 0,
+      pursuing: analysisStats?.pursuing || 0,
+      avg_score: analysisStats?.avg_score || 0,
+    },
+    matches: {
+      total: matchStats?.total_matches || 0,
+      excellent: matchStats?.excellent_matches || 0,
+      good: matchStats?.good_matches || 0,
+      fair: matchStats?.fair_matches || 0,
+      avg_score: matchStats?.avg_score || 0,
+    },
     credits_remaining: credits,
   };
 }
+
+// ============================================================================
+// LEGACY FUNCTION EXPORTS (for backward compatibility)
+// ============================================================================
+
+export const getCompanyProfile = CompanyProfileService.getByUserId;
+export const createCompanyProfile = CompanyProfileService.create;
+export const updateCompanyProfile = CompanyProfileService.update;
+
+export const getAnalyses = AnalysisService.getByUserId;
+export const getAnalysisById = AnalysisService.getById;
+export const createAnalysis = AnalysisService.create;
+export const updateAnalysis = AnalysisService.update;
+
+export const getCredits = CreditService.getTransactionHistory;
+export const getTotalCredits = CreditService.checkCredits;
+export const consumeCredit = CreditService.useCredit;
+export const addCredits = CreditService.addCredits;

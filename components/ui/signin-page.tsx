@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, LucideIcon } from "lucide-react";
-import { useSignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 // Google Icon Component
 interface GoogleIconProps {
@@ -211,6 +211,7 @@ interface ButtonProps {
   children: React.ReactNode;
   className?: string;
   fullWidth?: boolean;
+  disabled?: boolean;
 }
 
 const Button = ({
@@ -219,7 +220,8 @@ const Button = ({
   onClick,
   children,
   className = "",
-  fullWidth = false
+  fullWidth = false,
+  disabled = false
 }: ButtonProps) => {
   const baseStyles = "h-11 rounded-md font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background flex items-center justify-center gap-2";
 
@@ -235,7 +237,8 @@ const Button = ({
     <button
       type={type}
       onClick={onClick}
-      className={`${baseStyles} ${variants[variant]} ${widthClass} ${className}`}
+      disabled={disabled}
+      className={`${baseStyles} ${variants[variant]} ${widthClass} ${className} disabled:opacity-50 disabled:cursor-not-allowed`}
     >
       {children}
     </button>
@@ -270,8 +273,8 @@ interface SocialButtonProps {
 const SocialButton = ({ provider, onClick, children }: SocialButtonProps) => {
   const icons = {
     google: <GoogleIcon className="h-5 w-5" />,
-    github: null, // Add GitHub icon if needed
-    facebook: null // Add Facebook icon if needed
+    github: null,
+    facebook: null
   };
 
   return (
@@ -282,7 +285,7 @@ const SocialButton = ({ provider, onClick, children }: SocialButtonProps) => {
   );
 };
 
-// Animated Blob Component
+// Animated Blob Component - Changed from purple to indigo
 interface AnimatedBlobProps {
   color: string;
   position: string;
@@ -293,14 +296,14 @@ const AnimatedBlob = ({ color, position, delay = "" }: AnimatedBlobProps) => (
   <div className={`absolute ${position} w-72 h-72 ${color} rounded-full mix-blend-screen filter blur-xl opacity-70 animate-blob ${delay}`} />
 );
 
-// Gradient Wave Component
+// Gradient Wave Component - Changed from purple to indigo
 const GradientWave = () => (
   <div className="absolute inset-0 opacity-20">
     <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 1440 560">
       <defs>
         <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#4f3af6" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.1" />
+          <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.1" />
         </linearGradient>
       </defs>
       <path fill="url(#gradient1)" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,218.7C672,235,768,245,864,234.7C960,224,1056,192,1152,186.7C1248,181,1344,203,1392,213.3L1440,224L1440,560L1392,560C1344,560,1248,560,1152,560C1056,560,960,560,864,560C768,560,672,560,576,560C480,560,384,560,288,560C192,560,96,560,48,560L0,560Z" />
@@ -320,7 +323,7 @@ const ProgressDots = ({ count = 3, activeIndex = 2, color = "white" }: ProgressD
     {Array.from({ length: count }).map((_, index) => (
       <div
         key={index}
-        className={`w-2 h-2 rounded-full ${index <= activeIndex ? `bg-${color} opacity-${100 - (activeIndex - index) * 20}` : `bg-${color} opacity-40`}`}
+        className={`w-2 h-2 rounded-full bg-${color}/${index <= activeIndex ? (100 - (activeIndex - index) * 20) : 40}`}
       />
     ))}
   </div>
@@ -375,7 +378,7 @@ const HeroSection = ({ title, description, icon, showProgress = true }: HeroSect
   </div>
 );
 
-// Gradient Background Component
+// Gradient Background Component - Changed from purple to indigo
 interface GradientBackgroundProps {
   children: React.ReactNode;
   variant?: "default" | "dark" | "light";
@@ -384,8 +387,8 @@ interface GradientBackgroundProps {
 const GradientBackground = ({ children, variant = "dark" }: GradientBackgroundProps) => {
   const variants = {
     default: "bg-gradient-to-br from-background to-secondary",
-    dark: "bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900",
-    light: "bg-gradient-to-br from-white via-purple-50 to-purple-50"
+    dark: "bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900",
+    light: "bg-gradient-to-br from-white via-blue-50 to-indigo-50"
   };
 
   return (
@@ -393,9 +396,9 @@ const GradientBackground = ({ children, variant = "dark" }: GradientBackgroundPr
       <div className={`absolute inset-0 ${variants[variant]}`} />
 
       <div className="absolute inset-0">
-        <AnimatedBlob color="bg-purple-500/30" position="top-0 -left-4" />
-        <AnimatedBlob color="bg-violet-500/30" position="top-0 -right-4" delay="animation-delay-2000" />
-        <AnimatedBlob color="bg-purple-600/30" position="-bottom-8 left-20" delay="animation-delay-4000" />
+        <AnimatedBlob color="bg-indigo-500/30" position="top-0 -left-4" />
+        <AnimatedBlob color="bg-cyan-500/30" position="top-0 -right-4" delay="animation-delay-2000" />
+        <AnimatedBlob color="bg-indigo-600/30" position="-bottom-8 left-20" delay="animation-delay-4000" />
       </div>
 
       <GradientWave />
@@ -428,65 +431,56 @@ const FormFooter = ({ text, linkText, linkHref }: FormFooterProps) => (
 // ============================================================================
 
 const SignIn = () => {
-  const { isLoaded, signIn, setActive } = useSignIn();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!isLoaded) return;
-
     setIsLoading(true);
     setError("");
 
     try {
-      const result = await signIn.create({
-        identifier: email.trim(),
-        password: password,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
       });
 
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        router.push("/dashboard");
-      } else {
-        setError("Sign-in incomplete. Please try again.");
+      if (error) {
+        setError(error.message);
+      } else if (data.user) {
+        router.push('/dashboard');
       }
     } catch (err: any) {
-      console.error("Sign-in error:", err);
-
-      const errorMessage = err.errors?.[0]?.message || "";
-      const errorCode = err.errors?.[0]?.code || "";
-
-      if (errorCode === "form_identifier_not_found" || errorMessage.includes("Identifier is invalid")) {
-        setError("No account found with this email. Please sign up first.");
-      } else if (errorCode === "form_password_incorrect" || errorMessage.includes("password")) {
-        setError("Incorrect password. Please try again.");
-      } else {
-        setError(errorMessage || "Invalid email or password");
-      }
+      setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    if (!isLoaded) return;
+    setIsLoading(true);
+    setError("");
 
     try {
-      await signIn.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/dashboard",
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
       });
-    } catch (err: any) {
-      console.error("Google sign-in error:", err);
-      setError("Failed to sign in with Google. Please try again.");
+
+      if (error) {
+        setError(error.message);
+        setIsLoading(false);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+      setIsLoading(false);
     }
   };
 
@@ -501,13 +495,13 @@ const SignIn = () => {
           />
 
           <Card className="p-6 sm:p-8 shadow-sm">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-                  {error}
-                </div>
-              )}
+            {error && (
+              <div className="mb-4 p-3 rounded-md bg-red-50 border border-red-200">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
 
+            <form onSubmit={handleSubmit} className="space-y-6">
               <InputField
                 id="email"
                 type="email"
@@ -540,7 +534,7 @@ const SignIn = () => {
                 <Link href="/forgot-password">Forgot password?</Link>
               </div>
 
-              <Button type="submit" variant="primary" fullWidth className={isLoading ? "opacity-50 cursor-not-allowed" : ""}>
+              <Button type="submit" variant="primary" fullWidth disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>
 

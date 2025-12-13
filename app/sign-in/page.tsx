@@ -1,21 +1,20 @@
 "use client";
 
-import SignInPage from "@/components/ui/signin-page";
+import { SupabaseSignIn } from "@/components/ui/supabase-sign-in";
 import { Suspense } from "react";
 
-// Force dynamic rendering for pages using auth
 export const dynamic = 'force-dynamic';
 
 export default function SignIn() {
   return (
     <Suspense
       fallback={
-        <div className="flex flex-col justify-center items-center w-full h-screen">
-          <div className="max-w-md w-full bg-gray-200 dark:bg-gray-800 animate-pulse rounded-lg h-96"></div>
+        <div className="flex flex-col justify-center items-center w-full h-screen bg-black">
+          <div className="max-w-sm w-full bg-black/40 backdrop-blur-xl animate-pulse rounded-2xl h-96"></div>
         </div>
       }
     >
-      <SignInPage />
+      <SupabaseSignIn />
     </Suspense>
   );
 }

@@ -1,5 +1,5 @@
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SectionCards } from "./_components/section-cards";
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,32 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export default async function Dashboard() {
-  const result = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const cookieStore = await cookies();
 
-  if (!result?.session?.userId) {
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // Ignore - happens during static generation
+          }
+        },
+      },
+    }
+  );
+
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
     redirect("/sign-in");
   }
 

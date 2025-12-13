@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
 import type { CompanyProfile, Analysis, AnalysisCredit } from "@/lib/services";
 
 // ============================================
@@ -9,19 +8,13 @@ import type { CompanyProfile, Analysis, AnalysisCredit } from "@/lib/services";
 // ============================================
 
 export function useCompanyProfile() {
-  const { user, isLoaded: isUserLoaded } = useUser();
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isUserLoaded || !user) {
-      setLoading(false);
-      return;
-    }
-
     fetchProfile();
-  }, [user, isUserLoaded]);
+  }, []);
 
   const fetchProfile = async () => {
     try {
@@ -105,19 +98,13 @@ export function useCompanyProfile() {
 // ============================================
 
 export function useAnalyses() {
-  const { user, isLoaded: isUserLoaded } = useUser();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isUserLoaded || !user) {
-      setLoading(false);
-      return;
-    }
-
     fetchAnalyses();
-  }, [user, isUserLoaded]);
+  }, []);
 
   const fetchAnalyses = async () => {
     try {
@@ -216,20 +203,14 @@ export function useAnalysis(id: string) {
 // ============================================
 
 export function useCredits() {
-  const { user, isLoaded: isUserLoaded } = useUser();
   const [credits, setCredits] = useState<AnalysisCredit[]>([]);
   const [totalCredits, setTotalCredits] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isUserLoaded || !user) {
-      setLoading(false);
-      return;
-    }
-
     fetchCredits();
-  }, [user, isUserLoaded]);
+  }, []);
 
   const fetchCredits = async () => {
     try {
@@ -262,7 +243,6 @@ export function useCredits() {
 // ============================================
 
 export function useDashboardStats() {
-  const { user, isLoaded: isUserLoaded } = useUser();
   const [stats, setStats] = useState({
     total_analyses: 0,
     completed_analyses: 0,
@@ -274,13 +254,8 @@ export function useDashboardStats() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isUserLoaded || !user) {
-      setLoading(false);
-      return;
-    }
-
     fetchStats();
-  }, [user, isUserLoaded]);
+  }, []);
 
   const fetchStats = async () => {
     try {

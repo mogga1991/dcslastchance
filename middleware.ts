@@ -1,62 +1,76 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const isPublicRoute = createRouteMatcher([
+const publicRoutes = [
   '/',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/api/payments/webhooks(.*)',
+  '/sign-in',
+  '/sign-up',
+  '/auth/callback',
+  '/api/auth',
+  '/api/payments/webhooks',
   '/privacy-policy',
   '/terms-of-service',
-  '/api/public(.*)',
+  '/api/public',
   '/hero-demo',
-])
+]
 
-// Fallback middleware for when Clerk is not configured (build time)
-function fallbackMiddleware(request: NextRequest) {
-  const response = NextResponse.next()
-
-  // Add security headers even when Clerk is not available
-  const securityHeaders = {
-    "X-Frame-Options": "DENY",
-    "X-Content-Type-Options": "nosniff",
-    "X-XSS-Protection": "1; mode=block",
-    "Referrer-Policy": "strict-origin-when-cross-origin",
-    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), interest-cohort=()",
-  };
-
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
-
-  return response
+function isPublicRoute(pathname: string): boolean {
+  return publicRoutes.some(route => pathname.startsWith(route))
 }
 
-// Only use Clerk middleware if keys are available
-const middleware = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-  ? clerkMiddleware((auth, request) => {
-      const { userId } = auth()
-      const { pathname } = request.nextUrl
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
 
-      // Allow public routes
-      if (isPublicRoute(request)) {
-        return NextResponse.next()
-      }
+  // Create response
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-      // Redirect unauthenticated users to sign-in
-      if (!userId && pathname.startsWith('/dashboard')) {
-        const signInUrl = new URL('/sign-in', request.url)
-        signInUrl.searchParams.set('redirect_url', pathname)
-        return NextResponse.redirect(signInUrl)
-      }
+  // Create Supabase client
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set(name, value)
+          )
+          response = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
 
-      // Redirect authenticated users away from auth pages
-      if (userId && (pathname === '/sign-in' || pathname === '/sign-up')) {
-        return NextResponse.redirect(new URL('/dashboard', request.url))
-      }
+  // Get session
+  const { data: { session } } = await supabase.auth.getSession()
 
-      const response = NextResponse.next()
+  // Allow public routes
+  if (isPublicRoute(pathname)) {
+    // Redirect authenticated users away from auth pages
+    if (session && (pathname === '/sign-in' || pathname === '/sign-up')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+    return response
+  }
+
+  // Redirect unauthenticated users to sign-in
+  if (!session && pathname.startsWith('/dashboard')) {
+    const signInUrl = new URL('/sign-in', request.url)
+    signInUrl.searchParams.set('redirect_url', pathname)
+    return NextResponse.redirect(signInUrl)
+  }
 
   // Add comprehensive security headers
   const securityHeaders = {
@@ -78,12 +92,12 @@ const middleware = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
     // Content Security Policy
     "Content-Security-Policy": [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://js.stripe.com https://*.clerk.accounts.dev https://*.clerk.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://js.stripe.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: https: blob:",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://*.supabase.co https://api.openai.com wss://*.supabase.co https://*.clerk.accounts.dev https://*.clerk.com",
-      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.clerk.accounts.dev https://*.clerk.com",
+      "connect-src 'self' https://*.supabase.co https://api.openai.com wss://*.supabase.co",
+      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
       "media-src 'self' blob:",
       "object-src 'none'",
       "base-uri 'self'",
@@ -101,9 +115,8 @@ const middleware = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
     response.headers.set(key, value);
   });
 
-      return response
-    })
-  : fallbackMiddleware
+  return response
+}
 
 export default middleware
 

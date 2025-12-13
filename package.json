@@ -37,6 +37,7 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
     "@shikijs/transformers": "^3.3.0",
+    "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.49.4",
     "@t3-oss/env-nextjs": "^0.13.8",
     "@tabler/icons-react": "^3.34.0",
