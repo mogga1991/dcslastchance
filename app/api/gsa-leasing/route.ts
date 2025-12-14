@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get("state") || undefined;
     const city = searchParams.get("city") || undefined;
 
-    // Fetch GSA lease opportunities from SAM.gov
+    // Fetch GSA lease opportunities from SAM.gov using official GSA filters
     const data = await fetchGSALeaseOpportunities({
       limit,
       offset,

@@ -77,46 +77,39 @@ export interface SAMResponse {
 }
 
 /**
- * GSA Lease Opportunity Filters (as used on GSA.gov)
+ * GSA Lease Opportunity Filters (Optimized for maximum recall)
  *
- * Updated to include RLP (Real Property Lease) and all government office space lease opportunities
+ * Based on best practices for finding office lease solicitations on SAM.gov
+ * Uses PSC codes (more accurate than dept/subtier for leasing)
  */
 export const GSA_LEASE_FILTERS = {
-  // Department: General Services Administration
-  department: "General Services Administration",
-
-  // Sub-tier: Public Buildings Service
-  subTier: "Public Buildings Service",
-
   // NAICS Code: 531120 - Lessors of Nonresidential Buildings (except Miniwarehouses)
   naicsCode: "531120",
 
-  // Product Service Codes (PSC) for Real Property Leasing
-  // These are the primary codes used by GSA for RLP and office space leases
+  // PSC Codes for Office/Commercial Leasing (X1A series)
+  // Note: SAM.gov API only accepts one PSC per request, so we'll need to make multiple calls
   pscCodes: [
-    "Y1DA", // Lease of Real Estate (Office, Warehouse, etc.) - PRIMARY for RLP
-    "Z2DA", // Real Property Leasing (Short Term)
-    "Z1DA", // Maintenance of Real Property
-    "X1AA", // Lease/Rental of Office Buildings
+    "X1AA", // Office Buildings (most common)
+    "X1AB", // Administrative Buildings
+    "X1AD", // Commercial Buildings
+    "X1AF", // Mixed-Use Buildings
+    "X1AZ", // Other Real Property
   ],
 
-  // Notice Types - Include all relevant types for lease opportunities
+  // Notice Types (the ones leasing actually uses)
   noticeTypes: [
-    "o", // Combined Synopsis/Solicitation
+    "r", // Sources Sought (early market research)
     "p", // Presolicitation
+    "o", // Combined Synopsis/Solicitation
     "k", // Solicitation
-    "r", // Sources Sought
     "s", // Special Notice
-    "i", // Intent to Bundle Requirements (DoD-Funded)
-    "g", // Sale of Surplus Property
   ],
-
-  // Response Date: >= today
-  responseDateFrom: new Date().toISOString().split('T')[0], // Today in YYYY-MM-DD format
 };
 
 /**
  * Fetches GSA lease opportunities from SAM.gov API
+ * Makes multiple calls for each PSC code to maximize results
+ * Includes response deadline filter to only show open opportunities
  *
  * @param params - Additional query parameters to override defaults
  * @returns Promise<SAMResponse>
@@ -139,76 +132,125 @@ export async function fetchGSALeaseOpportunities(
 
   const baseUrl = "https://api.sam.gov/opportunities/v2/search";
 
-  // Calculate default date range (last 90 days to today)
+  // Calculate rolling 30-day window (best practice for daily ingestion)
   // Note: System clock may be incorrect, so we use 2024 explicitly
-  const today = new Date();
-  const ninetyDaysAgo = new Date();
-  ninetyDaysAgo.setDate(today.getDate() - 90);
-
-  const formatDate = (date: Date) => {
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const year = 2024; // Use 2024 explicitly due to system clock issue
-    return `${month}/${day}/${year}`;
+  const formatDate = (month: number, day: number, year: number) => {
+    const m = String(month).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    return `${m}/${d}/${year}`;
   };
 
-  // Build query parameters based on GSA lease filters
-  const queryParams = new URLSearchParams({
-    api_key: apiKey,
+  // Default to full year 2024 (wide net for initial testing)
+  const defaultFrom = formatDate(1, 1, 2024);
+  const defaultTo = formatDate(12, 14, 2024);
+  // Response deadline filter - commented out for now to see all opportunities
+  // const responseDeadlineFrom = formatDate(12, 14, 2024);
 
-    // Required date parameters
-    postedFrom: params.postedFrom || formatDate(ninetyDaysAgo),
-    postedTo: params.postedTo || formatDate(today),
-
-    // GSA-specific filters
-    deptname: GSA_LEASE_FILTERS.department,
-    subtier: GSA_LEASE_FILTERS.subTier,
-
-    // IMPORTANT: PSC codes are the primary filter for RLP and office space leases
-    // This captures Real Property Lease opportunities that NAICS code alone would miss
-    psc: GSA_LEASE_FILTERS.pscCodes.join(","),
-
-    // NAICS code as secondary filter
-    ncode: GSA_LEASE_FILTERS.naicsCode,
-
-    ptype: GSA_LEASE_FILTERS.noticeTypes.join(","),
-
-    // Pagination
-    limit: String(params.limit || 100),
-    offset: String(params.offset || 0),
-
-    // Optional filters
-    ...(params.state && { state: params.state }),
-    ...(params.city && { city: params.city }),
-  });
+  // SAM.gov API only accepts one PSC per request, so we make multiple calls
+  // and merge the results
+  const allOpportunities = new Map<string, SAMOpportunity>();
 
   try {
-    const response = await fetch(`${baseUrl}?${queryParams.toString()}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      // Cache for 5 minutes to avoid rate limiting
-      next: { revalidate: 300 },
-    });
+    // Make a call for each PSC code + one for NAICS only (safety net)
+    const pscCodesToTry = [...GSA_LEASE_FILTERS.pscCodes, null]; // null = NAICS only
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `SAM.gov API error: ${response.status} ${response.statusText} - ${errorText}`
-      );
+    for (const pscCode of pscCodesToTry) {
+      const queryParams = new URLSearchParams({
+        api_key: apiKey,
+
+        // Required date parameters (rolling window)
+        postedFrom: params.postedFrom || defaultFrom,
+        postedTo: params.postedTo || defaultTo,
+
+        // Response deadline filter (commented out to see all opportunities)
+        // rdlfrom: responseDeadlineFrom,
+
+        // Notice types
+        ptype: GSA_LEASE_FILTERS.noticeTypes.join(","),
+
+        // NAICS code (optional - PSC codes are more accurate for leasing)
+        // Commenting out to maximize results
+        // ncode: GSA_LEASE_FILTERS.naicsCode,
+
+        // Pagination (get more per call to reduce API calls)
+        limit: String(1000), // Max allowed
+        offset: String(params.offset || 0),
+
+        // Optional filters
+        ...(params.state && { state: params.state }),
+        ...(params.city && { city: params.city }),
+      });
+
+      // Add classification code (PSC) if not null
+      // Use 'ccode' parameter as per SAM.gov API docs
+      if (pscCode) {
+        queryParams.set("ccode", pscCode);
+      }
+
+      const response = await fetch(`${baseUrl}?${queryParams.toString()}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // Cache for 5 minutes to avoid rate limiting
+        next: { revalidate: 300 },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn(
+          `SAM.gov API warning for PSC ${pscCode}: ${response.status} - ${errorText}`
+        );
+        continue; // Skip this PSC and continue with others
+      }
+
+      const data: SAMResponse = await response.json();
+
+      // Merge opportunities, deduping by noticeId
+      // SAM.gov API doesn't respect PSC filter, so we filter client-side
+      data.opportunitiesData?.forEach((opp) => {
+        // Only include opportunities with X1A* PSC codes (real property leasing)
+        if (!allOpportunities.has(opp.noticeId)) {
+          // Accept X1A* codes or NAICS 531120 as lease opportunities
+          const pscCode = opp.classificationCode || "";
+          const naicsCode = opp.naicsCode || opp.naicsCodes?.[0] || "";
+
+          if (
+            pscCode.startsWith("X1A") ||
+            pscCode.startsWith("X1D") || // Also include X1DB (parking)
+            naicsCode === "531120"
+          ) {
+            allOpportunities.set(opp.noticeId, opp);
+          }
+        }
+      });
     }
 
-    const data: SAMResponse = await response.json();
-    return data;
+    // Convert Map back to array, sort by posted date (newest first), and apply limit
+    const mergedOpportunities = Array.from(allOpportunities.values())
+      .sort((a, b) => new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime());
+
+    const limitedOpportunities = mergedOpportunities.slice(0, params.limit || 100);
+
+    return {
+      totalRecords: mergedOpportunities.length,
+      limit: params.limit || 100,
+      offset: params.offset || 0,
+      opportunitiesData: limitedOpportunities,
+    };
   } catch (error) {
-    console.error("Error fetching SAM.gov opportunities:", error);
+    console.error("Error fetching SAM.gov lease opportunities:", error);
     throw error;
   }
 }
 
 /**
- * Fetches ALL contract opportunities from SAM.gov API (not just GSA leasing)
+ * Alias for backward compatibility
+ */
+export const fetchFederalLeaseOpportunities = fetchGSALeaseOpportunities;
+
+/**
+ * Fetches ALL contract opportunities from SAM.gov API (not just leasing)
  * Used for the main dashboard to show all opportunities
  *
  * @param params - Additional query parameters

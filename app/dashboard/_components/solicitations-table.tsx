@@ -132,12 +132,11 @@ export function SolicitationsTable() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      {/* Header */}
-      <div className="px-6 py-4 border-b flex items-center justify-between">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      {/* Header - SAM.gov style */}
+      <div className="px-6 py-5 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
         <div>
-          <h2 className="text-xl font-bold">All Solicitations</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-base font-medium text-gray-900">
             Showing {((currentPage - 1) * limit) + 1} - {Math.min(currentPage * limit, totalRecords)} of {totalRecords.toLocaleString()} results
           </p>
         </div>
@@ -220,74 +219,118 @@ export function SolicitationsTable() {
             <div
               key={opportunity.noticeId}
               onClick={() => handleRowClick(opportunity)}
-              className={`p-6 cursor-pointer transition-colors hover:bg-gray-50 ${
-                selectedOpportunity?.noticeId === opportunity.noticeId && isPanelOpen
-                  ? "bg-orange-50 border-l-4 border-orange-500"
-                  : ""
-              }`}
+              className="p-8 cursor-pointer transition-all hover:bg-blue-50/30 border-b border-gray-100 last:border-b-0"
             >
-              {/* Top Row: Title and Notice Type */}
-              <div className="flex items-start justify-between mb-2">
+              {/* SAM.gov Style Layout */}
+              <div className="flex gap-8">
+                {/* Left: Main Content */}
                 <div className="flex-1">
-                  <h3 className="font-semibold text-blue-600 hover:underline text-base">
+                  {/* Title */}
+                  <h3 className="text-lg font-semibold text-[#005EA2] hover:underline mb-3 leading-snug">
                     {opportunity.title}
                   </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Notice ID: {opportunity.noticeId}
+
+                  {/* Notice ID */}
+                  <p className="text-sm font-medium text-gray-900 mb-3">
+                    Notice ID: <span className="font-mono">{opportunity.solicitationNumber || opportunity.noticeId}</span>
                   </p>
-                </div>
-                <Badge variant="outline" className="ml-4 flex-shrink-0">
-                  {getNoticeTypeLabel(opportunity.type)}
-                </Badge>
-              </div>
 
-              {/* Description */}
-              <p className="text-sm text-gray-700 line-clamp-2 mb-3">
-                {opportunity.description || "No description available"}
-              </p>
+                  {/* Description */}
+                  <p className="text-sm text-gray-700 leading-relaxed line-clamp-2 mb-4">
+                    {typeof opportunity.description === "string" && opportunity.description.startsWith("http")
+                      ? "View full description on SAM.gov"
+                      : opportunity.description || "No description available"}
+                  </p>
 
-              {/* Info Grid */}
-              <div className="grid grid-cols-4 gap-4 text-sm mt-4">
-                <div>
-                  <div className="text-gray-500 text-xs mb-1">Department</div>
-                  <div className="font-medium line-clamp-1">{opportunity.department}</div>
+                  {/* Agency Info - SAM.gov style */}
+                  <div className="grid grid-cols-3 gap-x-8 gap-y-2 text-sm">
+                    <div>
+                      <span className="text-gray-600">Department/Ind.Agency</span>
+                      <p className="font-medium text-[#005EA2] mt-0.5">
+                        {opportunity.fullParentPathName?.split('.')[0] || opportunity.department || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Subtier</span>
+                      <p className="font-medium text-[#005EA2] mt-0.5">
+                        {opportunity.fullParentPathName?.split('.')[1] || opportunity.subTier || "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Office</span>
+                      <p className="font-medium text-[#005EA2] mt-0.5 line-clamp-1">
+                        {opportunity.office || opportunity.fullParentPathName?.split('.')[2] || "N/A"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-gray-500 text-xs mb-1">Subtier</div>
-                  <div className="font-medium line-clamp-1">{opportunity.subTier}</div>
-                </div>
-                <div>
-                  <div className="text-gray-500 text-xs mb-1">Office</div>
-                  <div className="font-medium line-clamp-1">{opportunity.office}</div>
-                </div>
-                <div>
-                  <div className="text-gray-500 text-xs mb-1">Response Due</div>
-                  <div className="font-medium">
-                    {formatDate(opportunity.responseDeadLine)}
-                    {opportunity.responseDeadLine && (
-                      <span className="ml-2 text-xs text-gray-500">
-                        ({getDaysUntilDeadline(opportunity.responseDeadLine)}d left)
-                      </span>
+
+                {/* Right: Metadata Sidebar - SAM.gov style */}
+                <div className="w-64 flex-shrink-0 bg-gray-50 -mr-8 -my-8 p-6 border-l border-gray-200">
+                  <div className="space-y-4">
+                    {/* Contract Opportunities Badge */}
+                    <div className="bg-white border border-gray-300 px-3 py-1.5 rounded text-center">
+                      <span className="text-xs font-medium text-gray-700">Contract Opportunities</span>
+                    </div>
+
+                    {/* Response Deadline */}
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Current Date Offers Due</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {opportunity.responseDeadLine
+                          ? new Date(opportunity.responseDeadLine).toLocaleDateString("en-US", {
+                              month: "long",
+                              day: "numeric",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              timeZoneName: "short",
+                            })
+                          : "Not specified"}
+                      </p>
+                    </div>
+
+                    {/* Notice Type */}
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Notice Type</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {getNoticeTypeLabel(opportunity.baseType || opportunity.type)}
+                      </p>
+                    </div>
+
+                    {/* Updated Date */}
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Updated Date</p>
+                      <p className="text-sm text-gray-900">
+                        {formatDate(opportunity.postedDate)}
+                      </p>
+                    </div>
+
+                    {/* Published Date */}
+                    <div>
+                      <p className="text-xs text-gray-600 mb-1">Published Date</p>
+                      <p className="text-sm text-gray-900">
+                        {formatDate(opportunity.postedDate)}
+                      </p>
+                    </div>
+
+                    {/* NAICS */}
+                    {opportunity.naicsCode && (
+                      <div>
+                        <p className="text-xs text-gray-600 mb-1">NAICS Code</p>
+                        <p className="text-sm font-mono text-gray-900">{opportunity.naicsCode}</p>
+                      </div>
+                    )}
+
+                    {/* Set-Aside */}
+                    {opportunity.typeOfSetAsideDescription && (
+                      <div>
+                        <p className="text-xs text-gray-600 mb-1">Set-Aside</p>
+                        <p className="text-sm text-gray-900">{opportunity.typeOfSetAsideDescription}</p>
+                      </div>
                     )}
                   </div>
                 </div>
-              </div>
-
-              {/* Bottom Row: Dates */}
-              <div className="flex items-center gap-6 text-xs text-gray-500 mt-3 pt-3 border-t">
-                <div>
-                  <span className="font-medium">Posted:</span> {formatDate(opportunity.postedDate)}
-                </div>
-                {opportunity.typeOfSetAsideDescription && (
-                  <div>
-                    <span className="font-medium">Set-Aside:</span> {opportunity.typeOfSetAsideDescription}
-                  </div>
-                )}
-                {opportunity.naicsCode && (
-                  <div>
-                    <span className="font-medium">NAICS:</span> {opportunity.naicsCode}
-                  </div>
-                )}
               </div>
             </div>
           ))
