@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
-import { Upload } from "lucide-react";
+import { Upload, UserPlus } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -56,7 +56,7 @@ const US_STATES = [
 function SettingsContent() {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState("basics");
+  const [currentTab, setCurrentTab] = useState("general");
   const [saving, setSaving] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -74,7 +74,7 @@ function SettingsContent() {
   // Handle URL tab parameter
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab && ["basics", "account", "team", "billing"].includes(tab)) {
+    if (tab && ["general", "business", "account-manager", "team-overview"].includes(tab)) {
       setCurrentTab(tab);
     }
   }, [searchParams]);
@@ -255,13 +255,13 @@ function SettingsContent() {
         className="w-full max-w-4xl"
       >
         <TabsList>
-          <TabsTrigger value="basics">Basics</TabsTrigger>
-          <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="team">Account Manager</TabsTrigger>
-          <TabsTrigger value="billing">Billing & Subscription</TabsTrigger>
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="business">Business Information</TabsTrigger>
+          <TabsTrigger value="account-manager">Account Manager</TabsTrigger>
+          <TabsTrigger value="team-overview">Team Overview</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="basics" className="space-y-6">
+        <TabsContent value="general" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Profile information</CardTitle>
@@ -391,60 +391,96 @@ function SettingsContent() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="account" className="space-y-6">
+        <TabsContent value="business" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Password & Security</CardTitle>
+              <CardTitle>Business Information</CardTitle>
               <CardDescription>
-                Manage your password and security settings
+                Manage your company details and business profile
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label>Email</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="email"
-                    value={user?.email || ""}
-                    disabled
-                    className="bg-gray-50 dark:bg-gray-900"
-                  />
-                  {user?.email && (
-                    <Badge variant="outline" className="bg-green-50 text-green-700">
-                      Verified
-                    </Badge>
-                  )}
-                </div>
+                <Label htmlFor="companyName">Company Name</Label>
+                <Input
+                  id="companyName"
+                  placeholder="Your Company LLC"
+                  className="bg-gray-50 dark:bg-gray-900"
+                />
               </div>
 
-              <div className="pt-4 border-t">
-                <Button variant="outline">Change Password</Button>
+              <div className="space-y-2">
+                <Label htmlFor="businessType">Business Type</Label>
+                <Select>
+                  <SelectTrigger className="bg-gray-50 dark:bg-gray-900">
+                    <SelectValue placeholder="Select business type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="broker">Brokerage Firm</SelectItem>
+                    <SelectItem value="realtor">Real Estate Agency</SelectItem>
+                    <SelectItem value="individual">Individual Agent</SelectItem>
+                    <SelectItem value="owner">Property Owner</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="licenseNumber">License Number</Label>
+                <Input
+                  id="licenseNumber"
+                  placeholder="RE-12345678"
+                  className="bg-gray-50 dark:bg-gray-900"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Business Phone</Label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  placeholder="+1 (555) 000-0000"
+                  className="bg-gray-50 dark:bg-gray-900"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="businessAddress">Business Address</Label>
+                <Input
+                  id="businessAddress"
+                  placeholder="123 Main St, City, State 12345"
+                  className="bg-gray-50 dark:bg-gray-900"
+                />
+              </div>
+
+              <Button>Save Business Information</Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="team" className="space-y-6">
-          <AccountManager />
-        </TabsContent>
-
-        <TabsContent value="billing" className="space-y-6">
+        <TabsContent value="account-manager" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Billing & Subscription</CardTitle>
+              <CardTitle>Onboard Team Members</CardTitle>
               <CardDescription>
-                Manage your subscription and billing information
+                Add Sellers, Brokers, Agents, or Building Owners to your team
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No active subscription</p>
-                <Button className="mt-4" asChild>
-                  <a href="/dashboard/upgrade">Upgrade Plan</a>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">
+                  Onboard new team members to start earning commissions
+                </p>
+                <Button className="gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Onboard Team Member
                 </Button>
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="team-overview" className="space-y-6">
+          <AccountManager />
         </TabsContent>
       </Tabs>
     </div>

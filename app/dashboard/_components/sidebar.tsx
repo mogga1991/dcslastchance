@@ -40,12 +40,7 @@ export default function DashboardSideBar() {
       href: "/dashboard",
       icon: (
         <LayoutDashboard
-          className={cn(
-            "h-5 w-5 flex-shrink-0",
-            pathname === "/dashboard"
-              ? "text-signal-orange"
-              : "text-navy-deep dark:text-slate-400"
-          )}
+          className="h-5 w-5 flex-shrink-0"
         />
       ),
     },
@@ -54,12 +49,7 @@ export default function DashboardSideBar() {
       href: "/dashboard/gsa-leasing",
       icon: (
         <Building2
-          className={cn(
-            "h-5 w-5 flex-shrink-0",
-            pathname === "/dashboard/gsa-leasing"
-              ? "text-signal-orange"
-              : "text-navy-deep dark:text-slate-400"
-          )}
+          className="h-5 w-5 flex-shrink-0"
         />
       ),
     },
@@ -68,12 +58,7 @@ export default function DashboardSideBar() {
       href: "/dashboard/broker-listing",
       icon: (
         <Users
-          className={cn(
-            "h-5 w-5 flex-shrink-0",
-            pathname === "/dashboard/broker-listing"
-              ? "text-signal-orange"
-              : "text-navy-deep dark:text-slate-400"
-          )}
+          className="h-5 w-5 flex-shrink-0"
         />
       ),
     },
@@ -82,12 +67,7 @@ export default function DashboardSideBar() {
       href: "/dashboard/upload",
       icon: (
         <Upload
-          className={cn(
-            "h-5 w-5 flex-shrink-0",
-            pathname === "/dashboard/upload"
-              ? "text-signal-orange"
-              : "text-navy-deep dark:text-slate-400"
-          )}
+          className="h-5 w-5 flex-shrink-0"
         />
       ),
     },
@@ -96,12 +76,7 @@ export default function DashboardSideBar() {
       href: "/dashboard/my-proposals",
       icon: (
         <FileText
-          className={cn(
-            "h-5 w-5 flex-shrink-0",
-            pathname === "/dashboard/my-proposals"
-              ? "text-signal-orange"
-              : "text-navy-deep dark:text-slate-400"
-          )}
+          className="h-5 w-5 flex-shrink-0"
         />
       ),
     },
@@ -110,12 +85,7 @@ export default function DashboardSideBar() {
       href: "/dashboard/market-news",
       icon: (
         <Newspaper
-          className={cn(
-            "h-5 w-5 flex-shrink-0",
-            pathname === "/dashboard/market-news"
-              ? "text-signal-orange"
-              : "text-navy-deep dark:text-slate-400"
-          )}
+          className="h-5 w-5 flex-shrink-0"
         />
       ),
     },
@@ -124,12 +94,7 @@ export default function DashboardSideBar() {
       href: "/dashboard/my-earnings",
       icon: (
         <DollarSign
-          className={cn(
-            "h-5 w-5 flex-shrink-0",
-            pathname === "/dashboard/my-earnings"
-              ? "text-signal-orange"
-              : "text-navy-deep dark:text-slate-400"
-          )}
+          className="h-5 w-5 flex-shrink-0"
         />
       ),
     },
@@ -138,12 +103,7 @@ export default function DashboardSideBar() {
       href: "/dashboard/settings",
       icon: (
         <Settings
-          className={cn(
-            "h-5 w-5 flex-shrink-0",
-            pathname === "/dashboard/settings"
-              ? "text-signal-orange"
-              : "text-navy-deep dark:text-slate-400"
-          )}
+          className="h-5 w-5 flex-shrink-0"
         />
       ),
     },
@@ -152,12 +112,7 @@ export default function DashboardSideBar() {
       href: "/dashboard/upgrade",
       icon: (
         <CreditCard
-          className={cn(
-            "h-5 w-5 flex-shrink-0",
-            pathname === "/dashboard/upgrade"
-              ? "text-signal-orange"
-              : "text-navy-deep dark:text-slate-400"
-          )}
+          className="h-5 w-5 flex-shrink-0"
         />
       ),
     },
@@ -165,7 +120,7 @@ export default function DashboardSideBar() {
 
   return (
     <Sidebar open={open} setOpen={setOpen}>
-      <SidebarBody className="justify-between gap-10">
+      <SidebarBody className="justify-between gap-10 bg-gradient-to-b from-[#4F46E5] to-[#3730A3] dark:from-[#3730A3] dark:to-[#312E81]">
         <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
           {open ? <Logo /> : <LogoIcon />}
           <div className="mt-8 flex flex-col gap-2">
@@ -175,8 +130,8 @@ export default function DashboardSideBar() {
                 link={link}
                 className={cn(
                   pathname === link.href
-                    ? "bg-signal-orange/10 text-signal-orange rounded-lg font-medium"
-                    : "hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                    ? "bg-white/20 text-white rounded-lg font-medium backdrop-blur-sm"
+                    : "text-white/70 hover:bg-white/10 hover:text-white rounded-lg"
                 )}
               />
             ))}
@@ -189,7 +144,7 @@ export default function DashboardSideBar() {
               <Button
                 onClick={handleSignOut}
                 variant="ghost"
-                className="w-full justify-start gap-2 text-navy-deep dark:text-slate-400 hover:text-signal-orange hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="w-full justify-start gap-2 text-white/70 hover:text-white hover:bg-white/10"
               >
                 <LogOut className="h-5 w-5 flex-shrink-0" />
                 <span>Logout</span>
@@ -202,7 +157,7 @@ export default function DashboardSideBar() {
                 onClick={handleSignOut}
                 variant="ghost"
                 size="icon"
-                className="text-navy-deep dark:text-slate-400 hover:text-signal-orange hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="text-white/70 hover:text-white hover:bg-white/10"
               >
                 <LogOut className="h-5 w-5" />
               </Button>
