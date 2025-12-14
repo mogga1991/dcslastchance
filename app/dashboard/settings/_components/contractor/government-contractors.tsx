@@ -111,7 +111,7 @@ export default function GovernmentContractors() {
               <TabsTrigger
                 key={section.id}
                 value={section.id}
-                className="flex flex-col items-center gap-1 py-3 data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-900"
+                className="flex flex-col items-center gap-1 py-3 data-[state=active]:bg-blue-600 data-[state=active]:text-white dark:data-[state=active]:bg-blue-600 dark:data-[state=active]:text-white"
               >
                 <Icon className="h-4 w-4" />
                 <span className="text-xs hidden sm:block">{section.label}</span>
