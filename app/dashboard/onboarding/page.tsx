@@ -541,20 +541,7 @@ export default function OnboardingPage() {
             >
               Back
             </Button>
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  localStorage.setItem("onboarding_skipped", "true");
-                  router.push("/dashboard");
-                }}
-                disabled={loading}
-                size="lg"
-                className="text-lg"
-              >
-                Skip for now
-              </Button>
+            <div>
               {step < totalSteps ? (
                 <Button
                   type="button"
