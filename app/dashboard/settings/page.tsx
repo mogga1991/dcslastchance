@@ -27,6 +27,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import AccountManager from "./_components/account-manager";
+import GovernmentContractors from "./_components/contractor/government-contractors";
 
 interface UserData {
   id: string;
@@ -74,7 +75,7 @@ function SettingsContent() {
   // Handle URL tab parameter
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab && ["general", "business", "account-manager", "team-overview"].includes(tab)) {
+    if (tab && ["general", "business", "government-contractors", "team-overview"].includes(tab)) {
       setCurrentTab(tab);
     }
   }, [searchParams]);
@@ -257,7 +258,7 @@ function SettingsContent() {
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="business">Business Information</TabsTrigger>
-          <TabsTrigger value="account-manager">Account Manager</TabsTrigger>
+          <TabsTrigger value="government-contractors">Government Contractors</TabsTrigger>
           <TabsTrigger value="team-overview">Team Overview</TabsTrigger>
         </TabsList>
 
@@ -457,26 +458,8 @@ function SettingsContent() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="account-manager" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Onboard Team Members</CardTitle>
-              <CardDescription>
-                Add Sellers, Brokers, Agents, or Building Owners to your team
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">
-                  Onboard new team members to start earning commissions
-                </p>
-                <Button className="gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Onboard Team Member
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="government-contractors" className="space-y-6">
+          <GovernmentContractors />
         </TabsContent>
 
         <TabsContent value="team-overview" className="space-y-6">
