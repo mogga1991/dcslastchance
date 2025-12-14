@@ -13,7 +13,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AllOpportunitiesClient from "./_components/all-opportunities-client";
 import GSALeasingClient from "./gsa-leasing/_components/gsa-leasing-client";
-import { Stats } from "@/components/ui/statistics-card";
 
 export default async function Dashboard() {
   const supabase = await createClient();
@@ -43,9 +42,6 @@ export default async function Dashboard() {
             </Button>
           </Link>
         </div>
-
-        {/* Statistics Card */}
-        <Stats />
 
         {/* Stats Cards */}
         <div className="@container/main flex flex-1 flex-col gap-2">

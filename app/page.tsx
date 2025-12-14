@@ -9,6 +9,7 @@ import GovernmentBuysEverythingSection from "@/components/homepage/government-bu
 import ValuePropositionSection from "@/components/homepage/value-proposition-section";
 import MarketResilienceSection from "@/components/homepage/market-resilience-section";
 import SocialProofSection from "@/components/homepage/social-proof-section";
+import { Stats } from "@/components/ui/statistics-card";
 // import { getSubscriptionDetails } from "@/lib/subscription";
 // import PricingTable from "./pricing/_component/pricing-table";
 
@@ -19,6 +20,7 @@ export default function Home() {
   return (
     <>
       <HeroSection />
+      <Stats />
       <AnimatedStatsSection />
       <MultiVerticalSection />
       <GovernmentBuysEverythingSection />
