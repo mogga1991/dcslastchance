@@ -27,8 +27,8 @@ export async function GET(request: Request) {
         email: data?.user?.email,
       })
 
-      // Redirect to debug page temporarily to see session state
-      return NextResponse.redirect(`${origin}/auth/debug`)
+      // Redirect to dashboard after successful authentication
+      return NextResponse.redirect(`${origin}/dashboard`)
     }
 
     console.log('[Auth Callback] No code provided, redirecting to sign-in')
