@@ -37,18 +37,18 @@ const Stats = () => {
             perferendis deserunt quis excepturi reiciendis nulla?
           </p>
         </div>
-        <div className="relative mx-auto mt-20 flex h-112 max-w-4xl items-center justify-center gap-2">
+        <div className="relative mx-auto mt-20 flex h-112 max-w-6xl items-center justify-center gap-4 px-4">
           {[
-            { value: 35, label: "competitor 1", delay: 0.2 },
-            { value: 25, label: "competitor 2", delay: 0.4 },
+            { value: 35, label: "Sweetspot", delay: 0.2 },
+            { value: 25, label: "GovDash", delay: 0.4 },
             {
               value: 99,
-              label: "shadcnblocks",
+              label: "FedSpace",
               className: "bg-sky-400",
               showToolTip: true,
               delay: 0.6,
             },
-            { value: 37, label: "competitor 4", delay: 0.8 },
+            { value: 37, label: "Unanet AI", delay: 0.8 },
           ].map((props, index) => (
             <motion.div
               key={index}
