@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       getSubscriptionDetails(),
 
       // Get analysis stats (completed analyses and avg bid score)
-      sql\`
+      sql`
         SELECT
           COUNT(*) as total_analyses,
           AVG(CASE
@@ -44,10 +44,10 @@ export async function GET(request: NextRequest) {
           END) as avg_bid_score
         FROM analysis a
         JOIN "user" u ON a.user_id = u.id
-        WHERE u.id = \${session.userId}
+        WHERE u.id = ${session.userId}
           AND a.status = 'completed'
           AND a.created_at >= NOW() - INTERVAL '30 days'
-      \`,
+      `,
 
       // Get upcoming deadlines from saved opportunities
       supabase
@@ -88,12 +88,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Get analyses used this period
-    const analysesUsedResult = await sql\`
+    const analysesUsedResult = await sql`
       SELECT COUNT(*) as analyses_used
       FROM analysis a
-      WHERE a.user_id = \${session.userId}
-        AND a.created_at >= \${subscription?.currentPeriodStart || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
-    \`;
+      WHERE a.user_id = ${session.userId}
+        AND a.created_at >= ${subscription?.currentPeriodStart || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
+    `;
     const analysesUsed = Number(analysesUsedResult[0].analyses_used);
 
     // Process upcoming deadlines
