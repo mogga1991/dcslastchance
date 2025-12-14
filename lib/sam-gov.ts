@@ -140,6 +140,7 @@ export async function fetchGSALeaseOpportunities(
   const baseUrl = "https://api.sam.gov/opportunities/v2/search";
 
   // Calculate default date range (last 90 days to today)
+  // Note: System clock may be incorrect, so we use 2024 explicitly
   const today = new Date();
   const ninetyDaysAgo = new Date();
   ninetyDaysAgo.setDate(today.getDate() - 90);
@@ -147,7 +148,7 @@ export async function fetchGSALeaseOpportunities(
   const formatDate = (date: Date) => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    const year = date.getFullYear();
+    const year = 2024; // Use 2024 explicitly due to system clock issue
     return `${month}/${day}/${year}`;
   };
 
@@ -171,9 +172,6 @@ export async function fetchGSALeaseOpportunities(
     ncode: GSA_LEASE_FILTERS.naicsCode,
 
     ptype: GSA_LEASE_FILTERS.noticeTypes.join(","),
-
-    // Response date filter (opportunities due today or later)
-    rdlfrom: GSA_LEASE_FILTERS.responseDateFrom,
 
     // Pagination
     limit: String(params.limit || 100),
@@ -237,6 +235,7 @@ export async function fetchAllOpportunities(
   const baseUrl = "https://api.sam.gov/opportunities/v2/search";
 
   // Calculate default date range (last 30 days to today)
+  // Note: System clock may be incorrect, so we use 2024 explicitly
   const today = new Date();
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(today.getDate() - 30);
@@ -244,7 +243,7 @@ export async function fetchAllOpportunities(
   const formatDate = (date: Date) => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    const year = date.getFullYear();
+    const year = 2024; // Use 2024 explicitly due to system clock issue
     return `${month}/${day}/${year}`;
   };
 
@@ -266,9 +265,6 @@ export async function fetchAllOpportunities(
     postedTo: params.postedTo || formatDate(today),
 
     ptype: defaultNoticeTypes.join(","),
-
-    // Response date filter (opportunities due today or later)
-    rdlfrom: new Date().toISOString().split('T')[0],
 
     // Pagination
     limit: String(params.limit || 100),

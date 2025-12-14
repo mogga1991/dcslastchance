@@ -28,6 +28,7 @@ import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import AccountManager from "./_components/account-manager";
 import GovernmentContractors from "./_components/contractor/government-contractors";
+import { CompanyProfileForm } from "./_components/company-profile-form";
 
 interface UserData {
   id: string;
@@ -393,69 +394,7 @@ function SettingsContent() {
         </TabsContent>
 
         <TabsContent value="business" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Business Information</CardTitle>
-              <CardDescription>
-                Manage your company details and business profile
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="companyName">Company Name</Label>
-                <Input
-                  id="companyName"
-                  placeholder="Your Company LLC"
-                  className="bg-white border-gray-300"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="businessType">Business Type</Label>
-                <Select>
-                  <SelectTrigger className="bg-white border-gray-300">
-                    <SelectValue placeholder="Select business type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="broker">Brokerage Firm</SelectItem>
-                    <SelectItem value="realtor">Real Estate Agency</SelectItem>
-                    <SelectItem value="individual">Individual Agent</SelectItem>
-                    <SelectItem value="owner">Property Owner</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="licenseNumber">License Number</Label>
-                <Input
-                  id="licenseNumber"
-                  placeholder="RE-12345678"
-                  className="bg-white border-gray-300"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Business Phone</Label>
-                <Input
-                  id="phoneNumber"
-                  type="tel"
-                  placeholder="+1 (555) 000-0000"
-                  className="bg-white border-gray-300"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="businessAddress">Business Address</Label>
-                <Input
-                  id="businessAddress"
-                  placeholder="123 Main St, City, State 12345"
-                  className="bg-white border-gray-300"
-                />
-              </div>
-
-              <Button>Save Business Information</Button>
-            </CardContent>
-          </Card>
+          <CompanyProfileForm />
         </TabsContent>
 
         <TabsContent value="government-contractors" className="space-y-6">
