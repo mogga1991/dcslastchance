@@ -27,9 +27,9 @@ const css = `
 
 const Stats = () => {
   return (
-    <section className="py-32 bg-gradient-to-b from-white to-gray-50">
+    <section className="py-32 bg-gradient-to-b from-white to-gray-50 w-full">
       <style>{css}</style>
-      <div className="container mx-auto px-4">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Primary Headline */}
         <div className="mx-auto max-w-4xl text-center mb-6">
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6">
