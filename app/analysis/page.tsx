@@ -123,7 +123,7 @@ export default function AnalysisPage() {
 
       {/* Analyses List */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Recent Analyses</h2>
+        <h2 className="text-xl font-semibold">Opportunities</h2>
 
         {analyses.length === 0 ? (
           <Card>

@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -44,67 +42,139 @@
     --radius-xl: 20px;
 }
 
+/**
+ * RLP SCOUT — Brand Design Tokens
+ * Version: 1.0.0
+ */
+
 :root {
-    /* Apple Light Theme Colors */
-    --background: #ffffff;
-    --foreground: #000000;
-    --card: #ffffff;
-    --card-foreground: #000000;
-    --popover: #ffffff;
-    --popover-foreground: #000000;
-    --primary: #4f3af6; /* Brand Purple */
-    --primary-foreground: #ffffff;
-    --secondary: #f5f5f7; /* Apple Light Gray */
-    --secondary-foreground: #1d1d1f;
-    --muted: #f5f5f7;
-    --muted-foreground: #86868b;
-    --accent: #4f3af6; /* Brand Purple */
-    --accent-foreground: #ffffff;
-    --destructive: #ff3b30; /* Apple Red */
-    --destructive-foreground: #ffffff;
-    --border: #e2e2e7; /* Lighter, more subtle border */
-    --input: #f5f5f7;
-    --ring: #4f3af6;
-    --chart-1: #4f3af6; /* Brand Purple */
-    --chart-2: #34c759; /* Apple Green */
-    --chart-3: #ff9500; /* Apple Orange */
-    --chart-4: #ffcc00; /* Apple Yellow */
-    --chart-5: #af52de; /* Apple Purple */
-    --sidebar: #f5f5f7;
-    --sidebar-foreground: #1d1d1f;
-    --sidebar-primary: #4f3af6;
-    --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #e8e8ed;
-    --sidebar-accent-foreground: #1d1d1f;
-    --sidebar-border: #e2e2e7; /* Lighter border */
-    --sidebar-ring: #4f3af6;
-    /* Apple Fonts */
-    --font-apple-system:
-        -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue",
-        Helvetica, sans-serif;
-    --font-sf-mono: "SF Mono", Menlo, monospace;
-    --font-sans: var(--font-apple-system);
-    --font-serif: "New York", Georgia, serif;
-    --font-mono: var(--font-sf-mono);
-    /* Apple uses more rounded corners */
-    --radius: 10px;
-    /* Apple-style shadows */
-    --shadow-2xs: 0px 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-xs: 0px 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-sm: 0px 2px 4px rgba(0, 0, 0, 0.1);
-    --shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0px 8px 16px rgba(0, 0, 0, 0.1);
-    --shadow-xl: 0px 12px 24px rgba(0, 0, 0, 0.1);
-    --shadow-2xl: 0px 16px 32px rgba(0, 0, 0, 0.1);
+    /* ============================================
+       PRIMARY COLORS
+       ============================================ */
+
+    /* Scout Navy - Primary brand color, deep and authoritative */
+    --color-scout-navy: #0A1628;
+    --color-scout-navy-rgb: 10, 22, 40;
+
+    /* Command Blue - Secondary, for cards and elevated surfaces */
+    --color-command-blue: #1E3A5F;
+    --color-command-blue-rgb: 30, 58, 95;
+
+    /* Signal Orange - Primary accent, CTAs, highlights */
+    --color-signal-orange: #F97316;
+    --color-signal-orange-rgb: 249, 115, 22;
+    --color-signal-orange-dark: #EA580C;
+
+    /* Radar Green - Success, completion, positive states */
+    --color-radar-green: #22C55E;
+    --color-radar-green-rgb: 34, 197, 94;
+    --color-radar-green-dark: #16A34A;
+
+    /* ============================================
+       NEUTRAL PALETTE
+       ============================================ */
+
+    --color-white: #FFFFFF;
+    --color-ice-white: #F8FAFC;
+    --color-slate-50: #F8FAFC;
+    --color-slate-100: #F1F5F9;
+    --color-slate-200: #E2E8F0;
+    --color-slate-300: #CBD5E1;
+    --color-slate-400: #94A3B8;
+    --color-slate-500: #64748B;
+    --color-slate-600: #475569;
+    --color-slate-700: #334155;
+    --color-slate-800: #1E293B;
+    --color-slate-900: #0F172A;
+
+    /* ============================================
+       SHADCN UI MAPPINGS (Light Mode Default)
+       ============================================ */
+
+    --background: var(--color-white);
+    --foreground: var(--color-scout-navy);
+    --card: var(--color-white);
+    --card-foreground: var(--color-scout-navy);
+    --popover: var(--color-white);
+    --popover-foreground: var(--color-scout-navy);
+    --primary: var(--color-signal-orange);
+    --primary-foreground: var(--color-white);
+    --secondary: var(--color-slate-100);
+    --secondary-foreground: var(--color-scout-navy);
+    --muted: var(--color-slate-100);
+    --muted-foreground: var(--color-slate-600);
+    --accent: var(--color-signal-orange);
+    --accent-foreground: var(--color-white);
+    --destructive: #EF4444;
+    --destructive-foreground: var(--color-white);
+    --border: var(--color-slate-200);
+    --input: var(--color-white);
+    --ring: var(--color-signal-orange);
+    --chart-1: var(--color-signal-orange);
+    --chart-2: var(--color-radar-green);
+    --chart-3: #3B82F6;
+    --chart-4: #F59E0B;
+    --chart-5: var(--color-command-blue);
+    --sidebar: var(--color-white);
+    --sidebar-foreground: var(--color-scout-navy);
+    --sidebar-primary: var(--color-signal-orange);
+    --sidebar-primary-foreground: var(--color-white);
+    --sidebar-accent: var(--color-slate-100);
+    --sidebar-accent-foreground: var(--color-scout-navy);
+    --sidebar-border: var(--color-slate-200);
+    --sidebar-ring: var(--color-signal-orange);
+
+    /* ============================================
+       TYPOGRAPHY
+       ============================================ */
+
+    --font-display: 'Space Grotesk', 'Outfit', system-ui, sans-serif;
+    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --font-sans: var(--font-body);
+
+    /* ============================================
+       SPACING & RADII
+       ============================================ */
+
+    --radius: 0.5rem;
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-2xl: 1.5rem;
+
+    /* ============================================
+       SHADOWS
+       ============================================ */
+
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    --shadow-glow-orange: 0 0 20px rgba(249, 115, 22, 0.3);
+    --shadow-glow-green: 0 0 20px rgba(34, 197, 94, 0.3);
+    --shadow-glow-blue: 0 0 30px rgba(30, 58, 95, 0.5);
+
+    /* ============================================
+       GRADIENTS
+       ============================================ */
+
+    --gradient-hero: linear-gradient(135deg, #0A1628 0%, #1E3A5F 50%, #0F172A 100%);
+    --gradient-accent: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+    --gradient-success: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+    --gradient-subtle: linear-gradient(180deg, #1E3A5F 0%, #0A1628 100%);
+    --gradient-glow: radial-gradient(ellipse at center, rgba(249, 115, 22, 0.15) 0%, transparent 70%);
+    --gradient-radar: conic-gradient(from 0deg, transparent 0deg, rgba(34, 197, 94, 0.5) 30deg, transparent 60deg);
 }
 
 @layer base {
     * {
         @apply border-border outline-ring/50;
     }
+    html,
     body {
-        @apply bg-background text-foreground font-sans;
+        @apply bg-white text-foreground font-sans;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
@@ -127,6 +197,45 @@
     }
 }
 
+/* ============================================
+   RLP SCOUT ANIMATIONS
+   ============================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes radarSweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(249, 115, 22, 0.5); }
+}
+
 @keyframes blob {
   0% {
     transform: translate(0px, 0px) scale(1);
@@ -142,9 +251,14 @@
   }
 }
 
-.animate-blob {
-  animation: blob 7s infinite;
-}
+/* Utility classes */
+.animate-fade-in { animation: fadeIn 0.3s ease-out; }
+.animate-fade-in-up { animation: fadeInUp 0.4s ease-out; }
+.animate-slide-in { animation: slideInRight 0.3s ease-out; }
+.animate-pulse { animation: pulse 2s ease-in-out infinite; }
+.animate-radar { animation: radarSweep 2s linear infinite; }
+.animate-glow { animation: glow 2s ease-in-out infinite; }
+.animate-blob { animation: blob 7s infinite; }
 
 .animation-delay-2000 {
   animation-delay: 2s;
