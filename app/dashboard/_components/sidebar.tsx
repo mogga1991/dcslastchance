@@ -1,6 +1,7 @@
 "use client";
 
 import UserProfile from "@/components/user-profile";
+import SidebarUsageStats from "@/components/sidebar-usage-stats";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -128,31 +129,29 @@ export default function DashboardSideBar() {
             ))}
           </div>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
+          {/* Usage Stats */}
+          <SidebarUsageStats mini={!open} />
+
+          {/* Logout Button */}
           {open ? (
-            <>
-              {/* Logout Button */}
-              <Button
-                onClick={handleSignOut}
-                variant="ghost"
-                className="w-full justify-start gap-2 text-white/70 hover:text-white hover:bg-white/10"
-              >
-                <LogOut className="h-5 w-5 flex-shrink-0" />
-                <span>Logout</span>
-              </Button>
-            </>
+            <Button
+              onClick={handleSignOut}
+              variant="ghost"
+              className="w-full justify-start gap-2 text-white/70 hover:text-white hover:bg-white/10"
+            >
+              <LogOut className="h-5 w-5 flex-shrink-0" />
+              <span>Logout</span>
+            </Button>
           ) : (
-            <>
-              {/* Logout Button - Icon only */}
-              <Button
-                onClick={handleSignOut}
-                variant="ghost"
-                size="icon"
-                className="text-white/70 hover:text-white hover:bg-white/10"
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </>
+            <Button
+              onClick={handleSignOut}
+              variant="ghost"
+              size="icon"
+              className="text-white/70 hover:text-white hover:bg-white/10"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
           )}
 
           {/* User Profile - Always at bottom */}
