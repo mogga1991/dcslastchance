@@ -4,6 +4,7 @@ import UserProfile from "@/components/user-profile";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { FedSpaceLogo, FedSpaceText } from "@/components/brand/fedspace-logo";
 import {
   LayoutDashboard,
   Building2,
@@ -14,6 +15,7 @@ import {
   CreditCard,
   Newspaper,
   LogOut,
+  Upload,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -41,8 +43,8 @@ export default function DashboardSideBar() {
           className={cn(
             "h-5 w-5 flex-shrink-0",
             pathname === "/dashboard"
-              ? "text-white"
-              : "text-white/70"
+              ? "text-signal-orange"
+              : "text-navy-deep dark:text-slate-400"
           )}
         />
       ),
@@ -55,8 +57,8 @@ export default function DashboardSideBar() {
           className={cn(
             "h-5 w-5 flex-shrink-0",
             pathname === "/dashboard/gsa-leasing"
-              ? "text-white"
-              : "text-white/70"
+              ? "text-signal-orange"
+              : "text-navy-deep dark:text-slate-400"
           )}
         />
       ),
@@ -69,8 +71,22 @@ export default function DashboardSideBar() {
           className={cn(
             "h-5 w-5 flex-shrink-0",
             pathname === "/dashboard/broker-listing"
-              ? "text-white"
-              : "text-white/70"
+              ? "text-signal-orange"
+              : "text-navy-deep dark:text-slate-400"
+          )}
+        />
+      ),
+    },
+    {
+      label: "Upload RFP",
+      href: "/dashboard/upload",
+      icon: (
+        <Upload
+          className={cn(
+            "h-5 w-5 flex-shrink-0",
+            pathname === "/dashboard/upload"
+              ? "text-signal-orange"
+              : "text-navy-deep dark:text-slate-400"
           )}
         />
       ),
@@ -83,8 +99,8 @@ export default function DashboardSideBar() {
           className={cn(
             "h-5 w-5 flex-shrink-0",
             pathname === "/dashboard/my-proposals"
-              ? "text-white"
-              : "text-white/70"
+              ? "text-signal-orange"
+              : "text-navy-deep dark:text-slate-400"
           )}
         />
       ),
@@ -97,8 +113,8 @@ export default function DashboardSideBar() {
           className={cn(
             "h-5 w-5 flex-shrink-0",
             pathname === "/dashboard/market-news"
-              ? "text-white"
-              : "text-white/70"
+              ? "text-signal-orange"
+              : "text-navy-deep dark:text-slate-400"
           )}
         />
       ),
@@ -111,8 +127,8 @@ export default function DashboardSideBar() {
           className={cn(
             "h-5 w-5 flex-shrink-0",
             pathname === "/dashboard/my-earnings"
-              ? "text-white"
-              : "text-white/70"
+              ? "text-signal-orange"
+              : "text-navy-deep dark:text-slate-400"
           )}
         />
       ),
@@ -125,8 +141,8 @@ export default function DashboardSideBar() {
           className={cn(
             "h-5 w-5 flex-shrink-0",
             pathname === "/dashboard/settings"
-              ? "text-white"
-              : "text-white/70"
+              ? "text-signal-orange"
+              : "text-navy-deep dark:text-slate-400"
           )}
         />
       ),
@@ -139,8 +155,8 @@ export default function DashboardSideBar() {
           className={cn(
             "h-5 w-5 flex-shrink-0",
             pathname === "/dashboard/upgrade"
-              ? "text-white"
-              : "text-white/70"
+              ? "text-signal-orange"
+              : "text-navy-deep dark:text-slate-400"
           )}
         />
       ),
@@ -159,8 +175,8 @@ export default function DashboardSideBar() {
                 link={link}
                 className={cn(
                   pathname === link.href
-                    ? "bg-blue-600/30 text-white rounded-lg"
-                    : "hover:bg-slate-700/50 rounded-lg"
+                    ? "bg-signal-orange/10 text-signal-orange rounded-lg font-medium"
+                    : "hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
                 )}
               />
             ))}
@@ -173,7 +189,7 @@ export default function DashboardSideBar() {
               <Button
                 onClick={handleSignOut}
                 variant="ghost"
-                className="w-full justify-start gap-2 text-white/70 hover:text-white hover:bg-slate-700/50"
+                className="w-full justify-start gap-2 text-navy-deep dark:text-slate-400 hover:text-signal-orange hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <LogOut className="h-5 w-5 flex-shrink-0" />
                 <span>Logout</span>
@@ -186,7 +202,7 @@ export default function DashboardSideBar() {
                 onClick={handleSignOut}
                 variant="ghost"
                 size="icon"
-                className="text-white/70 hover:text-white hover:bg-slate-700/50"
+                className="text-navy-deep dark:text-slate-400 hover:text-signal-orange hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <LogOut className="h-5 w-5" />
               </Button>
@@ -207,14 +223,13 @@ export const Logo = () => {
       href="/dashboard"
       className="font-normal flex space-x-2 items-center text-sm py-1 relative z-20"
     >
-      <div className="h-5 w-6 bg-blue-500 rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
-      <motion.span
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="font-semibold text-white whitespace-pre"
+      <motion.div
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3 }}
       >
-        Sentyr
-      </motion.span>
+        <FedSpaceLogo variant="full" size="sm" />
+      </motion.div>
     </Link>
   );
 };
@@ -225,7 +240,7 @@ export const LogoIcon = () => {
       href="/dashboard"
       className="font-normal flex space-x-2 items-center text-sm py-1 relative z-20"
     >
-      <div className="h-5 w-6 bg-blue-500 rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+      <FedSpaceLogo variant="mark" size="sm" />
     </Link>
   );
 };

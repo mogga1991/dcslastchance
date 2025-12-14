@@ -10,10 +10,10 @@ export default async function DashboardLayout({
   children: ReactNode;
 }) {
   return (
-    <div className="flex h-screen overflow-hidden w-full bg-gray-100 dark:bg-neutral-800">
+    <div className="flex h-screen overflow-hidden w-full bg-white">
       <ProfileChecker />
       <DashboardSideBar />
-      <main className="flex-1 overflow-y-auto bg-white dark:bg-neutral-900">
+      <main className="flex-1 overflow-y-auto bg-white">
         <DashboardTopNav>{children}</DashboardTopNav>
       </main>
       <Chatbot />

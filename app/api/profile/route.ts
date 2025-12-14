@@ -59,17 +59,25 @@ export async function POST(request: NextRequest) {
 
     const profile = await createCompanyProfile({
       user_id: userId,
-      company_name: body.company_name,
+      organization_id: body.organization_id,
       naics_codes: body.naics_codes || [],
+      primary_naics: body.primary_naics,
       set_asides: body.set_asides || [],
-      core_capabilities: body.core_capabilities || [],
-      past_performance: body.past_performance || "",
-      security_clearances: body.security_clearances || [],
+      core_competencies: body.core_competencies || [],
+      keywords: body.keywords || [],
+      service_areas: body.service_areas || [],
       certifications: body.certifications || [],
-      geographic_focus: body.geographic_focus || [],
-      contract_value_range: body.contract_value_range || { min: 0, max: 0 },
+      is_small_business: body.is_small_business,
+      employee_count: body.employee_count || 0,
+      annual_revenue: body.annual_revenue,
       preferred_agencies: body.preferred_agencies || [],
-      team_size: body.team_size || 0,
+      excluded_agencies: body.excluded_agencies || [],
+      min_contract_value: body.min_contract_value || 0,
+      max_contract_value: body.max_contract_value || 0,
+      preferred_states: body.preferred_states || [],
+      remote_work_capable: body.remote_work_capable,
+      current_contracts: body.current_contracts || 0,
+      max_concurrent_contracts: body.max_concurrent_contracts,
     });
 
     return NextResponse.json({ profile }, { status: 201 });

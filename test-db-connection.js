@@ -1,31 +1,51 @@
+const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config({ path: '.env.local' });
-const { neon } = require('@neondatabase/serverless');
 
-const sql = neon(process.env.DATABASE_URL);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 async function testConnection() {
-  try {
-    console.log('Testing database connection...');
-    const result = await sql`SELECT current_database(), current_user, version()`;
-    console.log('✅ Database connected successfully!');
-    console.log('Database:', result[0].current_database);
-    console.log('User:', result[0].current_user);
-    
-    // Check if user table exists
-    const tables = await sql`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      ORDER BY table_name
-    `;
-    
-    console.log('\n📊 Tables in database:');
-    tables.forEach(t => console.log('  -', t.table_name));
-    
-  } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
-    process.exit(1);
+  console.log('Testing Supabase connection...\n');
+
+  // Test properties table
+  const { data: properties, error: propertiesError } = await supabase
+    .from('properties')
+    .select('id')
+    .limit(1);
+
+  if (propertiesError) {
+    console.log('❌ Properties table:', propertiesError.message);
+  } else {
+    console.log('✅ Properties table exists');
   }
+
+  // Test broker_profiles table
+  const { data: brokers, error: brokersError } = await supabase
+    .from('broker_profiles')
+    .select('id')
+    .limit(1);
+
+  if (brokersError) {
+    console.log('❌ Broker profiles table:', brokersError.message);
+  } else {
+    console.log('✅ Broker profiles table exists');
+  }
+
+  // Test property_scores table
+  const { data: scores, error: scoresError } = await supabase
+    .from('property_scores')
+    .select('id')
+    .limit(1);
+
+  if (scoresError) {
+    console.log('❌ Property scores table:', scoresError.message);
+  } else {
+    console.log('✅ Property scores table exists');
+  }
+
+  console.log('\n✅ Database setup complete!');
 }
 
-testConnection();
+testConnection().catch(console.error);

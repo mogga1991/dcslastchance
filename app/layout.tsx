@@ -5,21 +5,25 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
-  title: "Sentyr - AI-Powered RFP Analysis for Government Contractors",
+  title: "FedSpace - AI-Native GovCon OS",
   description:
-    "AI-powered RFP/RFI/RFQ analysis platform that extracts requirements, evaluates criteria, and delivers bid/no-bid recommendations in minutes. Save 10+ hours per opportunity.",
+    "AI-powered government contracting platform that extracts requirements, evaluates opportunities, and delivers bid/no-bid recommendations. The operating system for federal contractors.",
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
   openGraph: {
-    title: "Sentyr - AI-Powered RFP Analysis",
+    title: "FedSpace - AI-Native GovCon OS",
     description:
-      "AI-powered RFP analysis that transforms complex solicitations into actionable intelligence for government contractors.",
-    url: "https://sentyr.ai",
-    siteName: "Sentyr",
+      "AI-powered platform that transforms complex government solicitations into actionable intelligence for federal contractors.",
+    url: "https://fedspace.ai",
+    siteName: "FedSpace",
     images: [
       {
         url: "https://jdj14ctwppwprnqu.public.blob.vercel-storage.com/nsk-w9fFwBBmLDLxrB896I4xqngTUEEovS.png",
         width: 1200,
         height: 630,
-        alt: "Sentyr - AI-Powered RFP Analysis",
+        alt: "FedSpace - AI-Native GovCon OS",
       },
     ],
     locale: "en-US",

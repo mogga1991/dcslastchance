@@ -29,10 +29,10 @@ export default async function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex flex-col items-start justify-center gap-2">
             <h1 className="text-3xl font-semibold tracking-tight">
-              Welcome to ProposalIQ
+              Welcome to FedSpace
             </h1>
             <p className="text-muted-foreground">
-              AI-powered RFP analysis and bid/no-bid intelligence for government contractors
+              AI-Native GovCon OS - Your intelligent federal contracting platform
             </p>
           </div>
           <Link href="/dashboard/upload">
@@ -56,12 +56,12 @@ export default async function Dashboard() {
           </TabsList>
 
           <TabsContent value="opportunities" className="mt-6">
-            {/* All SAM.gov Opportunities with Map */}
+            {/* All SAM.gov Opportunities - Everything from SAM.gov API */}
             <AllOpportunitiesClient />
           </TabsContent>
 
           <TabsContent value="leasing" className="mt-6">
-            {/* GSA Leasing Opportunities with Map */}
+            {/* GSA Leasing Opportunities Only */}
             <GSALeasingClient />
           </TabsContent>
         </Tabs>

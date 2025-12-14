@@ -1,237 +1,407 @@
-# Next.js SaaS Starter Template
+# RLP Scout
 
-A comprehensive, production-ready SaaS starter template built with Next.js 15, featuring authentication, subscriptions, AI integration, and modern UI components. Perfect for quickly launching subscription-based applications with all the essential infrastructure in place.
+**AI-Powered Property-to-Opportunity Matching Platform for Government Real Estate**
 
-## ✨ Features
+RLP Scout is a comprehensive platform that connects commercial property brokers with GSA lease opportunities through intelligent matching and scoring, helping brokers identify the best government contracting opportunities for their properties.
 
-### 🔐 Authentication & User Management
-- **Better Auth v1.2.8** - Modern authentication system
-- Google OAuth integration
-- Session management with database persistence
-- User profile management with image uploads
-- Account linking for multiple providers
+🌐 **Live at:** [www.rlpscout.ai](https://www.rlpscout.ai)
 
-### 💳 Subscription & Billing
-- **Polar.sh** integration for subscription management
-- Configurable pricing tiers and plans
-- Real-time webhook processing
-- Customer portal for self-service billing
-- Subscription status tracking (active, canceled, expired)
-- Payment gating with elegant overlays
-
-### 🤖 AI Integration
-- **OpenAI** powered chatbot
-- React Markdown rendering for rich responses
-- Multi-step conversation support
-- Integrated chat widget in dashboard
-
-### 🎨 Modern UI/UX
-- **Tailwind CSS v4** - Latest utility-first styling
-- **shadcn/ui** components - Accessible, customizable
-- **Radix UI** primitives - Unstyled, accessible components
-- Dark/light theme support with smooth transitions
-- Responsive design with mobile-first approach
-- Loading skeletons and optimistic UI updates
-
-### 🗄️ Database & Storage
-- **Neon PostgreSQL** - Serverless database
-- **Drizzle ORM** - Type-safe database toolkit
-- **Supabase Storage** - Secure, scalable object storage with CDN
-- Database migrations with Drizzle Kit
-- Drag & drop file uploads with progress tracking
-
-### 📊 Analytics & Monitoring
-- **PostHog** integration for product analytics
-- User behavior tracking
-- Custom event monitoring
-- Error tracking and insights
-
-## 🚀 Tech Stack
-
-- **Framework**: Next.js 15.3.1 with App Router
-- **Language**: TypeScript with strict mode
-- **Styling**: Tailwind CSS v4 + shadcn/ui
-- **Database**: Neon PostgreSQL + Drizzle ORM
-- **Authentication**: Better Auth v1.2.8
-- **Payments**: Polar.sh
-- **AI**: OpenAI SDK
-- **Storage**: Supabase Storage
-- **Analytics**: PostHog
-- **Deployment**: Vercel (recommended)
-
-## 📁 Project Structure
+## Architecture
 
 ```
-├── app/
-│   ├── (auth)/              # Authentication pages
-│   ├── dashboard/           # Protected dashboard area
-│   │   ├── _components/     # Dashboard components
-│   │   ├── chat/           # AI chat interface
-│   │   ├── upload/         # File upload with Supabase Storage
-│   │   ├── payment/        # Subscription management
-│   │   └── settings/       # User settings & billing
-│   ├── pricing/            # Public pricing page
-│   └── api/                # API routes
-├── components/
-│   ├── ui/                 # shadcn/ui components
-│   └── homepage/           # Landing page sections
-├── lib/
-│   ├── auth/              # Authentication config
-│   ├── subscription.ts    # Subscription utilities
-│   └── upload-image.ts    # Supabase Storage upload utilities
-└── db/
-    ├── schema.ts          # Database schema
-    └── drizzle.ts         # Database connection
+┌─────────────────────────────────────────────────────────────────┐
+│                      TECH STACK                                  │
+├─────────────────────────────────────────────────────────────────┤
+│  Frontend          Next.js 15 + React 19 + Tailwind CSS        │
+│  Authentication    Better Auth + Google OAuth                   │
+│  Database          Supabase (PostgreSQL 16)                     │
+│  Storage           Supabase Storage                             │
+│  AI/ML             OpenAI GPT-4 for analysis                    │
+│  Maps              Google Maps API                              │
+│  Government API    SAM.gov Opportunities API                    │
+│  Hosting           Vercel (Production)                          │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                  SCORING SYSTEM                                  │
+├─────────────────────────────────────────────────────────────────┤
+│  Location (30%)    Distance from delineated area               │
+│  Space (25%)       Square footage compliance                    │
+│  Building (20%)    Class, features, accessibility              │
+│  Timeline (15%)    Availability vs. occupancy date             │
+│  Experience (10%)  Gov lease history, certifications           │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## 🛠️ Quick Start
+## Key Features
+
+### ✅ Core Platform
+
+- **Property-to-Opportunity Matching**: Intelligent scoring system (0-100 scale with A-F grades)
+- **GSA Lease Opportunities**: Real-time sync with SAM.gov API
+- **Broker Profiles**: Track government lease experience and certifications
+- **Property Listings**: Comprehensive property management with location, space, and building details
+- **Smart Filtering**: Filter opportunities by location, NAICS code, set-aside type
+- **Authentication**: Google OAuth integration via Better Auth
+- **Dashboard Analytics**: Track opportunities, proposals, and match scores
+
+### 🎯 Scoring System
+
+The platform uses a weighted scoring algorithm to match properties against government requirements:
+
+| Category   | Weight | What It Measures                      |
+|------------|--------|---------------------------------------|
+| Location   | 30%    | Distance from delineated area         |
+| Space      | 25%    | Square footage compliance             |
+| Building   | 20%    | Class, features, accessibility        |
+| Timeline   | 15%    | Availability vs. occupancy date       |
+| Experience | 10%    | Gov lease history, certifications     |
+
+**Grade Scale:**
+- **A (85-100)**: Excellent match, highly competitive
+- **B (70-84)**: Good match, competitive
+- **C (55-69)**: Fair match, may need adjustments
+- **D (40-54)**: Weak match, significant gaps
+- **F (0-39)**: Poor match, likely not viable
+
+## Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- PostgreSQL database (Neon recommended)
-- Supabase account for storage
-- Polar.sh account for subscriptions
-- OpenAI API key for AI features
-- Google OAuth credentials (optional)
 
-### Installation
+- Node.js >= 20.0.0
+- npm >= 10.0.0
+- Supabase account (for database)
+- Google Cloud account (for OAuth and Maps)
+- SAM.gov API key (for opportunities)
 
-1. **Use this template**
-   - Click "Use this template" button on GitHub
-   - Or clone: `git clone <your-repo-url>`
-   - Or download as ZIP
+### Local Development
 
-2. **Install dependencies**
 ```bash
-npm install
-```
+# 1. Clone the repository
+git clone <repo-url>
+cd dcslasttry
 
-3. **Environment Setup**
-Create a `.env.local` file with:
-```env
-# Database
-DATABASE_URL="your-neon-database-url"
+# 2. Install dependencies
+npm install --legacy-peer-deps
 
-# Authentication
-BETTER_AUTH_SECRET="your-secret-key"
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
+# 3. Copy environment template
+cp .env.local.example .env.local
 
-# Polar.sh
-POLAR_ACCESS_TOKEN="your-polar-access-token"
-POLAR_WEBHOOK_SECRET="your-webhook-secret"
+# 4. Update .env.local with your credentials
+# - Supabase URL and keys
+# - Google OAuth credentials
+# - Google Maps API key
+# - SAM.gov API key
+# - OpenAI API key
 
-# OpenAI
-OPENAI_API_KEY="your-openai-api-key"
+# 5. Link to Supabase project
+supabase link
 
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL="https://xxx.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
-SUPABASE_SERVICE_ROLE_KEY="your-supabase-service-role-key"
+# 6. Push database migrations
+supabase db push
 
-# Polar.sh Pricing Tiers
-NEXT_PUBLIC_STARTER_TIER="your-starter-product-id"
-NEXT_PUBLIC_STARTER_SLUG="your-starter-slug"
-```
-
-4. **Database Setup**
-```bash
-# Generate and run migrations
-npx drizzle-kit generate
-npx drizzle-kit push
-```
-
-5. **Supabase Storage Setup**
-- Create a Supabase project (or use existing)
-- Create a storage bucket named "uploads"
-- Configure bucket permissions (public or private)
-- Enable RLS policies if needed
-
-6. **Polar.sh Setup**
-- Create products for your pricing tiers
-- Set up webhook endpoints for subscription events
-- Configure your pricing structure
-
-7. **Start Development Server**
-```bash
+# 7. Start development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see your application.
-
-## 🎯 Key Features Explained
-
-### Subscription Management
-- Automatic subscription status checking
-- Payment gating for premium features
-- Integration with Polar.sh customer portal
-- Webhook handling for real-time updates
-
-### AI Chat Integration
-- Built-in chatbot with OpenAI
-- Markdown rendering for rich responses
-- Conversation history and context
-
-### File Upload System
-- **Supabase Storage integration** with secure upload API
-- **Drag & drop interface** with visual feedback
-- **File validation** - Type checking and size limits
-- **Progress tracking** - Real-time upload progress
-- **Image gallery** - View uploaded files with metadata
-- **Copy URLs** - Easy sharing and integration
-
-### Analytics & Tracking
-- PostHog event tracking
-- User behavior monitoring
-- Custom analytics dashboard
-
-## 🔧 Customization
-
-### Adding New Features
-1. Create components in `components/`
-2. Add API routes in `app/api/`
-3. Update database schema in `db/schema.ts`
-4. Run `npx drizzle-kit generate` and `npx drizzle-kit push`
-
-### Styling
-- Modify `app/globals.css` for global styles
-- Use Tailwind classes for component styling
-- Customize theme in `tailwind.config.ts`
+This will start:
+- **Web App**: http://localhost:3002
+- **API Routes**: http://localhost:3002/api/*
 
 ### Authentication
-- Configure providers in `lib/auth/auth.ts`
-- Add new OAuth providers as needed
-- Customize user profile fields in database schema
 
-## 📚 Learn More
+Sign in with Google OAuth - no default credentials needed.
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Better Auth Documentation](https://better-auth.com)
-- [Polar.sh Documentation](https://docs.polar.sh)
-- [Drizzle ORM Documentation](https://orm.drizzle.team)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+## Project Structure
 
-## 🚀 Deployment
-
-### Vercel (Recommended)
-1. Connect your GitHub repository to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy automatically on every push
-
-### Manual Deployment
-```bash
-npm run build
-npm start
+```
+govcon-os/
+├── apps/
+│   ├── api/                      # Fastify backend
+│   │   ├── migrations/          # SQL migrations
+│   │   ├── src/
+│   │   │   ├── lib/            # Database, Redis, MinIO, Auth
+│   │   │   ├── middleware/     # RBAC middleware
+│   │   │   ├── routes/         # API routes
+│   │   │   ├── scripts/        # Migrate, seed scripts
+│   │   │   ├── tests/          # Test suites
+│   │   │   └── index.ts        # Server entry point
+│   │   └── package.json
+│   │
+│   ├── web/                     # Next.js frontend
+│   │   ├── src/
+│   │   │   ├── app/            # App router pages
+│   │   │   ├── components/     # React components
+│   │   │   └── lib/            # API client, auth context
+│   │   └── package.json
+│   │
+│   └── worker/                  # Background jobs (future)
+│
+├── packages/
+│   └── shared/                  # Shared code
+│       ├── src/
+│       │   ├── types.ts        # TypeScript types
+│       │   ├── schemas.ts      # Zod validation schemas
+│       │   └── index.ts
+│       └── package.json
+│
+├── docker-compose.yml           # Infrastructure services
+├── package.json                 # Root workspace config
+└── README.md
 ```
 
-## 📄 License
+## Database Schema (Sprint 1)
 
-This project is licensed under the MIT License.
+### Foundation Tables
 
-## 🤝 Contributing
+- `organizations` - Multi-tenant organizations
+- `users` - User accounts
+- `user_roles` - RBAC role assignments
+- `audit_events` - Audit trail
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+### Capability Evidence Locker (Addendum A)
+
+- `capability_documents` - Uploaded capability documents
+- `capability_document_versions` - Document version control
+- `capability_facts` - Extracted facts with citations
+- `company_claims` - Evidence-backed capability claims
+
+### Bid/No-Bid Scoring (Addendum A)
+
+- `bid_decisions` - Bid/no-bid decisions with scoring
+- `requirement_evidence_links` - Links RFP requirements to capability evidence
+
+## API Endpoints
+
+### Authentication
+
+- `POST /api/auth/login` - User login
+- `GET /api/auth/me` - Get current user
+
+### Capability Documents
+
+- `POST /api/capability-documents` - Upload document
+- `GET /api/capability-documents` - List documents
+- `POST /api/capability-documents/:id/versions` - Upload version
+
+### Capability Facts
+
+- `GET /api/capability-facts` - List facts
+- `PATCH /api/capability-facts/:id/verify` - Verify fact
+
+### Company Claims
+
+- `POST /api/company-claims` - Create claim
+- `GET /api/company-claims` - List claims
+- `PATCH /api/company-claims/:id` - Update claim
+
+## Available Scripts
+
+```bash
+# Development
+npm run dev              # Start API + Web in parallel
+npm run dev:api          # Start API only
+npm run dev:web          # Start Web only
+
+# Database
+npm run db:migrate       # Run migrations
+npm run db:seed          # Seed database
+
+# Docker
+npm run docker:up        # Start infrastructure
+npm run docker:down      # Stop infrastructure
+npm run docker:logs      # View logs
+
+# Testing
+npm run test             # Run all tests
+npm run lint             # Lint code
+
+# Production
+npm run build            # Build all apps
+npm run clean            # Clean node_modules
+```
+
+## Environment Variables
+
+### API (apps/api/.env)
+
+```bash
+# Server
+NODE_ENV=development
+PORT=4000
+HOST=0.0.0.0
+CORS_ORIGIN=http://localhost:3000
+
+# JWT
+JWT_SECRET=your_secret_key_change_in_production
+
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=govcon_os
+DB_USER=govcon
+DB_PASSWORD=govcon_dev_password
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# MinIO
+MINIO_ENDPOINT=localhost
+MINIO_PORT=9000
+MINIO_USE_SSL=false
+MINIO_ACCESS_KEY=govcon
+MINIO_SECRET_KEY=govcon_minio_password
+```
+
+### Web (apps/web/.env)
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:4000
+```
+
+## Testing
+
+```bash
+# Run all tests
+npm run test
+
+# Run API tests only
+cd apps/api && npm test
+
+# Run specific test file
+cd apps/api && npm test -- rbac.test.ts
+```
+
+Test suites:
+- `rbac.test.ts` - Role-based access control
+- `tenancy.test.ts` - Multi-tenant isolation
+
+## RBAC Roles
+
+| Role | Level | Permissions |
+|------|-------|-------------|
+| `admin` | 100 | Full system access |
+| `capture` | 80 | Manage opportunities, capability docs |
+| `proposal` | 70 | Manage proposals, compliance matrices |
+| `technical` | 50 | Write technical sections |
+| `pricing` | 50 | Manage pricing data |
+| `reviewer` | 30 | Review and comment |
+| `readonly` | 10 | Read-only access |
+
+## Troubleshooting
+
+### Docker services not starting
+
+```bash
+# Check if ports are already in use
+lsof -i :5432  # PostgreSQL
+lsof -i :6379  # Redis
+lsof -i :9000  # MinIO
+
+# Restart services
+npm run docker:down
+npm run docker:up
+```
+
+### Database connection errors
+
+```bash
+# Verify PostgreSQL is running
+docker ps | grep postgres
+
+# Check logs
+docker logs govcon-postgres
+
+# Reconnect
+npm run docker:down
+npm run docker:up
+sleep 10
+npm run db:migrate
+```
+
+### Migration errors
+
+```bash
+# Drop and recreate database (WARNING: destroys data)
+docker exec -it govcon-postgres psql -U govcon -c "DROP DATABASE IF EXISTS govcon_os;"
+docker exec -it govcon-postgres psql -U govcon -c "CREATE DATABASE govcon_os;"
+npm run db:migrate
+npm run db:seed
+```
+
+## Deployment
+
+See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for complete deployment instructions to **www.rlpscout.ai**.
+
+### Quick Deploy to Vercel
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy to production
+vercel --prod
+```
+
+### Configure Custom Domain
+
+1. Go to Vercel Dashboard → Settings → Domains
+2. Add `www.rlpscout.ai`
+3. Update DNS records (see DEPLOYMENT_GUIDE.md)
+4. Wait for SSL certificate provisioning
+
+## Roadmap
+
+### ✅ Phase 1 - Core Platform (COMPLETE)
+- Next.js 15 application
+- Supabase authentication & database
+- SAM.gov opportunity sync
+- Dashboard with opportunity filters
+- Broker listing page
+
+### ✅ Phase 2 - Scoring System (COMPLETE)
+- Property database schema
+- Broker profile schema
+- 5-category weighted scoring algorithm
+- PropertyMatchScore UI component
+- API endpoint for score calculation
+- Score caching (24-hour TTL)
+
+### 🚧 Phase 3 - Property Management
+- Property listing creation UI
+- Broker profile onboarding
+- Image upload for properties
+- Floor plan management
+- Document storage
+
+### 🚧 Phase 4 - Enhanced Matching
+- AI-powered requirement extraction from RFPs
+- Automatic geocoding for delineated areas
+- Email notifications for high-scoring matches
+- Weekly digest of new opportunities
+
+### 🚧 Phase 5 - Collaboration
+- Team management for brokers
+- Shared property portfolios
+- Internal notes on opportunities
+- Lead management system
+
+## Contributing
+
+1. Create a feature branch
+2. Make changes
+3. Run tests: `npm test`
+4. Submit pull request
+
+## License
+
+Proprietary - All rights reserved
+
+## Support
+
+For issues and questions, contact the development team.
 
 ---
 
-Built with ❤️ using Next.js and modern web technologies.
+**Built with evidence-based architecture.** Every claim needs a citation.
