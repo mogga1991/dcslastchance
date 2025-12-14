@@ -28,42 +28,42 @@ export default function SidebarDemo() {
       label: "Dashboard",
       href: "/dashboard",
       icon: (
-        <Home className="text-blue-300 dark:text-blue-300 h-5 w-5 flex-shrink-0" />
+        <Home className="text-blue-300 dark:text-blue-300 h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: "Analyses",
       href: "/analyses",
       icon: (
-        <FileText className="text-blue-300 dark:text-blue-300 h-5 w-5 flex-shrink-0" />
+        <FileText className="text-blue-300 dark:text-blue-300 h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: "Reports",
       href: "/reports",
       icon: (
-        <BarChart3 className="text-blue-300 dark:text-blue-300 h-5 w-5 flex-shrink-0" />
+        <BarChart3 className="text-blue-300 dark:text-blue-300 h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: "Organizations",
       href: "/organizations",
       icon: (
-        <Building2 className="text-blue-300 dark:text-blue-300 h-5 w-5 flex-shrink-0" />
+        <Building2 className="text-blue-300 dark:text-blue-300 h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: "Team",
       href: "/team",
       icon: (
-        <Users className="text-blue-300 dark:text-blue-300 h-5 w-5 flex-shrink-0" />
+        <Users className="text-blue-300 dark:text-blue-300 h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: "Settings",
       href: "/settings",
       icon: (
-        <Settings className="text-blue-300 dark:text-blue-300 h-5 w-5 flex-shrink-0" />
+        <Settings className="text-blue-300 dark:text-blue-300 h-6 w-6 flex-shrink-0" />
       ),
     },
   ];
@@ -88,7 +88,7 @@ export default function SidebarDemo() {
                 label: "Logout",
                 href: "/logout",
                 icon: (
-                  <LogOut className="text-blue-300 dark:text-blue-300 h-5 w-5 flex-shrink-0" />
+                  <LogOut className="text-blue-300 dark:text-blue-300 h-6 w-6 flex-shrink-0" />
                 ),
               }}
             />

@@ -166,7 +166,7 @@ export const SidebarLink = ({
     <Link
       href={link.href}
       className={cn(
-        "flex items-center justify-start gap-2 group/sidebar py-2 px-3 rounded-md hover:bg-blue-900 dark:hover:bg-blue-900 transition-colors",
+        "flex items-center justify-start gap-3 group/sidebar py-3 px-3 rounded-md hover:bg-blue-900 dark:hover:bg-blue-900 transition-colors",
         className
       )}
       {...props}
@@ -177,7 +177,8 @@ export const SidebarLink = ({
           display: animate ? (open ? "inline-block" : "none") : "inline-block",
           opacity: animate ? (open ? 1 : 0) : 1,
         }}
-        className="text-blue-50 dark:text-blue-50 text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+        className="text-white dark:text-white text-[15px] font-bold group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+        style={{ fontFamily: 'Roboto, sans-serif' }}
       >
         {link.label}
       </motion.span>
