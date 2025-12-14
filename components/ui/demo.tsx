@@ -14,6 +14,14 @@ import {
 import { motion } from "framer-motion";
 import Link from "next/link";
 
+// Load Roboto font
+if (typeof window !== 'undefined') {
+  const link = document.createElement('link');
+  link.href = 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap';
+  link.rel = 'stylesheet';
+  document.head.appendChild(link);
+}
+
 export default function SidebarDemo() {
   const links = [
     {
@@ -96,13 +104,14 @@ export const Logo = () => {
   return (
     <Link
       href="/dashboard"
-      className="font-normal flex space-x-2 items-center text-sm text-blue-50 py-1 relative z-20"
+      className="font-normal flex space-x-2 items-center text-sm py-1 relative z-20"
     >
       <div className="h-5 w-6 bg-blue-400 dark:bg-blue-400 rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
       <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-medium text-blue-50 dark:text-blue-50 whitespace-pre"
+        className="font-bold text-white text-xl whitespace-pre"
+        style={{ fontFamily: 'Roboto, sans-serif' }}
       >
         FedSpace
       </motion.span>
@@ -125,6 +134,12 @@ const Dashboard = () => {
   return (
     <div className="flex flex-1">
       <div className="p-2 md:p-10 rounded-tl-2xl border border-blue-800 dark:border-blue-800 bg-blue-950 dark:bg-blue-950 flex flex-col gap-2 flex-1 w-full h-full overflow-auto">
+        <h1
+          className="text-white font-bold text-[15px] mb-4"
+          style={{ fontFamily: 'Roboto, sans-serif' }}
+        >
+          Dashboard Overview
+        </h1>
         <div className="flex gap-2">
           {[...new Array(4)].map((_, i) => (
             <div
