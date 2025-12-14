@@ -1,37 +1,35 @@
-const { neon } = require('@neondatabase/serverless');
-const fs = require('fs');
-const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config({ path: '.env.local' });
 
-// Read .env.local file
-const envPath = path.join(__dirname, '.env.local');
-if (fs.existsSync(envPath)) {
-  const envContent = fs.readFileSync(envPath, 'utf8');
-  envContent.split('\n').forEach(line => {
-    const match = line.match(/^([^=:#]+)=(.*)$/);
-    if (match) {
-      const key = match[1].trim();
-      const value = match[2].trim().replace(/^["']|["']$/g, '');
-      process.env[key] = value;
-    }
-  });
-}
-
-const sql = neon(process.env.DATABASE_URL);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 async function checkTables() {
-  const tables = ['user', 'organization', 'company_profile', 'opportunity', 'opportunity_match', 'analysis'];
-  
-  for (const table of tables) {
-    const cols = await sql`
-      SELECT column_name, data_type, is_nullable
-      FROM information_schema.columns 
-      WHERE table_name = ${table}
-      ORDER BY ordinal_position
-    `;
-    
-    console.log(`\n${table.toUpperCase()} table:`);
-    cols.forEach(c => console.log(`  ${c.column_name}: ${c.data_type} ${c.is_nullable === 'NO' ? 'NOT NULL' : ''}`));
+  const { data, error } = await supabase.rpc('exec_sql', {
+    sql_query: `
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name LIKE '%org%'
+      ORDER BY table_name;
+    `
+  });
+
+  if (error) {
+    console.log('Trying alternative query method...');
+    const { data: tables, error: err2 } = await supabase
+      .from('information_schema.tables')
+      .select('table_name')
+      .eq('table_schema', 'public')
+      .like('table_name', '%org%');
+      
+    console.log('Tables:', tables);
+    console.log('Error:', err2);
+  } else {
+    console.log('Tables:', data);
   }
 }
 
-checkTables().catch(console.error);
+checkTables();

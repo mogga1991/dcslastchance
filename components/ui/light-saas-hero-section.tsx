@@ -213,24 +213,11 @@ export const Plasma: React.FC<PlasmaProps> = ({
 
 export function Logo() {
     return (
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="h-10 w-10">
-            <defs>
-                <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style={{ stopColor: "#6366F1", stopOpacity: 1 }} />
-                    <stop offset="100%" style={{ stopColor: "#8B5CF6", stopOpacity: 1 }} />
-                </linearGradient>
-            </defs>
-            {/* Document shape */}
-            <rect x="25" y="20" width="50" height="60" rx="3" fill="url(#purpleGradient)" />
-            <rect x="30" y="25" width="40" height="50" rx="2" fill="white" opacity="0.3" />
-            {/* Lines representing text */}
-            <line x1="35" y1="33" x2="65" y2="33" stroke="white" strokeWidth="2" opacity="0.9" />
-            <line x1="35" y1="41" x2="65" y2="41" stroke="white" strokeWidth="2" opacity="0.9" />
-            <line x1="35" y1="49" x2="55" y2="49" stroke="white" strokeWidth="2" opacity="0.9" />
-            {/* AI sparkle */}
-            <circle cx="70" cy="35" r="8" fill="#6366F1" opacity="0.9" />
-            <path d="M 70 30 L 71 33 L 74 34 L 71 35 L 70 38 L 69 35 L 66 34 L 69 33 Z" fill="white" />
-        </svg>
+        <img
+            src="/logo-full-dark.svg"
+            alt="RLP SCOUT"
+            className="h-10 w-auto"
+        />
     );
 }
 
