@@ -541,25 +541,37 @@ export default function OnboardingPage() {
             >
               Back
             </Button>
-            {step < totalSteps ? (
+            <div className="flex gap-3">
               <Button
                 type="button"
-                onClick={handleNext}
+                variant="ghost"
+                onClick={() => router.push("/dashboard")}
+                disabled={loading}
                 size="lg"
                 className="text-lg"
               >
-                Next
+                Skip for now
               </Button>
-            ) : (
-              <Button type="button" onClick={handleSubmit} disabled={loading} size="lg" className="text-lg">
-                {loading ? "Creating Profile..." : (
-                  <>
-                    <CheckCircle2 className="mr-2 h-5 w-5" />
-                    Complete Setup
-                  </>
-                )}
-              </Button>
-            )}
+              {step < totalSteps ? (
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  size="lg"
+                  className="text-lg"
+                >
+                  Next
+                </Button>
+              ) : (
+                <Button type="button" onClick={handleSubmit} disabled={loading} size="lg" className="text-lg">
+                  {loading ? "Creating Profile..." : (
+                    <>
+                      <CheckCircle2 className="mr-2 h-5 w-5" />
+                      Complete Setup
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
