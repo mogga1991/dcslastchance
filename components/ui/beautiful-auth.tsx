@@ -34,6 +34,9 @@ export default function BeautifulAuth() {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/dashboard`,
+            data: {
+              email_confirm: false,
+            },
           },
         });
 
@@ -43,7 +46,17 @@ export default function BeautifulAuth() {
           return;
         }
 
-        alert('Check your email to confirm your account!');
+        // Automatically sign in after signup
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) {
+          console.error('Auto sign-in error:', signInError);
+          alert('Account created! Please sign in.');
+          return;
+        }
       }
 
       window.location.href = '/dashboard';

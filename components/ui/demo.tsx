@@ -32,7 +32,7 @@ export default function Demo() {
               FedSpace empowers capture teams to analyze opportunities 10x faster while reducing compliance risk and improving bid quality.
             </p>
             <a
-              href="/dashboard/upload"
+              href="/sign-in"
               className="group flex items-center gap-2 mt-4 text-indigo-600 hover:text-indigo-700 transition"
             >
               Start analyzing your first RFP
