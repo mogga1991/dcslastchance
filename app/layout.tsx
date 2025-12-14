@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     siteName: "FedSpace",
     images: [
       {
-        url: "https://jdj14ctwppwprnqu.public.blob.vercel-storage.com/nsk-w9fFwBBmLDLxrB896I4xqngTUEEovS.png",
+        url: "/api/og",
         width: 1200,
         height: 630,
         alt: "FedSpace - AI-Powered Federal Contract Intelligence",
