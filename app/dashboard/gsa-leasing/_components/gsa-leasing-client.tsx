@@ -71,12 +71,12 @@ export default function GSALeasingClient() {
   const fetchOpportunities = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/opportunities?source=gsa_leasing&limit=100");
+      const response = await fetch("/api/gsa-leasing?limit=100");
       const data = await response.json();
 
-      if (data.success) {
-        setOpportunities(data.data || []);
-        setFilteredOpportunities(data.data || []);
+      if (data.opportunitiesData) {
+        setOpportunities(data.opportunitiesData || []);
+        setFilteredOpportunities(data.opportunitiesData || []);
       }
     } catch (error) {
       console.error("Error fetching opportunities:", error);

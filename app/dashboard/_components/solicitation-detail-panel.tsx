@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { SAMOpportunity } from "@/lib/sam-gov";
 import { getDaysUntilDeadline, getUrgencyLevel } from "@/lib/sam-gov";
+import { QualificationCheckModal } from "./qualification-check-modal";
 
 interface SolicitationDetailPanelProps {
   opportunity: SAMOpportunity | null;
@@ -25,6 +26,7 @@ export function SolicitationDetailPanel({
   onSave,
 }: SolicitationDetailPanelProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [isQualificationModalOpen, setIsQualificationModalOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -221,7 +223,7 @@ export function SolicitationDetailPanel({
         {/* Action Buttons */}
         <div className="sticky bottom-0 bg-white border-t p-6 space-y-3">
           <Button
-            onClick={onCheckQualification}
+            onClick={() => setIsQualificationModalOpen(true)}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
             size="lg"
           >
@@ -249,6 +251,18 @@ export function SolicitationDetailPanel({
           </Button>
         </div>
       </div>
+
+      {/* Qualification Check Modal */}
+      <QualificationCheckModal
+        opportunity={opportunity}
+        isOpen={isQualificationModalOpen}
+        onClose={() => setIsQualificationModalOpen(false)}
+        onSaveOpportunity={(qualified) => {
+          if (onSave) {
+            onSave();
+          }
+        }}
+      />
     </>
   );
 }
