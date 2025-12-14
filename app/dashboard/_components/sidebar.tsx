@@ -15,7 +15,6 @@ import {
   CreditCard,
   Newspaper,
   LogOut,
-  Upload,
   PlusCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -59,15 +58,6 @@ export default function DashboardSideBar() {
       href: "/dashboard/broker-listing",
       icon: (
         <PlusCircle
-          className="h-5 w-5 flex-shrink-0"
-        />
-      ),
-    },
-    {
-      label: "Upload RFP",
-      href: "/dashboard/upload",
-      icon: (
-        <Upload
           className="h-5 w-5 flex-shrink-0"
         />
       ),
