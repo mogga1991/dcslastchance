@@ -255,9 +255,6 @@ const GlassmorphicNavbar = () => {
 
                     {/* Auth Buttons */}
                     <div className="hidden md:flex items-center space-x-2">
-                        <a href="/sign-in" className="px-5 py-2 text-gray-700 font-medium rounded-full hover:bg-white/50 transition-colors">
-                            Sign in
-                        </a>
                         <a href="/sign-in" className="px-5 py-2 bg-indigo-600 text-white font-medium rounded-full shadow-md hover:bg-indigo-700 transition-colors">
                             Get Started
                         </a>
@@ -294,11 +291,8 @@ const GlassmorphicNavbar = () => {
                             <a href="#resources" className="px-4 py-3 text-gray-700 hover:text-indigo-600 font-medium rounded-lg hover:bg-white transition-colors">
                                 Resources
                             </a>
-                            <div className="border-t border-gray-200 pt-3 flex flex-col space-y-3">
-                                <a href="/sign-in" className="px-4 py-3 text-center text-gray-700 font-medium rounded-lg bg-white/50">
-                                    Sign in
-                                </a>
-                                <a href="/sign-in" className="px-4 py-3 text-center bg-indigo-600 text-white font-medium rounded-lg shadow-md">
+                            <div className="border-t border-gray-200 pt-3">
+                                <a href="/sign-in" className="px-4 py-3 text-center bg-indigo-600 text-white font-medium rounded-lg shadow-md block">
                                     Get Started
                                 </a>
                             </div>
