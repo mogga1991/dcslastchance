@@ -177,7 +177,8 @@ export async function POST(request: NextRequest) {
         !input.total_sf || !input.available_sf || !input.asking_rent_sf ||
         !input.lease_type || !input.available_date ||
         !input.broker_name || !input.broker_company ||
-        !input.broker_email || !input.broker_phone) {
+        !input.broker_email || !input.broker_phone ||
+        !input.lister_role) {
       return NextResponse.json(
         {
           success: false,
@@ -187,27 +188,93 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate federal score if coordinates provided
+    // Validate lister_role is one of the allowed values
+    const validRoles = ['owner', 'broker', 'agent', 'salesperson'];
+    if (!validRoles.includes(input.lister_role)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid lister_role. Must be one of: owner, broker, agent, salesperson'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate conditional fields based on role
+    if (input.lister_role === 'broker' || input.lister_role === 'agent') {
+      if (!input.license_number) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'license_number is required for brokers and agents'
+          },
+          { status: 400 }
+        );
+      }
+      if (!input.brokerage_company) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'brokerage_company is required for brokers and agents'
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate coordinates are provided (required for map display)
+    if (!input.latitude || !input.longitude) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Property coordinates are required. Please verify the address using the "Locate on Map" button.'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate coordinates are valid numbers
+    if (
+      typeof input.latitude !== 'number' ||
+      typeof input.longitude !== 'number' ||
+      isNaN(input.latitude) ||
+      isNaN(input.longitude) ||
+      input.latitude < -90 ||
+      input.latitude > 90 ||
+      input.longitude < -180 ||
+      input.longitude > 180
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid coordinates. Please verify the property location.'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Calculate federal score with coordinates
     let federalScore: number | undefined;
     let federalScoreData: any;
 
-    if (input.latitude && input.longitude) {
-      const score = await iolpAdapter.calculateFederalNeighborhoodScore(
-        input.latitude,
-        input.longitude,
-        5 // 5 mile radius
-      );
-      federalScore = score.score;
-      federalScoreData = score;
-    }
+    const score = await iolpAdapter.calculateFederalNeighborhoodScore(
+      input.latitude,
+      input.longitude,
+      5 // 5 mile radius
+    );
+    federalScore = score.score;
+    federalScoreData = score;
 
     // Prepare insert data
     const insertData = {
       user_id: user.id,
+      lister_role: input.lister_role,
       broker_name: input.broker_name,
       broker_company: input.broker_company,
       broker_email: input.broker_email,
       broker_phone: input.broker_phone,
+      license_number: input.license_number,
+      brokerage_company: input.brokerage_company,
       title: input.title,
       description: input.description,
       property_type: input.property_type,

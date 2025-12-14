@@ -16,6 +16,7 @@ import {
   Newspaper,
   LogOut,
   Upload,
+  PlusCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -54,10 +55,10 @@ export default function DashboardSideBar() {
       ),
     },
     {
-      label: "Broker Listing",
+      label: "List Property",
       href: "/dashboard/broker-listing",
       icon: (
-        <Users
+        <PlusCircle
           className="h-5 w-5 flex-shrink-0"
         />
       ),

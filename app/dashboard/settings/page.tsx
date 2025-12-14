@@ -339,7 +339,7 @@ function SettingsContent() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Sarah Mitchell"
-                  className="bg-gray-50 dark:bg-gray-900"
+                  className="bg-white border-gray-300"
                 />
               </div>
 
@@ -351,7 +351,7 @@ function SettingsContent() {
                   type="email"
                   value={user?.email || ""}
                   disabled
-                  className="bg-gray-50 dark:bg-gray-900"
+                  className="bg-gray-100 border-gray-300"
                 />
               </div>
 
@@ -359,7 +359,7 @@ function SettingsContent() {
               <div className="space-y-2">
                 <Label htmlFor="country">Country</Label>
                 <Select value={country} onValueChange={setCountry}>
-                  <SelectTrigger className="bg-gray-50 dark:bg-gray-900">
+                  <SelectTrigger className="bg-white border-gray-300">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -372,7 +372,7 @@ function SettingsContent() {
               <div className="space-y-2">
                 <Label htmlFor="state">State</Label>
                 <Select value={state} onValueChange={setState}>
-                  <SelectTrigger className="bg-gray-50 dark:bg-gray-900">
+                  <SelectTrigger className="bg-white border-gray-300">
                     <SelectValue placeholder="Select a state" />
                   </SelectTrigger>
                   <SelectContent>
@@ -406,14 +406,14 @@ function SettingsContent() {
                 <Input
                   id="companyName"
                   placeholder="Your Company LLC"
-                  className="bg-gray-50 dark:bg-gray-900"
+                  className="bg-white border-gray-300"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="businessType">Business Type</Label>
                 <Select>
-                  <SelectTrigger className="bg-gray-50 dark:bg-gray-900">
+                  <SelectTrigger className="bg-white border-gray-300">
                     <SelectValue placeholder="Select business type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -430,7 +430,7 @@ function SettingsContent() {
                 <Input
                   id="licenseNumber"
                   placeholder="RE-12345678"
-                  className="bg-gray-50 dark:bg-gray-900"
+                  className="bg-white border-gray-300"
                 />
               </div>
 
@@ -440,7 +440,7 @@ function SettingsContent() {
                   id="phoneNumber"
                   type="tel"
                   placeholder="+1 (555) 000-0000"
-                  className="bg-gray-50 dark:bg-gray-900"
+                  className="bg-white border-gray-300"
                 />
               </div>
 
@@ -449,7 +449,7 @@ function SettingsContent() {
                 <Input
                   id="businessAddress"
                   placeholder="123 Main St, City, State 12345"
-                  className="bg-gray-50 dark:bg-gray-900"
+                  className="bg-white border-gray-300"
                 />
               </div>
 

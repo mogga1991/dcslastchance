@@ -27,6 +27,11 @@ export type PropertyType =
   | 'other';
 
 /**
+ * Lister Role Types
+ */
+export type ListerRole = 'owner' | 'broker' | 'agent' | 'salesperson';
+
+/**
  * Set-Aside Types for Federal Contracting
  */
 export type SetAsideType =
@@ -50,11 +55,16 @@ export interface BrokerListing {
   id: string;
   user_id: string;
 
+  // Lister Role
+  lister_role: ListerRole;
+
   // Broker Information
   broker_name: string;
   broker_company: string;
   broker_email: string;
   broker_phone: string;
+  license_number?: string;
+  brokerage_company?: string;
 
   // Listing Details
   title: string;
@@ -111,11 +121,16 @@ export interface BrokerListing {
  * Input type for creating/updating broker listings
  */
 export interface BrokerListingInput {
+  // Lister Role
+  lister_role: ListerRole;
+
   // Broker Information
   broker_name: string;
   broker_company: string;
   broker_email: string;
   broker_phone: string;
+  license_number?: string;
+  brokerage_company?: string;
 
   // Listing Details
   title: string;

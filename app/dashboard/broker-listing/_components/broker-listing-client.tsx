@@ -16,6 +16,10 @@ import { Search, MapPin, Building2, Eye, Users, Plus, Star } from "lucide-react"
 import Image from "next/image";
 import { PropertyMatchScore } from "@/components/broker/property-match-score";
 import { generateMockPropertyScore, getMockOpportunityTitle } from "@/lib/scoring/mock-scores";
+import { CreateListingDialog } from "./create-listing-dialog";
+import type { ListerRole, BrokerListingInput } from "@/types/broker-listing";
+import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 interface Property {
   id: string;
@@ -33,6 +37,30 @@ interface Property {
   inquiries: number;
   views: number;
   featured: boolean;
+  listerRole: ListerRole;
+}
+
+// Helper function to get role badge styling and label
+function getRoleBadge(role: ListerRole) {
+  const badges = {
+    owner: {
+      label: "Listed by Owner",
+      className: "bg-green-100 text-green-700 border-green-200",
+    },
+    broker: {
+      label: "Listed by Broker",
+      className: "bg-blue-100 text-blue-700 border-blue-200",
+    },
+    agent: {
+      label: "Listed by Agent",
+      className: "bg-purple-100 text-purple-700 border-purple-200",
+    },
+    salesperson: {
+      label: "Listed by Sales",
+      className: "bg-gray-100 text-gray-700 border-gray-200",
+    },
+  };
+  return badges[role];
 }
 
 // Mock data - Replace with actual API call
@@ -54,6 +82,7 @@ const MOCK_PROPERTIES: Property[] = [
     inquiries: 23,
     views: 1547,
     featured: true,
+    listerRole: "owner",
   },
   {
     id: "2",
@@ -72,6 +101,7 @@ const MOCK_PROPERTIES: Property[] = [
     inquiries: 34,
     views: 1856,
     featured: true,
+    listerRole: "broker",
   },
 ];
 
@@ -81,6 +111,33 @@ export default function BrokerListingClient() {
   const [propertyType, setPropertyType] = useState("all");
   const [propertyClass, setPropertyClass] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+  const router = useRouter();
+
+  const handleCreateListing = async (data: BrokerListingInput) => {
+    try {
+      const response = await fetch("/api/broker-listings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        alert(`Error creating listing: ${result.error || "Unknown error"}`);
+        throw new Error(result.error || "Failed to create listing");
+      }
+
+      // Success! Redirect to GSA Leasing page to see the new listing on the map
+      alert("Property listed successfully! Redirecting to GSA Leasing to view on map...");
+      router.push("/dashboard/gsa-leasing");
+    } catch (error) {
+      console.error("Error creating listing:", error);
+      throw error;
+    }
+  };
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-gray-50">
@@ -95,10 +152,7 @@ export default function BrokerListingClient() {
             <div className="flex gap-2">
               <Button variant="default">Browse Listings</Button>
               <Button variant="outline">Manage Portfolio</Button>
-              <Button variant="default" className="gap-2">
-                <Plus className="h-4 w-4" />
-                List Property
-              </Button>
+              <CreateListingDialog onSubmit={handleCreateListing} />
             </div>
           </div>
 
@@ -189,9 +243,19 @@ export default function BrokerListingClient() {
                 <CardContent className="p-6">
                   {/* Property Name and Location */}
                   <h3 className="text-lg font-semibold mb-2">{property.name}</h3>
-                  <div className="flex items-center text-gray-600 mb-4">
+                  <div className="flex items-center text-gray-600 mb-2">
                     <MapPin className="h-4 w-4 mr-1" />
                     <span className="text-sm">{property.location}</span>
+                  </div>
+
+                  {/* Lister Role Badge */}
+                  <div className="mb-4">
+                    <Badge
+                      variant="outline"
+                      className={cn("text-xs", getRoleBadge(property.listerRole).className)}
+                    >
+                      {getRoleBadge(property.listerRole).label}
+                    </Badge>
                   </div>
 
                   {/* Property Details Grid */}

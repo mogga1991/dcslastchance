@@ -2,7 +2,51 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Building2, DollarSign, Calendar, Eye, Star, ExternalLink } from "lucide-react";
-import type { BrokerListing } from "@/types/broker-listing";
+import type { BrokerListing, ListerRole } from "@/types/broker-listing";
+
+// Array of placeholder office/building images from Unsplash
+const buildingImages = [
+  'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=400&fit=crop', // Modern glass building
+  'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=400&fit=crop', // Office building
+  'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=800&h=400&fit=crop', // Corporate office
+  'https://images.unsplash.com/photo-1554469384-e58fac16e23a?w=800&h=400&fit=crop', // Skyscraper
+  'https://images.unsplash.com/photo-1577985043696-8bd54d9c4f19?w=800&h=400&fit=crop', // Office tower
+  'https://images.unsplash.com/photo-1545324418-cc6e8fc3a3f0?w=800&h=400&fit=crop', // Business building
+  'https://images.unsplash.com/photo-1464938050520-ef2270bb8ce8?w=800&h=400&fit=crop', // City building
+  'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=400&fit=crop', // Commercial property
+  'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800&h=400&fit=crop', // Office exterior
+  'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=800&h=400&fit=crop', // Business center
+];
+
+// Get consistent image based on listing ID
+function getImageForListing(listingId: string): string {
+  // Use listing ID to get a consistent index
+  const hash = listingId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return buildingImages[hash % buildingImages.length];
+}
+
+// Helper function to get role badge styling and label
+function getRoleBadge(role: ListerRole) {
+  const badges = {
+    owner: {
+      label: "Listed by Owner",
+      className: "bg-green-100 text-green-700 border-green-200",
+    },
+    broker: {
+      label: "Listed by Broker",
+      className: "bg-blue-100 text-blue-700 border-blue-200",
+    },
+    agent: {
+      label: "Listed by Agent",
+      className: "bg-purple-100 text-purple-700 border-purple-200",
+    },
+    salesperson: {
+      label: "Listed by Sales",
+      className: "bg-gray-100 text-gray-700 border-gray-200",
+    },
+  };
+  return badges[role];
+}
 
 interface BrokerListingCardProps {
   listing: BrokerListing;
@@ -49,17 +93,19 @@ export function BrokerListingCard({ listing, isSelected, onClick, onViewDetails 
 
   return (
     <Card
-      className={`overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg ${
+      className={`group overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg ${
         isSelected ? "ring-2 ring-blue-500 shadow-lg" : ""
       }`}
       onClick={onClick}
     >
       {/* Image Section */}
-      <div className="relative h-48 bg-gradient-to-br from-blue-100 via-blue-50 to-gray-100">
-        {/* Placeholder for building image */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Building2 className="h-16 w-16 text-gray-300" />
-        </div>
+      <div className="relative h-48 overflow-hidden bg-gray-200">
+        <img
+          src={getImageForListing(listing.id)}
+          alt={listing.title}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          loading="lazy"
+        />
 
         {/* Property Class Badge - Top Right */}
         <div className="absolute top-3 right-3">
@@ -96,10 +142,19 @@ export function BrokerListingCard({ listing, isSelected, onClick, onViewDetails 
         {/* Title */}
         <div>
           <h3 className="font-bold text-base line-clamp-2 mb-1">{listing.title}</h3>
-          <div className="flex items-center text-sm text-gray-600">
+          <div className="flex items-center text-sm text-gray-600 mb-2">
             <MapPin className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
             <span className="truncate">{listing.city}, {listing.state} {listing.zipcode}</span>
           </div>
+          {/* Lister Role Badge */}
+          {listing.lister_role && (
+            <Badge
+              variant="outline"
+              className={`text-xs ${getRoleBadge(listing.lister_role).className}`}
+            >
+              {getRoleBadge(listing.lister_role).label}
+            </Badge>
+          )}
         </div>
 
         {/* Key Metrics - Three Columns */}

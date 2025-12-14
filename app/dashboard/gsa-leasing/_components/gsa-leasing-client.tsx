@@ -146,7 +146,7 @@ export default function GSALeasingClient() {
               GSA Opportunities
             </TabsTrigger>
             <TabsTrigger value="listings" className="rounded-none">
-              Broker Listings
+              Available Listings
             </TabsTrigger>
           </TabsList>
 
@@ -180,7 +180,7 @@ export default function GSALeasingClient() {
             )}
           </TabsContent>
 
-          {/* Broker Listings Tab */}
+          {/* Available Listings Tab */}
           <TabsContent value="listings" className="flex-1 overflow-y-auto m-0 p-4">
             {loading ? (
               <div className="flex items-center justify-center py-12">

@@ -1,51 +1,29 @@
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config({ path: '.env.local' });
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+const supabaseUrl = 'https://clxqdctofuxqjjonvytm.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNseHFkY3RvZnV4cWpqb252eXRtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTQ5Njg0MywiZXhwIjoyMDgxMDcyODQzfQ.rsFGPYgHdy4SjTjp-pL_0pZdM6s41xkodaAOZMwDCPk';
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function testConnection() {
-  console.log('Testing Supabase connection...\n');
+  try {
+    const { data, error } = await supabase
+      .from('broker_listings')
+      .select('*')
+      .limit(1);
 
-  // Test properties table
-  const { data: properties, error: propertiesError } = await supabase
-    .from('properties')
-    .select('id')
-    .limit(1);
-
-  if (propertiesError) {
-    console.log('❌ Properties table:', propertiesError.message);
-  } else {
-    console.log('✅ Properties table exists');
+    if (error) {
+      console.log('Error accessing broker_listings:', error.message);
+    } else {
+      console.log('Successfully connected to Supabase!');
+      console.log('Number of records:', data.length);
+      if (data.length > 0) {
+        console.log('Sample columns:', Object.keys(data[0]));
+      }
+    }
+  } catch (err) {
+    console.error('Connection error:', err);
   }
-
-  // Test broker_profiles table
-  const { data: brokers, error: brokersError } = await supabase
-    .from('broker_profiles')
-    .select('id')
-    .limit(1);
-
-  if (brokersError) {
-    console.log('❌ Broker profiles table:', brokersError.message);
-  } else {
-    console.log('✅ Broker profiles table exists');
-  }
-
-  // Test property_scores table
-  const { data: scores, error: scoresError } = await supabase
-    .from('property_scores')
-    .select('id')
-    .limit(1);
-
-  if (scoresError) {
-    console.log('❌ Property scores table:', scoresError.message);
-  } else {
-    console.log('✅ Property scores table exists');
-  }
-
-  console.log('\n✅ Database setup complete!');
 }
 
-testConnection().catch(console.error);
+testConnection();
