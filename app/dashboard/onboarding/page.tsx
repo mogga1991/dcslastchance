@@ -188,6 +188,9 @@ export default function OnboardingPage() {
         throw new Error("Failed to create profile");
       }
 
+      // Clear skip flag since profile is now complete
+      localStorage.removeItem("onboarding_skipped");
+
       toast.success("Profile created successfully!");
       router.push("/dashboard");
     } catch (error) {
@@ -545,7 +548,10 @@ export default function OnboardingPage() {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => router.push("/dashboard")}
+                onClick={() => {
+                  localStorage.setItem("onboarding_skipped", "true");
+                  router.push("/dashboard");
+                }}
                 disabled={loading}
                 size="lg"
                 className="text-lg"
