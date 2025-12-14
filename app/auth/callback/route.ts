@@ -7,20 +7,34 @@ export async function GET(request: Request) {
     const code = requestUrl.searchParams.get('code')
     const origin = requestUrl.origin
 
+    console.log('[Auth Callback] Processing OAuth callback', {
+      origin,
+      hasCode: !!code,
+      fullUrl: request.url
+    })
+
     if (code) {
       const supabase = await createClient()
-      const { error } = await supabase.auth.exchangeCodeForSession(code)
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
       if (error) {
-        console.error('Error exchanging code for session:', error)
-        return NextResponse.redirect(`${origin}/sign-in?error=auth_failed`)
+        console.error('[Auth Callback] Error exchanging code for session:', error)
+        return NextResponse.redirect(`${origin}/sign-in?error=auth_failed&message=${encodeURIComponent(error.message)}`)
       }
+
+      console.log('[Auth Callback] Successfully exchanged code for session', {
+        userId: data?.user?.id,
+        email: data?.user?.email,
+      })
+
+      // Redirect to debug page temporarily to see session state
+      return NextResponse.redirect(`${origin}/auth/debug`)
     }
 
-    // URL to redirect to after sign in process completes
-    return NextResponse.redirect(`${origin}/dashboard`)
+    console.log('[Auth Callback] No code provided, redirecting to sign-in')
+    return NextResponse.redirect(`${origin}/sign-in?error=no_code`)
   } catch (error) {
-    console.error('Auth callback error:', error)
+    console.error('[Auth Callback] Unexpected error:', error)
     return NextResponse.redirect(`${request.url.split('?')[0].replace('/auth/callback', '/sign-in')}?error=server_error`)
   }
 }
