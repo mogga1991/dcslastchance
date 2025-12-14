@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/select";
 import { Search, MapPin, Building2, Eye, Users, Plus, Star } from "lucide-react";
 import Image from "next/image";
+import { PropertyMatchScore } from "@/components/broker/property-match-score";
+import { generateMockPropertyScore, getMockOpportunityTitle } from "@/lib/scoring/mock-scores";
 
 interface Property {
   id: string;
@@ -249,6 +251,14 @@ export default function BrokerListingClient() {
                     <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
                       View Details
                     </Button>
+                  </div>
+
+                  {/* Property Match Score - ONLY shown in Broker Listing */}
+                  <div className="mt-4 pt-4 border-t">
+                    <PropertyMatchScore
+                      score={generateMockPropertyScore(property.id)}
+                      opportunityTitle={getMockOpportunityTitle()}
+                    />
                   </div>
                 </CardContent>
               </Card>
