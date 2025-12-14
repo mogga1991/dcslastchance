@@ -250,13 +250,13 @@ const GlassmorphicNavbar = () => {
 
                     {/* Desktop Navigation Links */}
                     <div className="hidden md:flex items-center space-x-1">
-                        <a href="#features" className="px-4 py-2 text-gray-700 hover:text-indigo-600 font-medium rounded-full hover:bg-white/50 transition-colors">
+                        <a href="/features" className="px-4 py-2 text-gray-700 hover:text-indigo-600 font-medium rounded-full hover:bg-white/50 transition-colors">
                             Features
                         </a>
                         <a href="#solutions" className="px-4 py-2 text-gray-700 hover:text-indigo-600 font-medium rounded-full hover:bg-white/50 transition-colors">
                             Solutions
                         </a>
-                        <a href="#pricing" className="px-4 py-2 text-gray-700 hover:text-indigo-600 font-medium rounded-full hover:bg-white/50 transition-colors">
+                        <a href="/pricing" className="px-4 py-2 text-gray-700 hover:text-indigo-600 font-medium rounded-full hover:bg-white/50 transition-colors">
                             Pricing
                         </a>
                         <a href="#resources" className="px-4 py-2 text-gray-700 hover:text-indigo-600 font-medium rounded-full hover:bg-white/50 transition-colors">
@@ -293,13 +293,13 @@ const GlassmorphicNavbar = () => {
                 {isMenuOpen && (
                     <div className="md:hidden mt-4 bg-white/90 rounded-2xl p-4 shadow-lg border border-white/20">
                         <div className="flex flex-col space-y-3">
-                            <a href="#features" className="px-4 py-3 text-gray-700 hover:text-indigo-600 font-medium rounded-lg hover:bg-white transition-colors">
+                            <a href="/features" className="px-4 py-3 text-gray-700 hover:text-indigo-600 font-medium rounded-lg hover:bg-white transition-colors">
                                 Features
                             </a>
                             <a href="#solutions" className="px-4 py-3 text-gray-700 hover:text-indigo-600 font-medium rounded-lg hover:bg-white transition-colors">
                                 Solutions
                             </a>
-                            <a href="#pricing" className="px-4 py-3 text-gray-700 hover:text-indigo-600 font-medium rounded-lg hover:bg-white transition-colors">
+                            <a href="/pricing" className="px-4 py-3 text-gray-700 hover:text-indigo-600 font-medium rounded-lg hover:bg-white transition-colors">
                                 Pricing
                             </a>
                             <a href="#resources" className="px-4 py-3 text-gray-700 hover:text-indigo-600 font-medium rounded-lg hover:bg-white transition-colors">

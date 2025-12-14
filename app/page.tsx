@@ -2,7 +2,6 @@
 
 import FooterSection from "@/components/homepage/footer";
 import { HeroSection } from "@/components/ui/light-saas-hero-section";
-import ServicesSection from "@/components/homepage/services-section";
 import HeroHighlightSection from "@/components/homepage/hero-highlight-section";
 import AnimatedStatsSection from "@/components/homepage/animated-stats-section";
 import MultiVerticalSection from "@/components/homepage/multi-vertical-section";
@@ -21,7 +20,6 @@ export default function Home() {
     <>
       <HeroSection />
       <AnimatedStatsSection />
-      <ServicesSection />
       <MultiVerticalSection />
       <GovernmentBuysEverythingSection />
       <ValuePropositionSection />
