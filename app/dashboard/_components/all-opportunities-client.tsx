@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 import { SAMOpportunity } from "@/lib/sam-gov";
 
 // Dynamically import the map to avoid SSR issues
-const GSAMap = dynamic(() => import("@/components/gsa-map"), { ssr: false });
+const GSAMap = dynamic(() => import("@/components/google-gsa-map"), { ssr: false });
 
 export default function AllOpportunitiesClient() {
   const [opportunities, setOpportunities] = useState<SAMOpportunity[]>([]);
