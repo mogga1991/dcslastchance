@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Building2, FileText, Zap, ArrowRight } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 export default function BeautifulAuth() {
   const [isSignIn, setIsSignIn] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleEmailSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -16,38 +18,45 @@ export default function BeautifulAuth() {
 
     try {
       setIsLoading(true);
+      const supabase = getSupabaseBrowserClient();
 
       if (isSignIn) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (error) {
           console.error('Sign-in error:', error);
-          alert('Failed to sign in. Please check your credentials.');
+          alert(`Failed to sign in: ${error.message}`);
           return;
         }
+
+        console.log('Sign in successful, session:', data.session?.access_token ? 'exists' : 'missing');
+
+        // Wait a moment for cookies to be set
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Use router.push for client-side navigation with cookies
+        router.push('/dashboard');
+        router.refresh();
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: {
-              email_confirm: false,
-            },
           },
         });
 
         if (error) {
           console.error('Sign-up error:', error);
-          alert('Failed to create account. Please try again.');
+          alert(`Failed to create account: ${error.message}`);
           return;
         }
 
         // Automatically sign in after signup
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
@@ -57,9 +66,15 @@ export default function BeautifulAuth() {
           alert('Account created! Please sign in.');
           return;
         }
-      }
 
-      window.location.href = '/dashboard';
+        console.log('Sign up and sign in successful');
+
+        // Wait a moment for cookies to be set
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        router.push('/dashboard');
+        router.refresh();
+      }
     } catch (error) {
       console.error('Auth error:', error);
       alert('An error occurred. Please try again.');
