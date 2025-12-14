@@ -10,6 +10,7 @@ import ValuePropositionSection from "@/components/homepage/value-proposition-sec
 import MarketResilienceSection from "@/components/homepage/market-resilience-section";
 import SocialProofSection from "@/components/homepage/social-proof-section";
 import { Stats } from "@/components/ui/statistics-card";
+import Testimonials from "@/components/ui/testimonials";
 // import { getSubscriptionDetails } from "@/lib/subscription";
 // import PricingTable from "./pricing/_component/pricing-table";
 
@@ -28,6 +29,7 @@ export default function Home() {
       <MarketResilienceSection />
       <SocialProofSection />
       <HeroHighlightSection />
+      <Testimonials />
       {/* <PricingTable subscriptionDetails={subscriptionDetails} /> */}
       <FooterSection />
     </>
