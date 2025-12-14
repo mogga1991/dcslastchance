@@ -213,11 +213,13 @@ export const Plasma: React.FC<PlasmaProps> = ({
 
 export function Logo() {
     return (
-        <img
-            src="/logo-full-dark.svg"
-            alt="RLP SCOUT"
-            className="h-10 w-auto"
-        />
+        <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+            </div>
+        </div>
     );
 }
 
@@ -230,8 +232,8 @@ const GlassmorphicNavbar = () => {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Logo />
-                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-                            Sentyr
+                        <span className="text-xl font-bold text-gray-900">
+                            FedSpace
                         </span>
                     </div>
 

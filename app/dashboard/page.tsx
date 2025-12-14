@@ -32,7 +32,7 @@ export default async function Dashboard() {
               Welcome to FedSpace
             </h1>
             <p className="text-muted-foreground">
-              AI-Native GovCon OS - Your intelligent federal contracting platform
+              Your intelligent federal contracting platform
             </p>
           </div>
           <Link href="/dashboard/upload">

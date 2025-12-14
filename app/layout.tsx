@@ -5,17 +5,17 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
-  title: "FedSpace - AI-Native GovCon OS",
+  title: "FedSpace - AI-Powered Federal Contract Intelligence",
   description:
-    "AI-powered government contracting platform that extracts requirements, evaluates opportunities, and delivers bid/no-bid recommendations. The operating system for federal contractors.",
+    "AI-powered government contracting platform that extracts requirements, evaluates opportunities, and delivers bid/no-bid recommendations in minutes.",
   icons: {
     icon: "/favicon.svg",
     apple: "/favicon.svg",
   },
   openGraph: {
-    title: "FedSpace - AI-Native GovCon OS",
+    title: "FedSpace - AI-Powered Federal Contract Intelligence",
     description:
-      "AI-powered platform that transforms complex government solicitations into actionable intelligence for federal contractors.",
+      "Transform complex government solicitations into actionable intelligence. Extract requirements, analyze opportunities, and make data-driven bid decisions.",
     url: "https://fedspace.ai",
     siteName: "FedSpace",
     images: [
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
         url: "https://jdj14ctwppwprnqu.public.blob.vercel-storage.com/nsk-w9fFwBBmLDLxrB896I4xqngTUEEovS.png",
         width: 1200,
         height: 630,
-        alt: "FedSpace - AI-Native GovCon OS",
+        alt: "FedSpace - AI-Powered Federal Contract Intelligence",
       },
     ],
     locale: "en-US",

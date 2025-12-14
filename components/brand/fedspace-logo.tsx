@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 
 type FedSpaceLogoProps = {
   variant?: "full" | "mark" | "wordmark";
@@ -124,23 +123,21 @@ export function FedSpaceLogo({
         <span className="font-display font-bold text-navy-deep dark:text-white">
           FedSpace
         </span>
-        <span className="font-display font-bold text-[#5B3FD9]">.AI</span>
       </div>
     );
   }
 
-  // Full variant - use the hero logo image
-  const dimensions = FULL_LOGO_SIZES[size];
+  // Full variant - simple text-based logo
   return (
-    <div className={cn("relative", className)} style={{ width: dimensions.width, height: dimensions.height }}>
-      <Image
-        src="/fedspace-logo.png"
-        alt="FedSpace.AI"
-        width={dimensions.width}
-        height={dimensions.height}
-        className="object-contain"
-        priority
-      />
+    <div className={cn("flex items-center gap-2", className)}>
+      <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <span className="font-display text-2xl font-bold text-gray-900">
+        FedSpace
+      </span>
     </div>
   );
 }
@@ -150,8 +147,8 @@ export function FedSpaceLogo({
  */
 export function FedSpaceText({ className }: { className?: string }) {
   return (
-    <div className={cn("font-display text-xl font-bold", className)}>
-      FedSpace<span className="text-[#5B3FD9]">.AI</span>
+    <div className={cn("font-display text-xl font-bold text-gray-900", className)}>
+      FedSpace
     </div>
   );
 }

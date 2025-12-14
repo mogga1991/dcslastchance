@@ -1,6 +1,5 @@
 "use client";
 
-import FooterSection from "@/components/homepage/footer";
 import { HeroSection } from "@/components/ui/light-saas-hero-section";
 import HeroHighlightSection from "@/components/homepage/hero-highlight-section";
 import AnimatedStatsSection from "@/components/homepage/animated-stats-section";
@@ -11,6 +10,10 @@ import MarketResilienceSection from "@/components/homepage/market-resilience-sec
 import SocialProofSection from "@/components/homepage/social-proof-section";
 import { Stats } from "@/components/ui/statistics-card";
 import Testimonials from "@/components/ui/testimonials";
+import FeatureSections from "@/components/ui/feature-sections";
+import Demo from "@/components/ui/demo";
+import FAQSection from "@/components/ui/faq-section";
+import SimpleFooter from "@/components/ui/simple-footer";
 // import { getSubscriptionDetails } from "@/lib/subscription";
 // import PricingTable from "./pricing/_component/pricing-table";
 
@@ -22,6 +25,8 @@ export default function Home() {
     <>
       <HeroSection />
       <Stats />
+      <FeatureSections />
+      <Demo />
       <AnimatedStatsSection />
       <MultiVerticalSection />
       <GovernmentBuysEverythingSection />
@@ -31,7 +36,8 @@ export default function Home() {
       <HeroHighlightSection />
       <Testimonials />
       {/* <PricingTable subscriptionDetails={subscriptionDetails} /> */}
-      <FooterSection />
+      <FAQSection />
+      <SimpleFooter />
     </>
   );
 }
