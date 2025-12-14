@@ -2,9 +2,80 @@
 
 import { useState } from "react";
 import { Building2, FileText, Zap, ArrowRight } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function BeautifulAuth() {
   const [isSignIn, setIsSignIn] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleOAuthSignIn = async (provider: 'apple' | 'google') => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) {
+        console.error(`${provider} sign-in error:`, error);
+        alert(`Failed to sign in with ${provider}. Please try again.`);
+      }
+    } catch (error) {
+      console.error(`${provider} sign-in error:`, error);
+      alert(`Failed to sign in with ${provider}. Please try again.`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEmailSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    try {
+      setIsLoading(true);
+
+      if (isSignIn) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          console.error('Sign-in error:', error);
+          alert('Failed to sign in. Please check your credentials.');
+          return;
+        }
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/dashboard`,
+          },
+        });
+
+        if (error) {
+          console.error('Sign-up error:', error);
+          alert('Failed to create account. Please try again.');
+          return;
+        }
+
+        alert('Check your email to confirm your account!');
+      }
+
+      window.location.href = '/dashboard';
+    } catch (error) {
+      console.error('Auth error:', error);
+      alert('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
@@ -33,14 +104,22 @@ export default function BeautifulAuth() {
 
           {/* Social Auth Buttons */}
           <div className="space-y-3 mb-6">
-            <button className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-black text-white rounded-xl font-medium hover:bg-gray-800 transition-colors">
+            <button
+              onClick={() => handleOAuthSignIn('apple')}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-black text-white rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
               </svg>
               Continue with Apple
             </button>
 
-            <button className="w-full flex items-center justify-center gap-3 px-6 py-3 border-2 border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors">
+            <button
+              onClick={() => handleOAuthSignIn('google')}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-3 px-6 py-3 border-2 border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
@@ -74,13 +153,16 @@ export default function BeautifulAuth() {
           </div>
 
           {/* Email/Password Form */}
-          <form className="space-y-4">
+          <form onSubmit={handleEmailSignIn} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
                 type="email"
+                name="email"
                 placeholder="Enter your email"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                required
+                disabled={isLoading}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
               />
             </div>
 
@@ -88,29 +170,35 @@ export default function BeautifulAuth() {
               <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <input
                 type="password"
+                name="password"
                 placeholder="Enter your password"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                required
+                disabled={isLoading}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                />
-                <span className="text-sm text-gray-600">Remember me</span>
-              </label>
-              <a href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-700">
-                Forgot Password?
-              </a>
-            </div>
+            {isSignIn && (
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  />
+                  <span className="text-sm text-gray-600">Remember me</span>
+                </label>
+                <a href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-700">
+                  Forgot Password?
+                </a>
+              </div>
+            )}
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {isSignIn ? "Sign In" : "Create Account"}
+              {isLoading ? 'Loading...' : (isSignIn ? "Sign In" : "Create Account")}
             </button>
           </form>
 
