@@ -15,7 +15,7 @@ export async function GET() {
 
     const userId = user.id;
 
-    // Check if user has a company profile
+    // Check if user has a company profile and has completed onboarding
     const [profile] = await db
       .select()
       .from(companyProfile)
@@ -23,7 +23,7 @@ export async function GET() {
       .limit(1);
 
     return NextResponse.json({
-      hasProfile: !!profile,
+      hasProfile: !!profile && profile.onboarding_completed === true,
       profile: profile || null,
     });
   } catch (error) {

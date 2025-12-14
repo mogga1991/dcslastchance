@@ -16,13 +16,6 @@ export function ProfileChecker() {
         return;
       }
 
-      // Check if user has skipped onboarding
-      const hasSkipped = localStorage.getItem("onboarding_skipped");
-      if (hasSkipped === "true") {
-        setChecking(false);
-        return;
-      }
-
       try {
         const response = await fetch("/api/profile/check");
         if (!response.ok) {

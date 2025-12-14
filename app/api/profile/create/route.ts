@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
         organization_id: org.id, // Link to organization
         business_type: data.business_type || "", // Agent, Broker, Owner, or None
         user_type: data.user_type || "", // Government Contractor or Government Employee
+        onboarding_completed: true, // Mark onboarding as completed
         primary_naics: "", // No longer collecting NAICS
         naics_codes: [],
         core_competencies: data.core_competencies || [],

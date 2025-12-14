@@ -188,9 +188,6 @@ export default function OnboardingPage() {
         throw new Error("Failed to create profile");
       }
 
-      // Clear skip flag since profile is now complete
-      localStorage.removeItem("onboarding_skipped");
-
       toast.success("Profile created successfully!");
       router.push("/dashboard");
     } catch (error) {
