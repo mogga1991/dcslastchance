@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -146,6 +147,7 @@ const mockProposals: Proposal[] = [
 ];
 
 export default function MyProposalsClient() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -379,7 +381,10 @@ export default function MyProposalsClient() {
               <div className="text-sm text-gray-500">
                 Last updated: {formatDate(proposal.lastUpdated)}
               </div>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => router.push(`/dashboard/my-proposals/${proposal.id}`)}
+              >
                 {proposal.status === "submitted" ? "View Submission" : "Continue Editing"}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
