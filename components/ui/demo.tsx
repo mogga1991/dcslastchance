@@ -1,46 +1,147 @@
 "use client";
 
-import React from "react";
-import { ArrowUpRight } from "lucide-react";
+import React, { useState } from "react";
+import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
+import {
+  Home,
+  FileText,
+  BarChart3,
+  Settings,
+  Users,
+  Building2,
+  LogOut,
+} from "lucide-react";
+import { motion } from "framer-motion";
+import Link from "next/link";
 
-export default function Demo() {
+export default function SidebarDemo() {
+  const links = [
+    {
+      label: "Dashboard",
+      href: "/dashboard",
+      icon: (
+        <Home className="text-blue-300 dark:text-blue-300 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Analyses",
+      href: "/analyses",
+      icon: (
+        <FileText className="text-blue-300 dark:text-blue-300 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Reports",
+      href: "/reports",
+      icon: (
+        <BarChart3 className="text-blue-300 dark:text-blue-300 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Organizations",
+      href: "/organizations",
+      icon: (
+        <Building2 className="text-blue-300 dark:text-blue-300 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Team",
+      href: "/team",
+      icon: (
+        <Users className="text-blue-300 dark:text-blue-300 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Settings",
+      href: "/settings",
+      icon: (
+        <Settings className="text-blue-300 dark:text-blue-300 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+  ];
+
+  const [open, setOpen] = useState(false);
+
   return (
-    <section className="w-full bg-white">
-      <div className="relative mx-auto max-w-5xl px-4 py-16">
-        <div className="absolute -z-50 size-[400px] -top-10 -left-20 aspect-square rounded-full bg-indigo-500/30 blur-3xl"></div>
-        <p className="text-slate-800 text-lg text-left max-w-3xl">
-          FedSpace transforms complex government solicitations into actionable intelligence, helping contractors win more federal contracts with AI-powered analysis and compliance automation.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 mt-8 gap-10">
-          <div className="md:col-span-2">
-            <img
-              alt="FedSpace platform dashboard showing RFP analysis"
-              className="rounded-xl object-cover w-full h-auto shadow-lg"
-              src="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=1200&auto=format&fit=crop"
+    <div className="flex h-screen w-full overflow-hidden bg-blue-900 dark:bg-blue-900">
+      <Sidebar open={open} setOpen={setOpen}>
+        <SidebarBody className="justify-between gap-10">
+          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+            {open ? <Logo /> : <LogoIcon />}
+            <div className="mt-8 flex flex-col gap-2">
+              {links.map((link, idx) => (
+                <SidebarLink key={idx} link={link} />
+              ))}
+            </div>
+          </div>
+          <div>
+            <SidebarLink
+              link={{
+                label: "Logout",
+                href: "/logout",
+                icon: (
+                  <LogOut className="text-blue-300 dark:text-blue-300 h-5 w-5 flex-shrink-0" />
+                ),
+              }}
             />
           </div>
-          <div className="md:col-span-1">
-            <img
-              alt="Compliance matrix and bid scoring interface"
-              className="rounded-xl object-cover w-full h-auto shadow-md hover:-translate-y-0.5 transition duration-300"
-              src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=800&auto=format&fit=crop"
-            />
-            <h3 className="text-[24px]/7.5 text-slate-800 font-medium mt-6">
-              AI-powered extraction with 96.3% accuracy on government contracts
-            </h3>
-            <p className="text-slate-600 mt-2">
-              FedSpace empowers capture teams to analyze opportunities 10x faster while reducing compliance risk and improving bid quality.
-            </p>
-            <a
-              href="/sign-in"
-              className="group flex items-center gap-2 mt-4 text-indigo-600 hover:text-indigo-700 transition"
-            >
-              Start analyzing your first RFP
-              <ArrowUpRight className="size-5 group-hover:translate-x-0.5 transition duration-300" aria-hidden="true" />
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
+        </SidebarBody>
+      </Sidebar>
+      <Dashboard />
+    </div>
   );
 }
+
+export const Logo = () => {
+  return (
+    <Link
+      href="/dashboard"
+      className="font-normal flex space-x-2 items-center text-sm text-blue-50 py-1 relative z-20"
+    >
+      <div className="h-5 w-6 bg-blue-400 dark:bg-blue-400 rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+      <motion.span
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="font-medium text-blue-50 dark:text-blue-50 whitespace-pre"
+      >
+        FedSpace
+      </motion.span>
+    </Link>
+  );
+};
+
+export const LogoIcon = () => {
+  return (
+    <Link
+      href="/dashboard"
+      className="font-normal flex space-x-2 items-center text-sm text-blue-50 py-1 relative z-20"
+    >
+      <div className="h-5 w-6 bg-blue-400 dark:bg-blue-400 rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+    </Link>
+  );
+};
+
+const Dashboard = () => {
+  return (
+    <div className="flex flex-1">
+      <div className="p-2 md:p-10 rounded-tl-2xl border border-blue-800 dark:border-blue-800 bg-blue-950 dark:bg-blue-950 flex flex-col gap-2 flex-1 w-full h-full overflow-auto">
+        <div className="flex gap-2">
+          {[...new Array(4)].map((_, i) => (
+            <div
+              key={"first-array-" + i}
+              className="h-20 w-full rounded-lg bg-blue-900 dark:bg-blue-900 border border-blue-800 dark:border-blue-800 animate-pulse"
+            ></div>
+          ))}
+        </div>
+        <div className="flex gap-2 flex-1">
+          {[...new Array(2)].map((_, i) => (
+            <div
+              key={"second-array-" + i}
+              className="h-full w-full rounded-lg bg-blue-900 dark:bg-blue-900 border border-blue-800 dark:border-blue-800 animate-pulse"
+            ></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};

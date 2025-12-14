@@ -89,7 +89,7 @@ export const DesktopSidebar = ({
   return (
     <motion.div
       className={cn(
-        "h-full px-4 py-4 hidden md:flex md:flex-col bg-white border-r border-gray-200 w-[300px] flex-shrink-0",
+        "h-full px-4 py-4 hidden md:flex md:flex-col bg-blue-950 dark:bg-blue-950 border-r border-blue-800 dark:border-blue-800 w-[300px] flex-shrink-0",
         className
       )}
       animate={{
@@ -112,13 +112,13 @@ export const MobileSidebar = ({
     <>
       <div
         className={cn(
-          "h-10 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-white border-b border-gray-200 w-full"
+          "h-10 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-blue-950 dark:bg-blue-950 border-b border-blue-800 dark:border-blue-800 w-full"
         )}
         {...props}
       >
         <div className="flex justify-end z-20 w-full">
           <Menu
-            className="text-gray-900 cursor-pointer"
+            className="text-blue-50 dark:text-blue-50 cursor-pointer hover:text-blue-200 transition-colors"
             onClick={() => setOpen(!open)}
           />
         </div>
@@ -133,12 +133,12 @@ export const MobileSidebar = ({
                 ease: "easeInOut",
               }}
               className={cn(
-                "fixed h-full w-full inset-0 bg-white p-10 z-[100] flex flex-col justify-between",
+                "fixed h-full w-full inset-0 bg-blue-950 dark:bg-blue-950 p-10 z-[100] flex flex-col justify-between",
                 className
               )}
             >
               <div
-                className="absolute right-10 top-10 z-50 text-gray-900 cursor-pointer"
+                className="absolute right-10 top-10 z-50 text-blue-50 dark:text-blue-50 cursor-pointer hover:text-blue-200 transition-colors"
                 onClick={() => setOpen(!open)}
               >
                 <X />
@@ -166,7 +166,7 @@ export const SidebarLink = ({
     <Link
       href={link.href}
       className={cn(
-        "flex items-center justify-start gap-2 group/sidebar py-2",
+        "flex items-center justify-start gap-2 group/sidebar py-2 px-3 rounded-md hover:bg-blue-900 dark:hover:bg-blue-900 transition-colors",
         className
       )}
       {...props}
@@ -177,7 +177,7 @@ export const SidebarLink = ({
           display: animate ? (open ? "inline-block" : "none") : "inline-block",
           opacity: animate ? (open ? 1 : 0) : 1,
         }}
-        className="text-gray-900 text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+        className="text-blue-50 dark:text-blue-50 text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
       >
         {link.label}
       </motion.span>
