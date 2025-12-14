@@ -1,7 +1,6 @@
 "use client";
 
 import UserProfile from "@/components/user-profile";
-import { ModeToggle } from "@/components/mode-toggle";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -170,11 +169,6 @@ export default function DashboardSideBar() {
         <div className="flex flex-col gap-2">
           {open ? (
             <>
-              {/* Dark Mode Toggle */}
-              <div className="px-4">
-                <ModeToggle />
-              </div>
-
               {/* Logout Button */}
               <Button
                 onClick={handleSignOut}
@@ -187,11 +181,6 @@ export default function DashboardSideBar() {
             </>
           ) : (
             <>
-              {/* Dark Mode Toggle - Icon only */}
-              <div className="flex justify-center">
-                <ModeToggle />
-              </div>
-
               {/* Logout Button - Icon only */}
               <Button
                 onClick={handleSignOut}
