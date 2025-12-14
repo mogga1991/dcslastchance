@@ -2,6 +2,15 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // Allow access to debug page and auth callback without any checks
+  if (request.nextUrl.pathname === '/auth/debug' || request.nextUrl.pathname === '/auth/callback') {
+    return NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    })
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
