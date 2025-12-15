@@ -753,10 +753,10 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
               Opportunities
             </TabsTrigger>
             <TabsTrigger value="listings" className="rounded-none text-xs">
-              Listings
+              Available Listings
             </TabsTrigger>
             <TabsTrigger value="expiring" className="rounded-none text-xs relative">
-              Expiring
+              Expiring Soon
               {urgencyCounts.critical > 0 && (
                 <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
                   {urgencyCounts.critical}
