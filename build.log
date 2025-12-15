@@ -1,0 +1,160 @@
+
+> sentyr@1.0.0 build
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/georgemogga/pnpm-lock.yaml as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/georgemogga/Downloads/dcslasttry/package-lock.json
+
+   ▲ Next.js 15.5.9
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ⚠ Compiled with warnings in 19.2s
+
+./node_modules/@supabase/realtime-js/dist/module/lib/websocket-factory.js
+A Node.js API is used (process.versions at line: 39) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/@supabase/realtime-js/dist/module/lib/websocket-factory.js
+./node_modules/@supabase/realtime-js/dist/module/index.js
+./node_modules/@supabase/supabase-js/dist/main/index.js
+./node_modules/@supabase/supabase-js/dist/esm/wrapper.mjs
+./node_modules/@supabase/ssr/dist/module/createBrowserClient.js
+./node_modules/@supabase/ssr/dist/module/index.js
+
+./node_modules/@supabase/supabase-js/dist/main/index.js
+A Node.js API is used (process.version at line: 60) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/@supabase/supabase-js/dist/main/index.js
+./node_modules/@supabase/supabase-js/dist/esm/wrapper.mjs
+./node_modules/@supabase/ssr/dist/module/createBrowserClient.js
+./node_modules/@supabase/ssr/dist/module/index.js
+
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Generating static pages (0/67) ...
+   Generating static pages (16/67) 
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+   Generating static pages (33/67) 
+Error fetching subscription details: Error: Dynamic server usage: Route /pricing couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at s (.next/server/chunks/4586.js:1:28328)
+    at n (.next/server/chunks/991.js:23:2879)
+    at f (.next/server/chunks/7570.js:1:13495)
+    at w (.next/server/chunks/7570.js:1:11954)
+    at g (.next/server/app/pricing/page.js:1:435)
+    at stringify (<anonymous>) {
+  description: "Route /pricing couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+  digest: 'DYNAMIC_SERVER_USAGE'
+}
+   Generating static pages (50/67) 
+ ✓ Generating static pages (67/67)
+Error fetching subscription details: Error: Dynamic server usage: Route /dashboard/payment couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at s (.next/server/chunks/4586.js:1:28328)
+    at n (.next/server/chunks/991.js:23:2879)
+    at f (.next/server/chunks/7570.js:1:13495)
+    at w (.next/server/chunks/7570.js:1:11954)
+    at k (.next/server/app/dashboard/payment/page.js:1:313)
+    at stringify (<anonymous>) {
+  description: "Route /dashboard/payment couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+  digest: 'DYNAMIC_SERVER_USAGE'
+}
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                  Size  First Load JS
+┌ ○ /                                     6.04 kB         120 kB
+├ ○ /_not-found                              1 kB         103 kB
+├ ○ /analysis                             5.15 kB         119 kB
+├ ƒ /api/analyses                           238 B         102 kB
+├ ƒ /api/analyses/[id]                      238 B         102 kB
+├ ƒ /api/auth/sign-out                      238 B         102 kB
+├ ƒ /api/broker-listings                    238 B         102 kB
+├ ƒ /api/broker-listings/[id]               238 B         102 kB
+├ ƒ /api/capability-documents               238 B         102 kB
+├ ƒ /api/capability-documents/[id]          238 B         102 kB
+├ ƒ /api/chat                               238 B         102 kB
+├ ƒ /api/company-profile                    238 B         102 kB
+├ ƒ /api/constraints                        238 B         102 kB
+├ ƒ /api/contractor-profile                 238 B         102 kB
+├ ƒ /api/contractor-profile/completeness    238 B         102 kB
+├ ƒ /api/credits                            238 B         102 kB
+├ ƒ /api/cron/sync-opportunities            238 B         102 kB
+├ ƒ /api/dashboard/stats                    238 B         102 kB
+├ ƒ /api/gsa-leasing                        238 B         102 kB
+├ ƒ /api/gsa-opportunities                  238 B         102 kB
+├ ƒ /api/iolp/alerts                        238 B         102 kB
+├ ƒ /api/iolp/expiring-leases               238 B         102 kB
+├ ƒ /api/iolp/nearby                        238 B         102 kB
+├ ƒ /api/iolp/score                         238 B         102 kB
+├ ƒ /api/iolp/viewport                      238 B         102 kB
+├ ƒ /api/key-personnel                      238 B         102 kB
+├ ƒ /api/news                               238 B         102 kB
+├ ƒ /api/og                                 238 B         102 kB
+├ ƒ /api/opportunities                      238 B         102 kB
+├ ƒ /api/opportunity-inquiries              238 B         102 kB
+├ ƒ /api/past-performance                   238 B         102 kB
+├ ƒ /api/proposal-library                   238 B         102 kB
+├ ƒ /api/qualification-check                238 B         102 kB
+├ ƒ /api/sam-opportunities                  238 B         102 kB
+├ ƒ /api/saved-opportunities                238 B         102 kB
+├ ƒ /api/saved-opportunities/[id]           238 B         102 kB
+├ ƒ /api/scoring/calculate-match            238 B         102 kB
+├ ƒ /api/solicitations                      238 B         102 kB
+├ ƒ /api/team-members                       238 B         102 kB
+├ ƒ /api/team-members/[id]                  238 B         102 kB
+├ ƒ /api/team-members/[id]/activity         238 B         102 kB
+├ ƒ /api/upload-image                       238 B         102 kB
+├ ƒ /api/user/usage-stats                   238 B         102 kB
+├ ○ /auth-demo                            3.76 kB         165 kB
+├ ƒ /auth/callback                          238 B         102 kB
+├ ○ /auth/debug                           1.24 kB         158 kB
+├ ○ /contact                              6.06 kB         129 kB
+├ ƒ /dashboard                              174 B         105 kB
+├ ƒ /dashboard/broker-listing             9.68 kB         170 kB
+├ ○ /dashboard/chat                       83.2 kB         193 kB
+├ ƒ /dashboard/documents/[documentId]     4.61 kB         245 kB
+├ ƒ /dashboard/gsa-leasing                26.1 kB         238 kB
+├ ƒ /dashboard/market-news                10.3 kB         151 kB
+├ ƒ /dashboard/my-earnings                  174 B         105 kB
+├ ƒ /dashboard/my-earnings/news             174 B         105 kB
+├ ƒ /dashboard/my-proposals               13.3 kB         154 kB
+├ ƒ /dashboard/my-proposals/[id]          12.7 kB         153 kB
+├ ƒ /dashboard/payment                    3.19 kB         117 kB
+├ ƒ /dashboard/piq/[id]                     14 kB         295 kB
+├ ƒ /dashboard/saved-opportunities          238 B         102 kB
+├ ○ /dashboard/settings                   19.2 kB         288 kB
+├ ƒ /dashboard/upgrade                    2.02 kB         112 kB
+├ ○ /dashboard/upload                     7.93 kB         133 kB
+├ ○ /features                              4.2 kB         109 kB
+├ ○ /forgot-password                      2.59 kB         164 kB
+├ ○ /hero-demo                            16.9 kB         119 kB
+├ ƒ /pricing                              5.14 kB         125 kB
+├ ○ /pricing/demo                         12.4 kB         159 kB
+├ ○ /privacy-policy                         874 B         115 kB
+├ ○ /reset-password                       2.69 kB         164 kB
+├ ○ /sign-in                                136 B         164 kB
+├ ○ /sign-up                                135 B         164 kB
+├ ○ /success                              3.85 kB         114 kB
+└ ○ /terms-of-service                       874 B         115 kB
++ First Load JS shared by all              102 kB
+  ├ chunks/1255-3f38644fe3778fb2.js       45.6 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js   54.2 kB
+  └ other shared chunks (total)           1.99 kB
+
+
+ƒ Middleware                              85.4 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
