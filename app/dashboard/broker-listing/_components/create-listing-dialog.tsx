@@ -199,7 +199,7 @@ export function CreateListingDialog({ onSubmit, userEmail }: CreateListingDialog
           <div className="space-y-4">
             <h3 className="font-semibold text-sm">Space Details</h3>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="total_sf">
                   Total RSF Available <span className="text-red-500">*</span>

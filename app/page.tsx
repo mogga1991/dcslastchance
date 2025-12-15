@@ -64,11 +64,11 @@ export default function LandingPage() {
       <section className="relative overflow-hidden bg-gradient-to-b from-blue-50 to-white pt-20 pb-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
               Find Government Lease Opportunities{" "}
               <span className="text-blue-600">Before Your Competition</span>
             </h1>
-            <p className="text-xl text-gray-600 mb-10 leading-relaxed">
+            <p className="text-lg sm:text-xl text-gray-600 mb-10 leading-relaxed">
               The only platform that combines GSA opportunities with federal building
               intelligence. See where government leases are expiring and get matched to
               opportunities automatically.
@@ -76,8 +76,8 @@ export default function LandingPage() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/sign-up">
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-6">
+              <Link href="/sign-up" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -86,7 +86,7 @@ export default function LandingPage() {
                 size="lg"
                 variant="outline"
                 onClick={() => scrollToSection("how-it-works")}
-                className="text-lg px-8 py-6"
+                className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6"
               >
                 See How It Works
               </Button>
@@ -112,7 +112,7 @@ export default function LandingPage() {
       <section id="problem" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
               Stop Wasting Hours on SAM.gov
             </h2>
           </div>
@@ -168,7 +168,7 @@ export default function LandingPage() {
       <section id="features" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
               Everything You Need to Win Government Leases
             </h2>
           </div>
@@ -232,7 +232,7 @@ export default function LandingPage() {
       <section id="how-it-works" className="py-20 bg-gradient-to-b from-blue-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Get Started in 3 Steps</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Get Started in 3 Steps</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-12">
@@ -290,18 +290,18 @@ export default function LandingPage() {
       {/* Stats Section */}
       <section className="py-20 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-12 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12 text-center">
             <div>
-              <div className="text-5xl font-bold text-blue-400 mb-2">$75B+</div>
-              <div className="text-gray-300">in annual GSA leases</div>
+              <div className="text-4xl sm:text-5xl font-bold text-blue-400 mb-2">$75B+</div>
+              <div className="text-gray-300 text-sm sm:text-base">in annual GSA leases</div>
             </div>
             <div>
-              <div className="text-5xl font-bold text-green-400 mb-2">23,000+</div>
-              <div className="text-gray-300">federal buildings tracked</div>
+              <div className="text-4xl sm:text-5xl font-bold text-green-400 mb-2">23,000+</div>
+              <div className="text-gray-300 text-sm sm:text-base">federal buildings tracked</div>
             </div>
             <div>
-              <div className="text-5xl font-bold text-purple-400 mb-2">Real-time</div>
-              <div className="text-gray-300">SAM.gov integration</div>
+              <div className="text-4xl sm:text-5xl font-bold text-purple-400 mb-2">Real-time</div>
+              <div className="text-gray-300 text-sm sm:text-base">SAM.gov integration</div>
             </div>
           </div>
         </div>
@@ -310,16 +310,16 @@ export default function LandingPage() {
       {/* Final CTA Section */}
       <section className="py-24 bg-gradient-to-r from-blue-600 to-green-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
             Ready to Find Your Next Government Lease?
           </h2>
-          <p className="text-xl text-blue-100 mb-10">
+          <p className="text-lg sm:text-xl text-blue-100 mb-10">
             Join brokers who are winning GSA contracts with better intelligence.
           </p>
-          <Link href="/sign-up">
+          <Link href="/sign-up" className="inline-block w-full sm:w-auto">
             <Button
               size="lg"
-              className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-10 py-6"
+              className="w-full sm:w-auto bg-white text-blue-600 hover:bg-gray-100 text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-6"
             >
               Get Started Free
               <ArrowRight className="ml-2 h-5 w-5" />

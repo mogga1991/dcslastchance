@@ -31,7 +31,11 @@ const GSAMapWithIOLP = dynamic(() => import("./gsa-map-with-iolp"), { ssr: false
 
 type TabType = "opportunities" | "listings" | "expiring";
 
-export default function GSALeasingClient() {
+interface GSALeasingClientProps {
+  userEmail?: string;
+}
+
+export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>("opportunities");
   const [opportunities, setOpportunities] = useState<SAMOpportunity[]>([]);
   const [filteredOpportunities, setFilteredOpportunities] = useState<SAMOpportunity[]>([]);
@@ -49,6 +53,7 @@ export default function GSALeasingClient() {
   const [detailOpportunity, setDetailOpportunity] = useState<SAMOpportunity | null>(null);
   const [showExpressInterest, setShowExpressInterest] = useState(false);
   const [expressInterestOpportunity, setExpressInterestOpportunity] = useState<SAMOpportunity | null>(null);
+  const [submittedInquiries, setSubmittedInquiries] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [currentViewport, setCurrentViewport] = useState<{ lat: number; lng: number } | null>(null);
@@ -90,6 +95,7 @@ export default function GSALeasingClient() {
     fetchBrokerListings();
     fetchUserAlerts();
     fetchSavedOpportunities();
+    fetchSubmittedInquiries();
   }, []);
 
   // Filter listings based on search term
@@ -206,6 +212,24 @@ export default function GSALeasingClient() {
     }
   };
 
+  const fetchSubmittedInquiries = async () => {
+    try {
+      const response = await fetch("/api/opportunity-inquiries");
+
+      if (!response.ok) {
+        // If unauthorized, just skip (user not logged in)
+        if (response.status === 401) return;
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      const inquiryIds = new Set(data.inquiries?.map((i: any) => i.opportunity_id) || []);
+      setSubmittedInquiries(inquiryIds);
+    } catch (error) {
+      console.error("Error fetching submitted inquiries:", error);
+    }
+  };
+
   const handleSaveOpportunity = async (opportunity: SAMOpportunity) => {
     try {
       const isSaved = savedOpportunities.has(opportunity.noticeId);
@@ -257,6 +281,14 @@ export default function GSALeasingClient() {
   const handleExpressInterest = (opportunity: SAMOpportunity) => {
     setExpressInterestOpportunity(opportunity);
     setShowExpressInterest(true);
+  };
+
+  const handleInquirySubmitted = (opportunityId: string) => {
+    setSubmittedInquiries(prev => {
+      const next = new Set(prev);
+      next.add(opportunityId);
+      return next;
+    });
   };
 
   const handleSetAlert = async (lease: any) => {
@@ -567,9 +599,9 @@ export default function GSALeasingClient() {
   }, [filteredExpiringLeases]);
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden">
       {/* Left Panel */}
-      <div className="w-[380px] bg-white border-r flex flex-col">
+      <div className="w-full md:w-[380px] bg-white border-r md:border-b-0 border-b flex flex-col max-h-[50vh] md:max-h-none">
         {/* Header */}
         <div className="p-4 border-b bg-gray-50">
           <div className="flex items-center justify-between mb-3">
@@ -813,6 +845,7 @@ export default function GSALeasingClient() {
                     }}
                     onSave={handleSaveOpportunity}
                     isSaved={savedOpportunities.has(opp.noticeId)}
+                    hasInquiry={submittedInquiries.has(opp.noticeId || opp.solicitationNumber)}
                     matchScore={opportunityMatchScores.get(opp.noticeId)}
                   />
                 ))}
@@ -1050,7 +1083,7 @@ export default function GSALeasingClient() {
       </div>
 
       {/* Right Panel - Map */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative min-h-[50vh] md:min-h-0">
         <GSAMapWithIOLP
           opportunities={activeTab === "opportunities" ? filteredOpportunities : []}
           listings={activeTab === "listings" ? filteredListings : []}
@@ -1087,7 +1120,8 @@ export default function GSALeasingClient() {
         opportunity={expressInterestOpportunity}
         open={showExpressInterest}
         onOpenChange={setShowExpressInterest}
-        userEmail=""
+        userEmail={userEmail || ""}
+        onInquirySubmitted={handleInquirySubmitted}
       />
     </div>
   );

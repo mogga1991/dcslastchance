@@ -35,6 +35,7 @@ interface ExpressInterestModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userEmail?: string;
+  onInquirySubmitted?: (opportunityId: string) => void;
 }
 
 export function ExpressInterestModal({
@@ -42,6 +43,7 @@ export function ExpressInterestModal({
   open,
   onOpenChange,
   userEmail = "",
+  onInquirySubmitted,
 }: ExpressInterestModalProps) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -144,6 +146,12 @@ export function ExpressInterestModal({
 
       // Success!
       setSuccess(true);
+
+      // Notify parent component
+      if (onInquirySubmitted) {
+        const opportunityId = opportunity.noticeId || opportunity.solicitationNumber;
+        onInquirySubmitted(opportunityId);
+      }
 
       // Reset form after 2 seconds and close modal
       setTimeout(() => {

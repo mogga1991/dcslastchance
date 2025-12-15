@@ -13,6 +13,7 @@ interface OpportunityCardProps {
   onExpressInterest?: (e: React.MouseEvent) => void;
   onSave?: (opportunity: SAMOpportunity) => void;
   isSaved?: boolean;
+  hasInquiry?: boolean;
   matchScore?: {
     overallScore: number;
     grade: string;
@@ -34,6 +35,7 @@ export function OpportunityCard({
   onExpressInterest,
   onSave,
   isSaved = false,
+  hasInquiry = false,
   matchScore
 }: OpportunityCardProps) {
   const [saved, setSaved] = useState(isSaved);
@@ -428,15 +430,27 @@ export function OpportunityCard({
       <div className="px-5 py-3 bg-gray-50 border-t">
         <div className="flex gap-2">
           {onExpressInterest && (
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={onExpressInterest}
-              className="flex-1 border-green-600 text-green-700 hover:bg-green-50 hover:text-green-800 hover:border-green-700"
-            >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Express Interest
-            </Button>
+            hasInquiry ? (
+              <Button
+                size="lg"
+                variant="outline"
+                disabled
+                className="flex-1 border-green-600 text-green-700 bg-green-50 cursor-not-allowed opacity-75"
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Inquiry Sent ✓
+              </Button>
+            ) : (
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={onExpressInterest}
+                className="flex-1 border-green-600 text-green-700 hover:bg-green-50 hover:text-green-800 hover:border-green-700"
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Express Interest
+              </Button>
+            )
           )}
           <Button
             size="lg"
