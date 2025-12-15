@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { SectionCards } from "./_components/section-cards";
 import { SolicitationsTable } from "./_components/solicitations-table";
 
 export default async function Dashboard() {
@@ -22,11 +21,6 @@ export default async function Dashboard() {
           <p className="text-muted-foreground">
             Federal contracting opportunities
           </p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <SectionCards />
         </div>
 
         {/* Main Solicitations Table */}

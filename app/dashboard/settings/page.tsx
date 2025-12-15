@@ -1,12 +1,10 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -22,13 +20,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
-import { Upload, UserPlus } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import AccountManager from "./_components/account-manager";
 import GovernmentContractors from "./_components/contractor/government-contractors";
 import { CompanyProfileForm } from "./_components/company-profile-form";
+import { KpiSummaryStrip } from "../_components/section-cards";
 
 interface UserData {
   id: string;
@@ -264,6 +263,17 @@ function SettingsContent() {
         </TabsList>
 
         <TabsContent value="general" className="space-y-6">
+          {/* Dashboard Summary Section */}
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold">Dashboard Summary</h2>
+              <p className="text-sm text-muted-foreground">
+                Quick overview of your account metrics and usage
+              </p>
+            </div>
+            <KpiSummaryStrip />
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle>Profile information</CardTitle>

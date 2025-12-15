@@ -86,7 +86,7 @@ export const GSA_LEASE_FILTERS = {
   // NAICS Code: 531120 - Lessors of Nonresidential Buildings (except Miniwarehouses)
   naicsCode: "531120",
 
-  // PSC Codes for Office/Commercial Leasing (X1A series)
+  // PSC Codes for Office/Commercial Leasing and Real Property
   // Note: SAM.gov API only accepts one PSC per request, so we'll need to make multiple calls
   pscCodes: [
     "X1AA", // Office Buildings (most common)
@@ -94,6 +94,12 @@ export const GSA_LEASE_FILTERS = {
     "X1AD", // Commercial Buildings
     "X1AF", // Mixed-Use Buildings
     "X1AZ", // Other Real Property
+    "X1BA", // Warehouses
+    "X1BB", // Industrial Buildings
+    "X1BZ", // Other Structures and Facilities
+    "X1CA", // Land (excluding right-of-way)
+    "X1DA", // Office Space Rental
+    "X1DB", // Parking Space Rental
   ],
 
   // Notice Types (the ones leasing actually uses)
@@ -140,7 +146,7 @@ export async function fetchGSALeaseOpportunities(
     return `${m}/${d}/${year}`;
   };
 
-  // Default to full year 2024 (wide net for initial testing)
+  // Default to full year 2024 (SAM.gov API doesn't accept dates before current year)
   const defaultFrom = formatDate(1, 1, 2024);
   const defaultTo = formatDate(12, 14, 2024);
   // Response deadline filter - commented out for now to see all opportunities
@@ -209,16 +215,28 @@ export async function fetchGSALeaseOpportunities(
       // Merge opportunities, deduping by noticeId
       // SAM.gov API doesn't respect PSC filter, so we filter client-side
       data.opportunitiesData?.forEach((opp) => {
-        // Only include opportunities with X1A* PSC codes (real property leasing)
+        // Only include opportunities with leasing-specific PSC codes or NAICS
         if (!allOpportunities.has(opp.noticeId)) {
-          // Accept X1A* codes or NAICS 531120 as lease opportunities
           const pscCode = opp.classificationCode || "";
           const naicsCode = opp.naicsCode || opp.naicsCodes?.[0] || "";
+          const title = (opp.title || "").toLowerCase();
+
+          // Accept:
+          // - X1A* (office/commercial leasing)
+          // - X1D* (space rental)
+          // - NAICS 531120 (lessors of nonresidential buildings)
+          // - Title contains whole words "lease", "rlp", "leasing" (with word boundaries)
+          const hasLeaseKeyword =
+            /\blease\b/.test(title) ||
+            /\bleasing\b/.test(title) ||
+            /\brlp\b/.test(title) ||
+            /\brequest for lease/.test(title);
 
           if (
             pscCode.startsWith("X1A") ||
-            pscCode.startsWith("X1D") || // Also include X1DB (parking)
-            naicsCode === "531120"
+            pscCode.startsWith("X1D") ||
+            naicsCode === "531120" ||
+            (hasLeaseKeyword && !title.includes("release")) // Exclude "release" false positives
           ) {
             allOpportunities.set(opp.noticeId, opp);
           }
@@ -339,6 +357,98 @@ export async function fetchAllOpportunities(
     return data;
   } catch (error) {
     console.error("Error fetching SAM.gov opportunities:", error);
+    throw error;
+  }
+}
+
+/**
+ * Fetches opportunities by keyword search (e.g., "RLP" for Request for Lease Proposals)
+ * This casts a wider net than PSC code filtering
+ *
+ * @param keyword - The search keyword (e.g., "RLP", "lease", etc.)
+ * @param params - Additional query parameters
+ * @returns Promise<SAMResponse>
+ */
+export async function fetchOpportunitiesByKeyword(
+  keyword: string,
+  params: {
+    limit?: number;
+    offset?: number;
+    postedFrom?: string;
+    postedTo?: string;
+    state?: string;
+    city?: string;
+  } = {}
+): Promise<SAMResponse> {
+  const apiKey = process.env.SAM_API_KEY || process.env.VITE_SAMGOV_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("SAM_API_KEY is not configured in environment variables");
+  }
+
+  const baseUrl = "https://api.sam.gov/opportunities/v2/search";
+
+  // Calculate date range (default to full year 2024)
+  const formatDate = (month: number, day: number, year: number) => {
+    const m = String(month).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    return `${m}/${d}/${year}`;
+  };
+
+  const defaultFrom = formatDate(1, 1, 2024);
+  const defaultTo = formatDate(12, 14, 2024);
+
+  // Notice types relevant to leasing
+  const noticeTypes = [
+    "r", // Sources Sought
+    "p", // Presolicitation
+    "o", // Combined Synopsis/Solicitation
+    "k", // Solicitation
+    "s", // Special Notice
+  ];
+
+  const queryParams = new URLSearchParams({
+    api_key: apiKey,
+
+    // Keyword search
+    qterms: keyword,
+
+    // Date range
+    postedFrom: params.postedFrom || defaultFrom,
+    postedTo: params.postedTo || defaultTo,
+
+    // Notice types
+    ptype: noticeTypes.join(","),
+
+    // Pagination
+    limit: String(params.limit || 1000),
+    offset: String(params.offset || 0),
+
+    // Optional filters
+    ...(params.state && { state: params.state }),
+    ...(params.city && { city: params.city }),
+  });
+
+  try {
+    const response = await fetch(`${baseUrl}?${queryParams.toString()}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      next: { revalidate: 300 },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `SAM.gov API error: ${response.status} ${response.statusText} - ${errorText}`
+      );
+    }
+
+    const data: SAMResponse = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`Error fetching opportunities for keyword "${keyword}":`, error);
     throw error;
   }
 }
