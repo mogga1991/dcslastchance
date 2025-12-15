@@ -378,7 +378,9 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
 
   // Filter and sort opportunities
   const filteredAndSortedOpportunities = useMemo(() => {
-    if (!opportunities || opportunities.length === 0) return [];
+    if (!opportunities || opportunities.length === 0) {
+      return [];
+    }
 
     let filtered = [...opportunities];
 
@@ -704,16 +706,19 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
                 </div>
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Federal Neighborhood Score Card */}
-        <div className="p-4 border-b bg-white">
-          <FederalScoreCard
-            latitude={currentViewport?.lat}
-            longitude={currentViewport?.lng}
-            radiusMiles={5}
-          />
+            {/* Federal Neighborhood Score (when footprint is enabled) */}
+            {/* Temporarily disabled to debug opportunities display */}
+            {false && showIOLPLayer && !iolpLoading && (
+              <div className="pt-2 border-t">
+                <FederalScoreCard
+                  latitude={currentViewport?.lat}
+                  longitude={currentViewport?.lng}
+                  radiusMiles={5}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Filters (for opportunities) */}

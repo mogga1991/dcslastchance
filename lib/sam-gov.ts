@@ -82,34 +82,47 @@ export interface SAMResponse {
  * Based on best practices for finding office lease solicitations on SAM.gov
  * Uses PSC codes (more accurate than dept/subtier for leasing)
  */
+/**
+ * Official GSA Leasing Portal Filter Criteria
+ *
+ * These filters match the exact criteria used by the official GSA Lease Contract
+ * Opportunities Map at leasing.gsa.gov
+ *
+ * Reference: https://leasing.gsa.gov/leasing/s/lease-contract-opportunities-map
+ */
 export const GSA_LEASE_FILTERS = {
+  // Department filter (matches official GSA portal)
+  department: "GENERAL SERVICES ADMINISTRATION",
+
+  // Sub-tier filter (matches official GSA portal)
+  subTier: "PUBLIC BUILDINGS SERVICE",
+
   // NAICS Code: 531120 - Lessors of Nonresidential Buildings (except Miniwarehouses)
   naicsCode: "531120",
 
-  // PSC Codes for Office/Commercial Leasing and Real Property
-  // Note: SAM.gov API only accepts one PSC per request, so we'll need to make multiple calls
-  // Optimized to only the most common codes for faster response
-  pscCodes: [
-    "X1AA", // Office Buildings (most common for GSA leasing)
-    "X1DA", // Office Space Rental
-    "X1AB", // Administrative Buildings
-    "X1DB", // Parking Space Rental
-  ],
-
-  // Notice Types (the ones leasing actually uses)
+  // Notice Types (matches official GSA portal)
   noticeTypes: [
-    "r", // Sources Sought (early market research)
-    "p", // Presolicitation
     "o", // Combined Synopsis/Solicitation
+    "p", // Presolicitation
     "k", // Solicitation
+    "r", // Sources Sought
     "s", // Special Notice
   ],
+
+  // Response date filter: >= today (only active opportunities)
+  filterByResponseDate: true,
 };
 
 /**
  * Fetches GSA lease opportunities from SAM.gov API
- * Makes multiple calls for each PSC code to maximize results
- * Includes response deadline filter to only show open opportunities
+ *
+ * Uses the EXACT same filters as the official GSA Lease Contract Opportunities Map:
+ * - Department: General Services Administration
+ * - Sub-tier: Public Buildings Service
+ * - NAICS: 531120 (Lessors of Nonresidential Buildings)
+ * - Response Date: >= today (only active opportunities)
+ *
+ * Reference: https://leasing.gsa.gov/leasing/s/lease-contract-opportunities-map
  *
  * @param params - Additional query parameters to override defaults
  * @returns Promise<SAMResponse>
@@ -132,162 +145,78 @@ export async function fetchGSALeaseOpportunities(
 
   const baseUrl = "https://api.sam.gov/opportunities/v2/search";
 
-  // Calculate rolling 30-day window (best practice for daily ingestion)
-  // Note: System clock may be incorrect, so we use 2024 explicitly
-  const formatDate = (month: number, day: number, year: number) => {
-    const m = String(month).padStart(2, '0');
-    const d = String(day).padStart(2, '0');
-    return `${m}/${d}/${year}`;
+  // Calculate date range (SAM.gov API max is 1 year, use 6 months to be safe)
+  const formatDate = (date: Date) => {
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const y = date.getFullYear();
+    return `${m}/${d}/${y}`;
   };
 
-  // Default to current year (rolling 12-month window for more results)
+  // Default to 6-month rolling window
   const today = new Date();
-  const twelveMonthsAgo = new Date();
-  twelveMonthsAgo.setMonth(today.getMonth() - 12);
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(today.getMonth() - 6);
 
-  // Use actual year instead of hardcoded to prevent date mismatch issues
-  const defaultFrom = formatDate(twelveMonthsAgo.getMonth() + 1, twelveMonthsAgo.getDate(), twelveMonthsAgo.getFullYear());
-  const defaultTo = formatDate(today.getMonth() + 1, today.getDate(), today.getFullYear());
-
-  // SAM.gov API only accepts one PSC per request, so we make multiple calls
-  // and merge the results
-  const allOpportunities = new Map<string, SAMOpportunity>();
+  const defaultFrom = formatDate(sixMonthsAgo);
+  const defaultTo = formatDate(today);
 
   try {
-    // Make parallel calls for each PSC code for faster response
-    const pscCodesToTry = [...GSA_LEASE_FILTERS.pscCodes];
+    // Build query using official GSA Leasing Portal filters
+    const queryParams = new URLSearchParams({
+      api_key: apiKey,
 
-    // Make all API calls in parallel (including NAICS-only fallback)
-    const fetchPromises = pscCodesToTry.map(async (pscCode) => {
-      const queryParams = new URLSearchParams({
-        api_key: apiKey,
+      // Date range
+      postedFrom: params.postedFrom || defaultFrom,
+      postedTo: params.postedTo || defaultTo,
 
-        // Required date parameters (rolling window)
-        postedFrom: params.postedFrom || defaultFrom,
-        postedTo: params.postedTo || defaultTo,
+      // Official GSA filters (matches leasing.gsa.gov)
+      deptname: GSA_LEASE_FILTERS.department,
+      subtier: GSA_LEASE_FILTERS.subTier,
+      ncode: GSA_LEASE_FILTERS.naicsCode,
 
-        // Notice types
-        ptype: GSA_LEASE_FILTERS.noticeTypes.join(","),
+      // Notice types
+      ptype: GSA_LEASE_FILTERS.noticeTypes.join(","),
 
-        // Pagination (get more per call to reduce API calls)
-        limit: String(1000), // Max allowed
-        offset: String(params.offset || 0),
+      // Response date filter (only active opportunities)
+      rdlfrom: formatDate(today),
 
-        // Optional filters
-        ...(params.state && { state: params.state }),
-        ...(params.city && { city: params.city }),
-      });
+      // Pagination
+      limit: String(params.limit || 1000),
+      offset: String(params.offset || 0),
 
-      // Add classification code (PSC)
-      if (pscCode) {
-        queryParams.set("ccode", pscCode);
-      }
-
-      try {
-        const response = await fetch(`${baseUrl}?${queryParams.toString()}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          // Cache for 5 minutes to avoid rate limiting
-          next: { revalidate: 300 },
-        });
-
-        if (!response.ok) {
-          console.warn(`SAM.gov API warning for PSC ${pscCode}: ${response.status}`);
-          return null;
-        }
-
-        return await response.json() as SAMResponse;
-      } catch (error) {
-        console.warn(`Error fetching PSC ${pscCode}:`, error);
-        return null;
-      }
+      // Optional location filters
+      ...(params.state && { state: params.state }),
+      ...(params.city && { city: params.city }),
     });
 
-    // Add fallback request with keyword search (no PSC filter) for robustness
-    const keywordFallback = async () => {
-      const queryParams = new URLSearchParams({
-        api_key: apiKey,
-        postedFrom: params.postedFrom || defaultFrom,
-        postedTo: params.postedTo || defaultTo,
-        ptype: GSA_LEASE_FILTERS.noticeTypes.join(","),
-        limit: String(1000),
-        offset: String(params.offset || 0),
-        // Use keyword search as fallback
-        keyword: "lease OR leasing OR RLP",
-        ...(params.state && { state: params.state }),
-        ...(params.city && { city: params.city }),
-      });
+    const response = await fetch(`${baseUrl}?${queryParams.toString()}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // Cache for 5 minutes to avoid rate limiting
+      next: { revalidate: 300 },
+    });
 
-      try {
-        const response = await fetch(`${baseUrl}?${queryParams.toString()}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          next: { revalidate: 300 },
-        });
-
-        if (!response.ok) {
-          console.warn(`SAM.gov API keyword fallback failed: ${response.status}`);
-          return null;
-        }
-
-        return await response.json() as SAMResponse;
-      } catch (error) {
-        console.warn(`Error in keyword fallback:`, error);
-        return null;
-      }
-    };
-
-    // Wait for all requests to complete (including fallback)
-    const results = await Promise.all([...fetchPromises, keywordFallback()]);
-
-    // Merge all results
-    for (const data of results) {
-      if (!data) continue;
-
-      // Merge opportunities, deduping by noticeId
-      data.opportunitiesData?.forEach((opp) => {
-        // Only include opportunities with leasing-specific PSC codes or NAICS
-        if (!allOpportunities.has(opp.noticeId)) {
-          const pscCode = opp.classificationCode || "";
-          const naicsCode = opp.naicsCode || "";
-          const title = (opp.title || "").toLowerCase();
-
-          // Accept:
-          // - X1A* (office/commercial leasing)
-          // - X1D* (space rental)
-          // - NAICS 531120 (lessors of nonresidential buildings)
-          // - Title contains whole words "lease", "rlp", "leasing" (with word boundaries)
-          const hasLeaseKeyword =
-            /\blease\b/.test(title) ||
-            /\bleasing\b/.test(title) ||
-            /\brlp\b/.test(title) ||
-            /\brequest for lease/.test(title);
-
-          if (
-            pscCode.startsWith("X1A") ||
-            pscCode.startsWith("X1D") ||
-            naicsCode === "531120" ||
-            (hasLeaseKeyword && !title.includes("release")) // Exclude "release" false positives
-          ) {
-            allOpportunities.set(opp.noticeId, opp);
-          }
-        }
-      });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `SAM.gov API error: ${response.status} ${response.statusText} - ${errorText}`
+      );
     }
 
-    // Convert Map back to array, sort by posted date (newest first), and apply limit
-    const mergedOpportunities = Array.from(allOpportunities.values())
+    const data: SAMResponse = await response.json();
+
+    // Sort by posted date (newest first)
+    const sortedOpportunities = (data.opportunitiesData || [])
       .sort((a, b) => new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime());
 
-    const limitedOpportunities = mergedOpportunities.slice(0, params.limit || 100);
-
     return {
-      totalRecords: mergedOpportunities.length,
-      limit: params.limit || 100,
-      offset: params.offset || 0,
-      opportunitiesData: limitedOpportunities,
+      totalRecords: data.totalRecords,
+      limit: data.limit,
+      offset: data.offset,
+      opportunitiesData: sortedOpportunities,
     };
   } catch (error) {
     console.error("Error fetching SAM.gov lease opportunities:", error);
