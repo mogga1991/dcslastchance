@@ -27,6 +27,11 @@ export type PropertyType =
   | 'other';
 
 /**
+ * Building Class
+ */
+export type BuildingClass = 'class_a' | 'class_b' | 'class_c';
+
+/**
  * Lister Role Types
  */
 export type ListerRole = 'owner' | 'broker' | 'agent' | 'salesperson';
@@ -93,6 +98,14 @@ export interface BrokerListing {
   // Availability
   available_date: string; // ISO date string
 
+  // MVP Property Features
+  building_class?: BuildingClass;
+  ada_accessible?: boolean;
+  parking_spaces?: number;
+  leed_certified?: boolean;
+  year_built?: number;
+  notes?: string;
+
   // Property Features
   features: string[]; // e.g., ["parking", "conference_rooms", "loading_dock"]
   amenities: string[]; // e.g., ["gym", "cafeteria", "bike_storage"]
@@ -118,29 +131,12 @@ export interface BrokerListing {
 }
 
 /**
- * Input type for creating/updating broker listings
+ * Input type for creating/updating broker listings (MVP Simplified)
  */
 export interface BrokerListingInput {
-  // Lister Role
-  lister_role: ListerRole;
-
-  // Broker Information
-  broker_name: string;
-  broker_company: string;
-  broker_email: string;
-  broker_phone: string;
-  license_number?: string;
-  brokerage_company?: string;
-
-  // Listing Details
-  title: string;
-  description: string;
-  property_type: PropertyType;
-  status?: ListingStatus;
-
+  // REQUIRED FIELDS
   // Location
   street_address: string;
-  suite_unit?: string;
   city: string;
   state: string;
   zipcode: string;
@@ -149,25 +145,43 @@ export interface BrokerListingInput {
 
   // Space Details
   total_sf: number;
-  available_sf: number;
-  min_divisible_sf?: number;
-
-  // Pricing
-  asking_rent_sf: number;
-  lease_type: LeaseType;
 
   // Availability
   available_date: string;
 
-  // Property Features
+  // Building Class
+  building_class: BuildingClass;
+
+  // Contact (pre-filled from logged-in user)
+  broker_email: string;
+
+  // OPTIONAL FIELDS (collapsed in "Additional Details")
+  ada_accessible?: boolean;
+  parking_spaces?: number;
+  leed_certified?: boolean;
+  year_built?: number;
+  notes?: string;
+
+  // Hidden/Auto-filled fields
+  lister_role?: ListerRole;
+  broker_name?: string;
+  broker_company?: string;
+  broker_phone?: string;
+  license_number?: string;
+  brokerage_company?: string;
+  title?: string;
+  description?: string;
+  property_type?: PropertyType;
+  status?: ListingStatus;
+  suite_unit?: string;
+  available_sf?: number;
+  min_divisible_sf?: number;
+  asking_rent_sf?: number;
+  lease_type?: LeaseType;
   features?: string[];
   amenities?: string[];
-
-  // Federal Suitability
   gsa_eligible?: boolean;
   set_aside_eligible?: SetAsideType[];
-
-  // Media
   images?: string[];
 }
 

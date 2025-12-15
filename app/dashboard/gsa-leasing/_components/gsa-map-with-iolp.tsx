@@ -15,6 +15,7 @@ interface GSAMapWithIOLPProps {
   center?: { lat: number; lng: number } | null;
   onIOLPCountChange?: (count: number) => void;
   onIOLPError?: (error: string | null) => void;
+  onViewportChange?: (center: { lat: number; lng: number }) => void;
 }
 
 // State center coordinates for geocoding
@@ -64,6 +65,7 @@ export default function GSAMapWithIOLP({
   center,
   onIOLPCountChange,
   onIOLPError,
+  onViewportChange,
 }: GSAMapWithIOLPProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
@@ -104,8 +106,10 @@ export default function GSAMapWithIOLP({
   useEffect(() => {
     if (!isLoaded || !mapContainer.current || map.current) return;
 
+    const initialCenter = { lat: 39.8283, lng: -98.5795 }; // Center of US
+
     map.current = new window.google.maps.Map(mapContainer.current, {
-      center: { lat: 39.8283, lng: -98.5795 }, // Center of US
+      center: initialCenter,
       zoom: 4,
       mapId: "GSA_OPPORTUNITIES_MAP",
       disableDefaultUI: false,
@@ -114,6 +118,12 @@ export default function GSAMapWithIOLP({
       streetViewControl: false,
       fullscreenControl: true,
     });
+
+    // Set initial viewport for Federal Neighborhood Score
+    if (onViewportChange) {
+      onViewportChange(initialCenter);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded]);
 
   // Fetch IOLP data based on viewport (debounced)
@@ -168,7 +178,7 @@ export default function GSAMapWithIOLP({
     }
   }, [showIOLPLayer, onIOLPLoadingChange, onIOLPCountChange, onIOLPError]);
 
-  // Add map idle listener for IOLP layer
+  // Add map idle listener for IOLP layer and viewport tracking
   useEffect(() => {
     if (!map.current || !isLoaded) return;
 
@@ -176,6 +186,17 @@ export default function GSAMapWithIOLP({
       map.current,
       "idle",
       () => {
+        // Notify viewport change for Federal Neighborhood Score
+        if (onViewportChange && map.current) {
+          const center = map.current.getCenter();
+          if (center) {
+            onViewportChange({
+              lat: center.lat(),
+              lng: center.lng(),
+            });
+          }
+        }
+
         if (!showIOLPLayer) return;
 
         // Debounce the fetch
@@ -192,6 +213,7 @@ export default function GSAMapWithIOLP({
     return () => {
       window.google.maps.event.removeListener(listener);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded, showIOLPLayer, fetchIOLPData]);
 
   // Render IOLP markers

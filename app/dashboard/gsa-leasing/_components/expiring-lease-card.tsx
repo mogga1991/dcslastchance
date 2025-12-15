@@ -54,7 +54,7 @@ export function ExpiringLeaseCard({
       case 'critical':
         return '< 6 months';
       case 'warning':
-        return '< 12 months';
+        return '6-12 months';
       default:
         return '12+ months';
     }
@@ -63,8 +63,7 @@ export function ExpiringLeaseCard({
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return 'N/A';
     return new Date(dateStr).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
+      month: 'long',
       year: 'numeric'
     });
   };

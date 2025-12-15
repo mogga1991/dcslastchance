@@ -105,7 +105,11 @@ const MOCK_PROPERTIES: Property[] = [
   },
 ];
 
-export default function BrokerListingClient() {
+interface BrokerListingClientProps {
+  userEmail?: string;
+}
+
+export default function BrokerListingClient({ userEmail }: BrokerListingClientProps) {
   const [properties] = useState<Property[]>(MOCK_PROPERTIES);
   const [searchTerm, setSearchTerm] = useState("");
   const [propertyType, setPropertyType] = useState("all");
@@ -152,7 +156,7 @@ export default function BrokerListingClient() {
             <div className="flex gap-2">
               <Button variant="default">Browse Listings</Button>
               <Button variant="outline">Manage Portfolio</Button>
-              <CreateListingDialog onSubmit={handleCreateListing} />
+              <CreateListingDialog onSubmit={handleCreateListing} userEmail={userEmail} />
             </div>
           </div>
 

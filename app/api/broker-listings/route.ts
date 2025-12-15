@@ -171,127 +171,120 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const input: BrokerListingInput = await request.json();
 
-    // Validate required fields
-    if (!input.title || !input.description || !input.property_type ||
-        !input.street_address || !input.city || !input.state || !input.zipcode ||
-        !input.total_sf || !input.available_sf || !input.asking_rent_sf ||
-        !input.lease_type || !input.available_date ||
-        !input.broker_name || !input.broker_company ||
-        !input.broker_email || !input.broker_phone ||
-        !input.lister_role) {
+    // Validate required MVP fields only
+    if (!input.street_address || !input.city || !input.state || !input.zipcode ||
+        !input.total_sf || !input.available_date ||
+        !input.building_class || !input.broker_email) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Missing required fields'
+          error: 'Missing required fields: street_address, city, state, zipcode, total_sf, available_date, building_class, broker_email'
         },
         { status: 400 }
       );
     }
 
-    // Validate lister_role is one of the allowed values
-    const validRoles = ['owner', 'broker', 'agent', 'salesperson'];
-    if (!validRoles.includes(input.lister_role)) {
+    // Validate building_class
+    const validBuildingClasses = ['class_a', 'class_b', 'class_c'];
+    if (!validBuildingClasses.includes(input.building_class)) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Invalid lister_role. Must be one of: owner, broker, agent, salesperson'
+          error: 'Invalid building_class. Must be one of: class_a, class_b, class_c'
         },
         { status: 400 }
       );
     }
 
-    // Validate conditional fields based on role
-    if (input.lister_role === 'broker' || input.lister_role === 'agent') {
-      if (!input.license_number) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'license_number is required for brokers and agents'
-          },
-          { status: 400 }
-        );
-      }
-      if (!input.brokerage_company) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'brokerage_company is required for brokers and agents'
-          },
-          { status: 400 }
-        );
-      }
-    }
+    // Auto-generate title from address if not provided
+    const title = input.title || `${input.street_address}, ${input.city}, ${input.state}`;
 
-    // Validate coordinates are provided (required for map display)
-    if (!input.latitude || !input.longitude) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Property coordinates are required. Please verify the address using the "Locate on Map" button.'
-        },
-        { status: 400 }
-      );
-    }
+    // Auto-generate description from notes if not provided
+    const description = input.description || input.notes || `${input.total_sf} RSF available at ${input.street_address}`;
 
-    // Validate coordinates are valid numbers
-    if (
-      typeof input.latitude !== 'number' ||
-      typeof input.longitude !== 'number' ||
-      isNaN(input.latitude) ||
-      isNaN(input.longitude) ||
-      input.latitude < -90 ||
-      input.latitude > 90 ||
-      input.longitude < -180 ||
-      input.longitude > 180
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Invalid coordinates. Please verify the property location.'
-        },
-        { status: 400 }
-      );
-    }
-
-    // Calculate federal score with coordinates
+    // Calculate federal score with coordinates (if provided)
     let federalScore: number | undefined;
     let federalScoreData: any;
+    let latitude = input.latitude;
+    let longitude = input.longitude;
 
-    const score = await iolpAdapter.calculateFederalNeighborhoodScore(
-      input.latitude,
-      input.longitude,
-      5 // 5 mile radius
-    );
-    federalScore = score.score;
-    federalScoreData = score;
+    // If coordinates not provided, try to geocode the address
+    if (!latitude || !longitude) {
+      try {
+        const { geocodeAddress } = await import('@/lib/geocode');
+        const geocodeResult = await geocodeAddress(
+          input.street_address,
+          input.city,
+          input.state,
+          input.zipcode
+        );
+        if (geocodeResult) {
+          latitude = geocodeResult.coordinates.lat;
+          longitude = geocodeResult.coordinates.lng;
+        }
+      } catch (error) {
+        console.error('Geocoding error:', error);
+        // Continue without coordinates - federal score will be null
+      }
+    }
 
-    // Prepare insert data
+    // Calculate federal score if we have coordinates
+    if (latitude && longitude) {
+      try {
+        const score = await iolpAdapter.calculateFederalNeighborhoodScore(
+          latitude,
+          longitude,
+          5 // 5 mile radius
+        );
+        federalScore = score.score;
+        federalScoreData = score;
+      } catch (error) {
+        console.error('Federal score calculation error:', error);
+        // Continue without federal score
+      }
+    }
+
+    // Prepare insert data with MVP fields
     const insertData = {
       user_id: user.id,
-      lister_role: input.lister_role,
-      broker_name: input.broker_name,
-      broker_company: input.broker_company,
+      // Contact info
       broker_email: input.broker_email,
-      broker_phone: input.broker_phone,
+      broker_name: input.broker_name || user.email?.split('@')[0] || 'Unknown',
+      broker_company: input.broker_company || 'Independent',
+      broker_phone: input.broker_phone || '',
+      lister_role: input.lister_role || 'owner',
       license_number: input.license_number,
       brokerage_company: input.brokerage_company,
-      title: input.title,
-      description: input.description,
-      property_type: input.property_type,
-      status: input.status || 'draft',
+      // Listing details
+      title,
+      description,
+      property_type: input.property_type || 'office',
+      status: input.status || 'active',
+      // Location
       street_address: input.street_address,
       suite_unit: input.suite_unit,
       city: input.city,
       state: input.state.toUpperCase(),
       zipcode: input.zipcode,
-      latitude: input.latitude,
-      longitude: input.longitude,
+      latitude,
+      longitude,
+      // Space details
       total_sf: input.total_sf,
-      available_sf: input.available_sf,
+      available_sf: input.available_sf || input.total_sf,
       min_divisible_sf: input.min_divisible_sf,
-      asking_rent_sf: input.asking_rent_sf,
-      lease_type: input.lease_type,
+      // Pricing
+      asking_rent_sf: input.asking_rent_sf || 0,
+      lease_type: input.lease_type || 'full_service',
+      // Availability
       available_date: input.available_date,
+      // MVP fields
+      building_class: input.building_class,
+      ada_accessible: input.ada_accessible || false,
+      parking_spaces: input.parking_spaces,
+      leed_certified: input.leed_certified || false,
+      year_built: input.year_built,
+      notes: input.notes,
+      // Legacy fields
       features: input.features || [],
       amenities: input.amenities || [],
       gsa_eligible: input.gsa_eligible || false,
