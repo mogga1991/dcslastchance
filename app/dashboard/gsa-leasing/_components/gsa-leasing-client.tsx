@@ -424,11 +424,19 @@ export default function GSALeasingClient() {
                 </div>
               </div>
             ) : loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="flex flex-col items-center gap-3">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                  <p className="text-sm text-gray-600">Loading opportunities...</p>
-                </div>
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="animate-pulse border rounded-lg p-4 bg-white">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+                    <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-5/6 mb-3"></div>
+                    <div className="flex gap-4 mt-3">
+                      <div className="h-3 bg-gray-200 rounded w-20"></div>
+                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      <div className="h-3 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredOpportunities.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
@@ -492,11 +500,19 @@ export default function GSALeasingClient() {
                 </div>
               </div>
             ) : loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="flex flex-col items-center gap-3">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                  <p className="text-sm text-gray-600">Loading listings...</p>
-                </div>
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="animate-pulse border rounded-lg p-4 bg-white">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+                    <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-5/6 mb-3"></div>
+                    <div className="flex gap-4 mt-3">
+                      <div className="h-3 bg-gray-200 rounded w-20"></div>
+                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      <div className="h-3 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredListings.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
@@ -537,11 +553,35 @@ export default function GSALeasingClient() {
           {/* Expiring Leases Tab */}
           <TabsContent value="expiring" className="flex-1 overflow-y-auto m-0 p-4">
             {expiringLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="flex flex-col items-center gap-3">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                  <p className="text-sm text-gray-600">Loading expiring leases...</p>
+              <div className="space-y-4">
+                {/* Urgency Summary Skeleton */}
+                <div className="animate-pulse p-3 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg">
+                  <div className="h-4 bg-gray-200 rounded w-40 mb-2"></div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="text-center">
+                        <div className="h-3 bg-gray-200 rounded w-12 mx-auto mb-1"></div>
+                        <div className="h-6 bg-gray-200 rounded w-8 mx-auto mb-1"></div>
+                        <div className="h-3 bg-gray-200 rounded w-16 mx-auto"></div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Lease Cards Skeleton */}
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="animate-pulse border rounded-lg p-4 bg-white">
+                    <div className="flex justify-between mb-3">
+                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                      <div className="h-5 bg-gray-200 rounded w-20"></div>
+                    </div>
+                    <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      <div className="h-3 bg-gray-200 rounded w-20"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredExpiringLeases.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
