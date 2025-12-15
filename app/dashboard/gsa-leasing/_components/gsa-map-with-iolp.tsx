@@ -12,6 +12,9 @@ interface GSAMapWithIOLPProps {
   selectedListing?: BrokerListing | null;
   showIOLPLayer?: boolean;
   onIOLPLoadingChange?: (loading: boolean) => void;
+  center?: { lat: number; lng: number } | null;
+  onIOLPCountChange?: (count: number) => void;
+  onIOLPError?: (error: string | null) => void;
 }
 
 // State center coordinates for geocoding
@@ -58,6 +61,9 @@ export default function GSAMapWithIOLP({
   selectedListing,
   showIOLPLayer = false,
   onIOLPLoadingChange,
+  center,
+  onIOLPCountChange,
+  onIOLPError,
 }: GSAMapWithIOLPProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
@@ -129,6 +135,7 @@ export default function GSAMapWithIOLP({
 
     try {
       onIOLPLoadingChange?.(true);
+      onIOLPError?.(null);
 
       const params = new URLSearchParams({
         swLat: viewportBounds.swLat.toString(),
@@ -138,17 +145,28 @@ export default function GSAMapWithIOLP({
       });
 
       const response = await fetch(`/api/iolp/viewport?${params}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to load federal properties`);
+      }
+
       const result = await response.json();
 
       if (result.success) {
         setIolpData(result.data);
+        onIOLPCountChange?.(result.data.features.length);
+      } else {
+        throw new Error(result.error || 'Unknown error');
       }
     } catch (error) {
       console.error("Error fetching IOLP data:", error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to load federal properties';
+      onIOLPError?.(errorMsg);
+      setIolpData({ features: [] });
     } finally {
       onIOLPLoadingChange?.(false);
     }
-  }, [showIOLPLayer, onIOLPLoadingChange]);
+  }, [showIOLPLayer, onIOLPLoadingChange, onIOLPCountChange, onIOLPError]);
 
   // Add map idle listener for IOLP layer
   useEffect(() => {
@@ -396,6 +414,40 @@ export default function GSAMapWithIOLP({
       map.current.setZoom(12);
     }
   }, [selectedListing, isLoaded]);
+
+  // Pan to center when "View on Map" is clicked
+  useEffect(() => {
+    if (!map.current || !center || !window.google?.maps) return;
+
+    map.current.panTo(center);
+    map.current.setZoom(14);
+
+    // Add a temporary highlight marker
+    const highlightEl = document.createElement("div");
+    highlightEl.style.width = "24px";
+    highlightEl.style.height = "24px";
+    highlightEl.style.borderRadius = "50%";
+    highlightEl.style.backgroundColor = "#ef4444";
+    highlightEl.style.border = "3px solid white";
+    highlightEl.style.boxShadow = "0 0 12px rgba(239, 68, 68, 0.6)";
+    highlightEl.style.animation = "pulse 1.5s ease-in-out infinite";
+
+    const highlightMarker = new window.google.maps.marker.AdvancedMarkerElement({
+      map: map.current,
+      position: center,
+      content: highlightEl,
+    });
+
+    // Remove highlight after 3 seconds
+    const timeout = setTimeout(() => {
+      highlightMarker.map = null;
+    }, 3000);
+
+    return () => {
+      clearTimeout(timeout);
+      highlightMarker.map = null;
+    };
+  }, [center, isLoaded]);
 
   const showingListings = listings.length > 0;
   const showingOpportunities = opportunities.length > 0 && !showingListings;

@@ -45,6 +45,10 @@ export default function GSALeasingClient() {
   const [showFilters, setShowFilters] = useState(false);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [userAlerts, setUserAlerts] = useState<Set<string>>(new Set());
+  const [opportunitiesError, setOpportunitiesError] = useState<string | null>(null);
+  const [listingsError, setListingsError] = useState<string | null>(null);
+  const [iolpError, setIolpError] = useState<string | null>(null);
+  const [iolpCount, setIolpCount] = useState<number>(0);
 
   // IOLP Filters
   const [iolpFilters, setIolpFilters] = useState<IOLPFilters>({
@@ -94,7 +98,14 @@ export default function GSALeasingClient() {
   const fetchOpportunities = async () => {
     try {
       setLoading(true);
+      setOpportunitiesError(null);
+
       const response = await fetch("/api/gsa-leasing?limit=100");
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
       const data = await response.json();
 
       if (data.opportunitiesData) {
@@ -103,6 +114,16 @@ export default function GSALeasingClient() {
       }
     } catch (error) {
       console.error("Error fetching opportunities:", error);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : "Failed to load opportunities. Please try again.";
+      setOpportunitiesError(errorMessage);
+
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -110,7 +131,14 @@ export default function GSALeasingClient() {
 
   const fetchBrokerListings = async () => {
     try {
+      setListingsError(null);
+
       const response = await fetch("/api/broker-listings?limit=100");
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
       const data = await response.json();
 
       if (data.success) {
@@ -119,6 +147,16 @@ export default function GSALeasingClient() {
       }
     } catch (error) {
       console.error("Error fetching broker listings:", error);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : "Failed to load listings. Please try again.";
+      setListingsError(errorMessage);
+
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
     }
   };
 
@@ -281,18 +319,50 @@ export default function GSALeasingClient() {
           )}
 
           {/* Federal Footprint Toggle */}
-          <div className="flex items-center justify-between">
-            <Label htmlFor="iolp-layer" className="text-sm cursor-pointer">
-              Federal Footprint
-            </Label>
-            <div className="flex items-center gap-2">
-              {iolpLoading && <Loader2 className="h-3 w-3 animate-spin text-blue-600" />}
-              <Switch
-                id="iolp-layer"
-                checked={showIOLPLayer}
-                onCheckedChange={setShowIOLPLayer}
-              />
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="iolp-layer" className="text-sm cursor-pointer">
+                Federal Footprint
+              </Label>
+              <div className="flex items-center gap-2">
+                {iolpLoading && <Loader2 className="h-3 w-3 animate-spin text-blue-600" />}
+                <Switch
+                  id="iolp-layer"
+                  checked={showIOLPLayer}
+                  onCheckedChange={setShowIOLPLayer}
+                />
+              </div>
             </div>
+
+            {/* Feedback text */}
+            {showIOLPLayer && (
+              <div className="text-xs">
+                {iolpLoading ? (
+                  <p className="text-blue-600 animate-pulse">Loading federal properties...</p>
+                ) : iolpError ? (
+                  <p className="text-red-600">{iolpError}</p>
+                ) : iolpCount > 0 ? (
+                  <p className="text-green-600">Showing {iolpCount.toLocaleString()} federal properties</p>
+                ) : (
+                  <p className="text-gray-500">No properties in current view</p>
+                )}
+              </div>
+            )}
+
+            {/* Legend (when layer is active) */}
+            {showIOLPLayer && !iolpLoading && (
+              <div className="text-xs space-y-1 pt-2 border-t">
+                <p className="font-semibold text-gray-700 mb-1">Legend:</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-cyan-500 border border-white"></div>
+                  <span className="text-gray-600">Leased</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500 border border-white"></div>
+                  <span className="text-gray-600">Owned</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -330,7 +400,30 @@ export default function GSALeasingClient() {
 
           {/* Opportunities Tab */}
           <TabsContent value="opportunities" className="flex-1 overflow-y-auto m-0 p-4">
-            {loading ? (
+            {opportunitiesError ? (
+              <div className="flex flex-col items-center justify-center py-12 px-4">
+                <div className="text-center max-w-sm">
+                  <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                    Failed to Load Opportunities
+                  </h3>
+                  <p className="text-xs text-gray-600 mb-4">
+                    {opportunitiesError}
+                  </p>
+                  <Button
+                    onClick={fetchOpportunities}
+                    size="sm"
+                    variant="outline"
+                  >
+                    Try Again
+                  </Button>
+                </div>
+              </div>
+            ) : loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="flex flex-col items-center gap-3">
                   <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -338,7 +431,22 @@ export default function GSALeasingClient() {
                 </div>
               </div>
             ) : filteredOpportunities.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">No opportunities found</div>
+              <div className="p-4 text-center text-gray-500">
+                {searchTerm ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <p>No matches for "{searchTerm}"</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSearchTerm("")}
+                    >
+                      Clear Search
+                    </Button>
+                  </div>
+                ) : (
+                  <p>No opportunities available</p>
+                )}
+              </div>
             ) : (
               <div className="space-y-4">
                 {filteredOpportunities.map((opp) => (
@@ -360,7 +468,30 @@ export default function GSALeasingClient() {
 
           {/* Available Listings Tab */}
           <TabsContent value="listings" className="flex-1 overflow-y-auto m-0 p-4">
-            {loading ? (
+            {listingsError ? (
+              <div className="flex flex-col items-center justify-center py-12 px-4">
+                <div className="text-center max-w-sm">
+                  <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                    Failed to Load Listings
+                  </h3>
+                  <p className="text-xs text-gray-600 mb-4">
+                    {listingsError}
+                  </p>
+                  <Button
+                    onClick={fetchBrokerListings}
+                    size="sm"
+                    variant="outline"
+                  >
+                    Try Again
+                  </Button>
+                </div>
+              </div>
+            ) : loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="flex flex-col items-center gap-3">
                   <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -368,7 +499,22 @@ export default function GSALeasingClient() {
                 </div>
               </div>
             ) : filteredListings.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">No broker listings found</div>
+              <div className="p-4 text-center text-gray-500">
+                {searchTerm ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <p>No matches for "{searchTerm}"</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSearchTerm("")}
+                    >
+                      Clear Search
+                    </Button>
+                  </div>
+                ) : (
+                  <p>No broker listings available</p>
+                )}
+              </div>
             ) : (
               <div className="space-y-4">
                 {filteredListings.map((listing) => (
@@ -452,6 +598,9 @@ export default function GSALeasingClient() {
           selectedListing={selectedListing}
           showIOLPLayer={showIOLPLayer}
           onIOLPLoadingChange={setIolpLoading}
+          center={mapCenter}
+          onIOLPCountChange={setIolpCount}
+          onIOLPError={setIolpError}
         />
       </div>
 
