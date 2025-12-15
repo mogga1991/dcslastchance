@@ -15,11 +15,17 @@ export function scoreBuilding(
     notes: [],
   };
 
+  // Safety check for buildingClass
+  if (!property.buildingClass) {
+    breakdown.notes.push('Building class information not available');
+    return { score: 50, breakdown };
+  }
+
   // Normalize building class (handle A+ as A)
   const normalizedClass = property.buildingClass.replace('+', '') as 'A' | 'B' | 'C';
 
   // Building Class (+20 / +10 / -20)
-  if (requirement.buildingClass.length > 0) {
+  if (requirement.buildingClass && requirement.buildingClass.length > 0) {
     if (requirement.buildingClass.includes(normalizedClass)) {
       breakdown.classMatch = true;
       if (requirement.buildingClass[0] === normalizedClass) {
@@ -38,13 +44,13 @@ export function scoreBuilding(
   }
 
   // Accessibility (CRITICAL - can be disqualifying)
-  if (requirement.accessibility.adaCompliant && !property.adaCompliant) {
+  if (requirement.accessibility?.adaCompliant && !property.adaCompliant) {
     breakdown.accessibilityMet = false;
     score -= 30;
     breakdown.notes.push('ADA compliance required but not met');
   }
 
-  if (requirement.accessibility.publicTransit && !property.publicTransitAccess) {
+  if (requirement.accessibility?.publicTransit && !property.publicTransitAccess) {
     score -= 5;
     breakdown.notes.push('Public transit access preferred');
   }
@@ -64,8 +70,8 @@ export function scoreBuilding(
   ];
 
   for (const [feature, points] of featureChecks) {
-    if (requirement.features[feature]) {
-      if (property.features[feature]) {
+    if (requirement.features?.[feature]) {
+      if (property.features?.[feature]) {
         breakdown.featuresMet.push(feature);
         score += points;
       } else {
@@ -76,15 +82,17 @@ export function scoreBuilding(
   }
 
   // Certifications
-  for (const cert of requirement.certifications) {
-    const hasCert = property.certifications.some((pc) =>
-      pc.toLowerCase().includes(cert.toLowerCase())
-    );
-    if (hasCert) {
-      breakdown.certificationsMet.push(cert);
-      score += 5;
-    } else {
-      breakdown.certificationsMissing.push(cert);
+  if (requirement.certifications && property.certifications) {
+    for (const cert of requirement.certifications) {
+      const hasCert = property.certifications.some((pc) =>
+        pc.toLowerCase().includes(cert.toLowerCase())
+      );
+      if (hasCert) {
+        breakdown.certificationsMet.push(cert);
+        score += 5;
+      } else {
+        breakdown.certificationsMissing.push(cert);
+      }
     }
   }
 

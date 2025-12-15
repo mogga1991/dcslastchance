@@ -34,40 +34,55 @@ export function calculateOpportunityMatchScores(
           lng: listing.longitude,
         },
         space: {
-          totalSF: listing.total_sf,
-          availableSF: listing.available_sf,
-          minDivisibleSF: listing.min_divisible_sf,
+          totalSqFt: listing.total_sf,
+          availableSqFt: listing.available_sf,
+          usableSqFt: null,
+          minDivisibleSqFt: listing.min_divisible_sf ?? null,
+          isContiguous: true,
         },
         building: {
-          class: 'A' as const, // Default to Class A
-          yearBuilt: 2000, // Default
+          buildingClass: 'A' as const,
+          totalFloors: 5,
+          availableFloors: [1],
+          adaCompliant: listing.features?.includes('ada') || listing.features?.includes('accessible') || false,
+          publicTransitAccess: listing.features?.includes('transit') || false,
+          parkingSpaces: 100,
+          parkingRatio: 4.0,
           features: {
-            parking: listing.features.includes('parking'),
-            ada: listing.features.includes('ada') || listing.features.includes('accessible'),
-            security: listing.features.includes('security'),
-            hvac: listing.features.includes('hvac'),
-            elevator: listing.features.includes('elevator'),
-            loading: listing.features.includes('loading_dock'),
-            generator: listing.features.includes('generator'),
-            scifCapable: listing.features.includes('scif'),
+            fiber: listing.features?.includes('fiber') || false,
+            backupPower: listing.features?.includes('generator') || listing.features?.includes('backup_power') || false,
+            loadingDock: listing.features?.includes('loading_dock') || false,
+            security24x7: listing.features?.includes('security') || false,
+            secureAccess: listing.features?.includes('secure_access') || false,
+            scifCapable: listing.features?.includes('scif') || false,
+            dataCenter: listing.features?.includes('data_center') || false,
+            cafeteria: listing.features?.includes('cafeteria') || false,
+            fitnessCenter: listing.features?.includes('fitness') || false,
+            conferenceCenter: listing.features?.includes('conference') || false,
           },
-          certifications: {
-            leed: listing.features.includes('leed'),
-            energyStar: listing.features.includes('energy_star'),
-          },
+          certifications: [
+            ...(listing.features?.includes('leed') ? ['LEED'] : []),
+            ...(listing.features?.includes('energy_star') ? ['Energy Star'] : []),
+          ],
         },
         timeline: {
           availableDate: new Date(listing.available_date),
+          minLeaseTermMonths: null,
+          maxLeaseTermMonths: null,
+          buildOutWeeksNeeded: 0,
         },
       };
 
       // Broker experience profile (simplified)
       const brokerExperience: ExperienceProfile = {
-        totalDeals: 10, // Would come from broker profile
-        govDeals: listing.gsa_eligible ? 5 : 0,
-        avgDealSize: listing.total_sf,
-        yearsExperience: 5,
-        certifications: [],
+        governmentLeaseExperience: listing.gsa_eligible,
+        governmentLeasesCount: listing.gsa_eligible ? 5 : 0,
+        gsa_certified: listing.gsa_eligible,
+        yearsInBusiness: 5,
+        totalPortfolioSqFt: listing.total_sf,
+        references: [],
+        willingToBuildToSuit: false,
+        willingToProvideImprovements: false,
       };
 
       const score = calculateMatchScore(

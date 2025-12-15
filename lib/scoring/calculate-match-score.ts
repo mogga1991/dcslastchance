@@ -56,9 +56,9 @@ function generateInsights(
   // Space
   if (scores.space.score >= 90) {
     strengths.push('Space requirements fully met');
-  } else if (scores.space.breakdown.meetsMinimum === false) {
+  } else if (scores.space.breakdown?.meetsMinimum === false) {
     weaknesses.push(
-      `Space is ${Math.abs(scores.space.breakdown.variance || 0).toLocaleString()} SF short`
+      `Space is ${Math.abs(scores.space.breakdown?.variance || 0).toLocaleString()} SF short`
     );
     recommendations.push(
       'Consider if government might accept smaller space or if expansion is possible'
@@ -69,13 +69,13 @@ function generateInsights(
   if (scores.building.score >= 80) {
     strengths.push('Building meets technical requirements');
   }
-  if (scores.building.breakdown.featuresMissing.length > 0) {
+  if (scores.building.breakdown?.featuresMissing && scores.building.breakdown.featuresMissing.length > 0) {
     weaknesses.push(
       `Missing features: ${scores.building.breakdown.featuresMissing.join(', ')}`
     );
     recommendations.push('Evaluate cost to add missing features');
   }
-  if (scores.building.breakdown.certificationsMet.length > 0) {
+  if (scores.building.breakdown?.certificationsMet && scores.building.breakdown.certificationsMet.length > 0) {
     strengths.push(
       `Certifications: ${scores.building.breakdown.certificationsMet.join(', ')}`
     );
@@ -92,7 +92,7 @@ function generateInsights(
   }
 
   // Experience
-  if (scores.experience.breakdown.hasGovExperience) {
+  if (scores.experience.breakdown?.hasGovExperience) {
     strengths.push('Prior government lease experience');
   } else {
     recommendations.push(
@@ -185,6 +185,7 @@ export function calculateMatchScore(
     disqualifiers.push('Property not in required state');
   }
   if (
+    space.breakdown &&
     !space.breakdown.meetsMinimum &&
     space.breakdown.variancePercent &&
     space.breakdown.variancePercent < -20
@@ -193,12 +194,12 @@ export function calculateMatchScore(
       'Property significantly under minimum size requirement'
     );
   }
-  if (!building.breakdown.accessibilityMet) {
+  if (building.breakdown && !building.breakdown.accessibilityMet) {
     disqualifiers.push('ADA accessibility requirement not met');
   }
   if (
-    requirements.building.features.scifCapable &&
-    !property.building.features.scifCapable
+    requirements.building.features?.scifCapable &&
+    !property.building.features?.scifCapable
   ) {
     disqualifiers.push('SCIF capability required but not available');
   }
