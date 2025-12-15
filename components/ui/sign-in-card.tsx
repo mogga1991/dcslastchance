@@ -78,9 +78,9 @@ export function SignInCard() {
       // Redirect to dashboard
       router.push("/dashboard");
       router.refresh();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Auth error:", error);
-      setError(error.message || "Failed to sign in");
+      setError((error as Error).message || "Failed to sign in");
       setIsLoading(false);
     }
   };
@@ -381,7 +381,7 @@ export function SignInCard() {
             transition={{ delay: 0.8 }}
           >
             <p className="text-white/60 text-sm">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link
                 href="/sign-up"
                 className="text-indigo-300 hover:text-indigo-200 font-semibold transition-colors"
