@@ -9,14 +9,10 @@ import { FedSpaceLogo, FedSpaceText } from "@/components/brand/fedspace-logo";
 import {
   LayoutDashboard,
   Building2,
-  Users,
-  FileText,
-  DollarSign,
   Settings,
-  CreditCard,
-  Newspaper,
   LogOut,
   PlusCircle,
+  Bookmark,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -35,6 +31,7 @@ export default function DashboardSideBar() {
     router.push("/sign-in");
   };
 
+  // MVP: Core navigation items only
   const links = [
     {
       label: "Dashboard",
@@ -64,28 +61,10 @@ export default function DashboardSideBar() {
       ),
     },
     {
-      label: "My Proposals",
-      href: "/dashboard/my-proposals",
+      label: "Saved Opportunities",
+      href: "/dashboard/saved-opportunities",
       icon: (
-        <FileText
-          className="h-5 w-5 flex-shrink-0"
-        />
-      ),
-    },
-    {
-      label: "Market News",
-      href: "/dashboard/market-news",
-      icon: (
-        <Newspaper
-          className="h-5 w-5 flex-shrink-0"
-        />
-      ),
-    },
-    {
-      label: "My Earnings",
-      href: "/dashboard/my-earnings",
-      icon: (
-        <DollarSign
+        <Bookmark
           className="h-5 w-5 flex-shrink-0"
         />
       ),
@@ -99,15 +78,43 @@ export default function DashboardSideBar() {
         />
       ),
     },
-    {
-      label: "Upgrade",
-      href: "/dashboard/upgrade",
-      icon: (
-        <CreditCard
-          className="h-5 w-5 flex-shrink-0"
-        />
-      ),
-    },
+    // MVP: Hidden for initial launch - uncomment when ready
+    // {
+    //   label: "My Proposals",
+    //   href: "/dashboard/my-proposals",
+    //   icon: (
+    //     <FileText
+    //       className="h-5 w-5 flex-shrink-0"
+    //     />
+    //   ),
+    // },
+    // {
+    //   label: "Market News",
+    //   href: "/dashboard/market-news",
+    //   icon: (
+    //     <Newspaper
+    //       className="h-5 w-5 flex-shrink-0"
+    //     />
+    //   ),
+    // },
+    // {
+    //   label: "My Earnings",
+    //   href: "/dashboard/my-earnings",
+    //   icon: (
+    //     <DollarSign
+    //       className="h-5 w-5 flex-shrink-0"
+    //     />
+    //   ),
+    // },
+    // {
+    //   label: "Upgrade",
+    //   href: "/dashboard/upgrade",
+    //   icon: (
+    //     <CreditCard
+    //       className="h-5 w-5 flex-shrink-0"
+    //     />
+    //   ),
+    // },
   ];
 
   return (

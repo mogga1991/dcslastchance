@@ -11,10 +11,12 @@ import {
 } from "@/components/ui/sheet";
 import UserProfile from "@/components/user-profile";
 import {
-  Brush,
-  HomeIcon,
-  LucideGitBranchPlus,
-  MonitorSmartphone,
+  LayoutDashboard,
+  Building2,
+  PlusCircle,
+  Bookmark,
+  Settings,
+  Menu,
 } from "lucide-react";
 import Link from "next/link";
 import { ReactNode } from "react";
@@ -25,47 +27,55 @@ export default function DashboardTopNav({ children }: { children: ReactNode }) {
       <header className="flex h-14 lg:h-[52px] items-center gap-4 border-b px-3">
         <Dialog>
           <SheetTrigger className="min-[1024px]:hidden p-2 transition">
-            <Link prefetch={true} href="/dashboard">
-              <span className="sr-only">Home</span>
-            </Link>
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle Menu</span>
           </SheetTrigger>
           <SheetContent side="left">
             <SheetHeader>
-              <Link prefetch={true} href="/">
-                <SheetTitle>Pass Builder</SheetTitle>
+              <Link prefetch={true} href="/dashboard">
+                <SheetTitle>FedSpace</SheetTitle>
               </Link>
             </SheetHeader>
+            {/* MVP: Mobile navigation - matches desktop sidebar */}
             <div className="flex flex-col space-y-3 mt-[1rem]">
               <DialogClose asChild>
                 <Link prefetch={true} href="/dashboard">
-                  <Button variant="outline" className="w-full">
-                    <HomeIcon className="mr-2 h-4 w-4" />
-                    Overview
+                  <Button variant="outline" className="w-full justify-start">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Dashboard
                   </Button>
                 </Link>
               </DialogClose>
               <DialogClose asChild>
-                <Link prefetch={true} href="/dashboard/create">
-                  <Button variant="outline" className="w-full">
-                    <Brush className="mr-2 h-4 w-4" />
-                    Create Pass
+                <Link prefetch={true} href="/dashboard/gsa-leasing">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Building2 className="mr-2 h-4 w-4" />
+                    GSA Leasing
                   </Button>
                 </Link>
               </DialogClose>
               <DialogClose asChild>
-                <Link prefetch={true} href="/dashboard/notifications">
-                  <Button variant="outline" className="w-full">
-                    <MonitorSmartphone className="mr-2 h-4 w-4" />
-                    Notifications
+                <Link prefetch={true} href="/dashboard/broker-listing">
+                  <Button variant="outline" className="w-full justify-start">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    List Property
+                  </Button>
+                </Link>
+              </DialogClose>
+              <DialogClose asChild>
+                <Link prefetch={true} href="/dashboard/saved-opportunities">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Bookmark className="mr-2 h-4 w-4" />
+                    Saved Opportunities
                   </Button>
                 </Link>
               </DialogClose>
               <Separator className="my-3" />
               <DialogClose asChild>
-                <Link prefetch={true} href="/dashboard/analytics">
-                  <Button variant="outline" className="w-full">
-                    <LucideGitBranchPlus className="mr-2 h-4 w-4" />
-                    Analytics
+                <Link prefetch={true} href="/dashboard/settings">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
                   </Button>
                 </Link>
               </DialogClose>
