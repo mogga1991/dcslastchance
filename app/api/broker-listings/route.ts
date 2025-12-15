@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { iolpAdapter } from '@/lib/iolp';
 import type { BrokerListingInput, BrokerListingFilters } from '@/types/broker-listing';
+import { Pool } from '@neondatabase/serverless';
 
 /**
  * GET /api/broker-listings
@@ -28,107 +29,56 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    // Build query
-    let query = supabase
-      .from('broker_listings')
-      .select('*', { count: 'exact' });
-
-    // Apply filters
-    const status = searchParams.get('status');
-    if (status) {
-      const statuses = status.split(',');
-      query = query.in('status', statuses);
-    } else {
-      // Default to active listings only
-      query = query.eq('status', 'active');
-    }
-
-    const propertyType = searchParams.get('property_type');
-    if (propertyType) {
-      const types = propertyType.split(',');
-      query = query.in('property_type', types);
-    }
-
-    const state = searchParams.get('state');
-    if (state) {
-      query = query.eq('state', state.toUpperCase());
-    }
-
-    const city = searchParams.get('city');
-    if (city) {
-      query = query.ilike('city', `%${city}%`);
-    }
-
-    const minSf = searchParams.get('min_sf');
-    if (minSf) {
-      query = query.gte('available_sf', parseInt(minSf));
-    }
-
-    const maxSf = searchParams.get('max_sf');
-    if (maxSf) {
-      query = query.lte('available_sf', parseInt(maxSf));
-    }
-
-    const minRent = searchParams.get('min_rent');
-    if (minRent) {
-      query = query.gte('asking_rent_sf', parseFloat(minRent));
-    }
-
-    const maxRent = searchParams.get('max_rent');
-    if (maxRent) {
-      query = query.lte('asking_rent_sf', parseFloat(maxRent));
-    }
-
-    const gsaEligible = searchParams.get('gsa_eligible');
-    if (gsaEligible === 'true') {
-      query = query.eq('gsa_eligible', true);
-    }
-
-    const search = searchParams.get('search');
-    if (search) {
-      // Full-text search on title, description, and address
-      query = query.or(
-        `title.ilike.%${search}%,description.ilike.%${search}%,street_address.ilike.%${search}%,city.ilike.%${search}%`
-      );
-    }
-
-    // Pagination
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
-    const offset = parseInt(searchParams.get('offset') || '0');
-
-    // Sorting
-    const sortBy = searchParams.get('sort_by') || 'created_at';
-    const sortOrder = searchParams.get('sort_order') || 'desc';
-    const ascending = sortOrder === 'asc';
-
-    query = query.order(sortBy as any, { ascending });
-
-    // Apply pagination
-    query = query.range(offset, offset + limit - 1);
-
-    // Execute query
-    const { data, error, count } = await query;
-
-    if (error) {
-      console.error('Error fetching broker listings:', error);
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Failed to fetch broker listings',
-          data: []
-        },
-        { status: 500 }
+        { error: "Unauthorized", listings: [] },
+        { status: 401 }
       );
     }
+
+    // Connect to Neon database
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+    // Get user's email from Supabase
+    const userEmail = user.email;
+
+    // Find user in Neon by email
+    const userResult = await pool.query(
+      'SELECT id FROM "user" WHERE email = $1 LIMIT 1',
+      [userEmail]
+    );
+
+    if (!userResult.rows[0]) {
+      await pool.end();
+      return NextResponse.json({
+        success: true,
+        data: [],
+        count: 0
+      });
+    }
+
+    const neonUserId = userResult.rows[0].id;
+
+    // Fetch properties from Neon
+    const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 100);
+
+    const result = await pool.query(
+      'SELECT id, address, city, state, total_sf, available_sf FROM property WHERE broker_id = $1 LIMIT $2',
+      [neonUserId, limit]
+    );
+
+    await pool.end();
 
     return NextResponse.json({
       success: true,
-      data: data || [],
+      data: result.rows || [],
       meta: {
-        total: count || 0,
+        total: result.rows.length,
         limit,
-        offset,
-        hasMore: (count || 0) > offset + limit
+        offset: 0,
+        hasMore: false
       }
     });
   } catch (error) {

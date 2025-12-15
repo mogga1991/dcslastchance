@@ -149,7 +149,7 @@ export function CreateListingDialog({ onSubmit, userEmail }: CreateListingDialog
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="city">
                   City <span className="text-red-500">*</span>

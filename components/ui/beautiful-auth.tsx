@@ -8,13 +8,22 @@ import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 export default function BeautifulAuth() {
   const [isSignIn, setIsSignIn] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleEmailSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+
+    // Validate confirm password for sign-up
+    if (!isSignIn && password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -28,7 +37,8 @@ export default function BeautifulAuth() {
 
         if (error) {
           console.error('Sign-in error:', error);
-          alert(`Failed to sign in: ${error.message}`);
+          setError(error.message || 'Failed to sign in');
+          setIsLoading(false);
           return;
         }
 
@@ -51,7 +61,8 @@ export default function BeautifulAuth() {
 
         if (error) {
           console.error('Sign-up error:', error);
-          alert(`Failed to create account: ${error.message}`);
+          setError(error.message || 'Failed to create account');
+          setIsLoading(false);
           return;
         }
 
@@ -63,7 +74,8 @@ export default function BeautifulAuth() {
 
         if (signInError) {
           console.error('Auto sign-in error:', signInError);
-          alert('Account created! Please sign in.');
+          setError('Account created! Please sign in.');
+          setIsLoading(false);
           return;
         }
 
@@ -77,8 +89,7 @@ export default function BeautifulAuth() {
       }
     } catch (error) {
       console.error('Auth error:', error);
-      alert('An error occurred. Please try again.');
-    } finally {
+      setError('An error occurred. Please try again.');
       setIsLoading(false);
     }
   };
@@ -110,6 +121,13 @@ export default function BeautifulAuth() {
 
           {/* Email/Password Form */}
           <form onSubmit={handleEmailSignIn} className="space-y-4">
+            {/* Error Message */}
+            {error && (
+              <div className="p-3 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">
+                {error}
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
@@ -129,10 +147,30 @@ export default function BeautifulAuth() {
                 name="password"
                 placeholder="Enter your password"
                 required
+                minLength={6}
                 disabled={isLoading}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
               />
+              {!isSignIn && (
+                <p className="mt-1 text-xs text-gray-500">Minimum 6 characters</p>
+              )}
             </div>
+
+            {/* Confirm Password (Sign Up Only) */}
+            {!isSignIn && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Confirm your password"
+                  required
+                  minLength={6}
+                  disabled={isLoading}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+                />
+              </div>
+            )}
 
             {isSignIn && (
               <div className="flex items-center justify-between">
@@ -162,7 +200,11 @@ export default function BeautifulAuth() {
           <p className="mt-6 text-center text-sm text-gray-600">
             {isSignIn ? "Don't have an account? " : "Already have an account? "}
             <button
-              onClick={() => setIsSignIn(!isSignIn)}
+              type="button"
+              onClick={() => {
+                setIsSignIn(!isSignIn);
+                setError(null);
+              }}
               className="text-indigo-600 font-semibold hover:text-indigo-700"
             >
               {isSignIn ? "Create an account" : "Sign in"}

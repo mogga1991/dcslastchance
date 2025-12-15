@@ -1,5 +1,5 @@
-import BeautifulAuth from "@/components/ui/beautiful-auth";
+import SimpleAuth from "@/components/ui/simple-auth";
 
 export default function SignInPage() {
-  return <BeautifulAuth />;
+  return <SimpleAuth mode="sign-in" />;
 }

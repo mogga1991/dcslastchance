@@ -367,23 +367,23 @@ export default function LandingPage() {
               </ul>
             </div>
 
-            {/* Legal Links */}
+            {/* Legal & Support Links */}
             <div>
-              <h3 className="text-white font-semibold mb-4">Legal</h3>
+              <h3 className="text-white font-semibold mb-4">Support</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/privacy" className="hover:text-white transition">
+                  <Link href="/contact" className="hover:text-white transition">
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/privacy-policy" className="hover:text-white transition">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/terms" className="hover:text-white transition">
+                  <Link href="/terms-of-service" className="hover:text-white transition">
                     Terms of Service
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/contact" className="hover:text-white transition">
-                    Contact
                   </Link>
                 </li>
               </ul>

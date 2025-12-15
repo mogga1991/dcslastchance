@@ -90,7 +90,12 @@ export function FederalScoreCard({ latitude, longitude, radiusMiles = 5, classNa
         setError(null);
       }
     } catch (err) {
-      console.error('Error fetching Federal Neighborhood Score:', err);
+      // Check if this is an abort error (from timeout or manual abort)
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log('Request timed out, falling back to demo data');
+      } else {
+        console.error('Error fetching Federal Neighborhood Score:', err);
+      }
 
       // Instead of showing error, fall back to demo data
       setScoreData(DEMO_SCORE_DATA);

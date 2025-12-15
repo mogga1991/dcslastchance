@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Calendar, Award, AlertCircle, FileText, Download, Sparkles, Bookmark, Building2, Hash, Info, X } from "lucide-react";
+import { MapPin, Calendar, Award, AlertCircle, FileText, Download, Sparkles, Bookmark, Building2, Hash, Info, X, MessageSquare } from "lucide-react";
 import type { SAMOpportunity } from "@/lib/sam-gov";
 import { useState } from "react";
 
@@ -10,6 +10,7 @@ interface OpportunityCardProps {
   isSelected: boolean;
   onClick: () => void;
   onViewDetails: (e: React.MouseEvent) => void;
+  onExpressInterest?: (e: React.MouseEvent) => void;
   onSave?: (opportunity: SAMOpportunity) => void;
   isSaved?: boolean;
   matchScore?: {
@@ -30,6 +31,7 @@ export function OpportunityCard({
   isSelected,
   onClick,
   onViewDetails,
+  onExpressInterest,
   onSave,
   isSaved = false,
   matchScore
@@ -424,13 +426,26 @@ export function OpportunityCard({
 
       {/* Footer - Actions */}
       <div className="px-5 py-3 bg-gray-50 border-t">
-        <Button
-          size="lg"
-          onClick={onViewDetails}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          View Full Details & All Documents
-        </Button>
+        <div className="flex gap-2">
+          {onExpressInterest && (
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={onExpressInterest}
+              className="flex-1 border-green-600 text-green-700 hover:bg-green-50 hover:text-green-800 hover:border-green-700"
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Express Interest
+            </Button>
+          )}
+          <Button
+            size="lg"
+            onClick={onViewDetails}
+            className={`${onExpressInterest ? 'flex-1' : 'w-full'} bg-blue-600 hover:bg-blue-700 text-white`}
+          >
+            View Details
+          </Button>
+        </div>
       </div>
     </Card>
   );

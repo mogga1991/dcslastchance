@@ -15,7 +15,8 @@ import {
   Building2,
   Clock,
   Download,
-  Sparkles
+  Sparkles,
+  MessageSquare
 } from "lucide-react";
 import type { SAMOpportunity } from "@/lib/sam-gov";
 
@@ -23,9 +24,10 @@ interface OpportunityDetailModalProps {
   opportunity: SAMOpportunity | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onExpressInterest?: () => void;
 }
 
-export function OpportunityDetailModal({ opportunity, open, onOpenChange }: OpportunityDetailModalProps) {
+export function OpportunityDetailModal({ opportunity, open, onOpenChange, onExpressInterest }: OpportunityDetailModalProps) {
   if (!opportunity) return null;
 
   const formatDate = (dateString: string) => {
@@ -273,6 +275,16 @@ export function OpportunityDetailModal({ opportunity, open, onOpenChange }: Oppo
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
+            {onExpressInterest && (
+              <Button
+                onClick={onExpressInterest}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+                size="lg"
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Express Interest
+              </Button>
+            )}
             <Button className="flex-1 bg-blue-600 hover:bg-blue-700" size="lg">
               <FileText className="h-4 w-4 mr-2" />
               Save Opportunity

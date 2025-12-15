@@ -1,61 +1,39 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextRequest, NextResponse } from "next/server";
+// MVP: Route disabled - Feature coming soon
+// Original code preserved in git history - revert this file when ready to enable
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const supabase = await createClient();
-    const { id } = await params;
+import { NextResponse } from "next/server";
 
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+export async function GET() {
+  return NextResponse.json(
+    { error: "Feature coming soon", code: "FEATURE_DISABLED" },
+    { status: 503 }
+  );
+}
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+export async function POST() {
+  return NextResponse.json(
+    { error: "Feature coming soon", code: "FEATURE_DISABLED" },
+    { status: 503 }
+  );
+}
 
-    // Verify team member belongs to user
-    const { data: teamMember } = await supabase
-      .from("team_members")
-      .select("id")
-      .eq("id", id)
-      .eq("owner_id", user.id)
-      .single();
+export async function PUT() {
+  return NextResponse.json(
+    { error: "Feature coming soon", code: "FEATURE_DISABLED" },
+    { status: 503 }
+  );
+}
 
-    if (!teamMember) {
-      return NextResponse.json(
-        { error: "Team member not found" },
-        { status: 404 }
-      );
-    }
+export async function DELETE() {
+  return NextResponse.json(
+    { error: "Feature coming soon", code: "FEATURE_DISABLED" },
+    { status: 503 }
+  );
+}
 
-    // Fetch activity logs
-    const { data: activities, error } = await supabase
-      .from("team_activity_log")
-      .select("*")
-      .eq("team_member_id", id)
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    if (error) {
-      console.error("Error fetching activity logs:", error);
-      return NextResponse.json(
-        { error: "Failed to fetch activity logs" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ activities });
-  } catch (error) {
-    console.error("Activity API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
+export async function PATCH() {
+  return NextResponse.json(
+    { error: "Feature coming soon", code: "FEATURE_DISABLED" },
+    { status: 503 }
+  );
 }

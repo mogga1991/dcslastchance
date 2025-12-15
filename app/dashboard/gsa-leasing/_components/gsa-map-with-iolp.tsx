@@ -73,7 +73,7 @@ export default function GSAMapWithIOLP({
   const iolpMarkers = useRef<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [iolpData, setIolpData] = useState<IOLPFeatureCollection>({ features: [] });
-  const debounceTimer = useRef<NodeJS.Timeout>();
+  const debounceTimer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Load Google Maps script
   useEffect(() => {

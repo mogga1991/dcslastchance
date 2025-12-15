@@ -16,6 +16,7 @@ import { OpportunityCard } from "./opportunity-card";
 import { BrokerListingCard } from "./broker-listing-card";
 import { ListingDetailModal } from "./listing-detail-modal";
 import { OpportunityDetailModal } from "./opportunity-detail-modal";
+import { ExpressInterestModal } from "./express-interest-modal";
 import { ExpiringLeaseCard } from "./expiring-lease-card";
 import { IOLPFiltersComponent, IOLPFilters } from "./iolp-filters";
 import { OpportunityFiltersComponent, OpportunityFilters } from "./opportunity-filters";
@@ -46,6 +47,8 @@ export default function GSALeasingClient() {
   const [showOpportunityDetail, setShowOpportunityDetail] = useState(false);
   const [detailListing, setDetailListing] = useState<BrokerListing | null>(null);
   const [detailOpportunity, setDetailOpportunity] = useState<SAMOpportunity | null>(null);
+  const [showExpressInterest, setShowExpressInterest] = useState(false);
+  const [expressInterestOpportunity, setExpressInterestOpportunity] = useState<SAMOpportunity | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [currentViewport, setCurrentViewport] = useState<{ lat: number; lng: number } | null>(null);
@@ -249,6 +252,11 @@ export default function GSALeasingClient() {
         variant: "destructive"
       });
     }
+  };
+
+  const handleExpressInterest = (opportunity: SAMOpportunity) => {
+    setExpressInterestOpportunity(opportunity);
+    setShowExpressInterest(true);
   };
 
   const handleSetAlert = async (lease: any) => {
@@ -799,6 +807,10 @@ export default function GSALeasingClient() {
                       setDetailOpportunity(opp);
                       setShowOpportunityDetail(true);
                     }}
+                    onExpressInterest={(e) => {
+                      e.stopPropagation();
+                      handleExpressInterest(opp);
+                    }}
                     onSave={handleSaveOpportunity}
                     isSaved={savedOpportunities.has(opp.noticeId)}
                     matchScore={opportunityMatchScores.get(opp.noticeId)}
@@ -1064,6 +1076,18 @@ export default function GSALeasingClient() {
         opportunity={detailOpportunity}
         open={showOpportunityDetail}
         onOpenChange={setShowOpportunityDetail}
+        onExpressInterest={() => {
+          if (detailOpportunity) {
+            handleExpressInterest(detailOpportunity);
+          }
+        }}
+      />
+
+      <ExpressInterestModal
+        opportunity={expressInterestOpportunity}
+        open={showExpressInterest}
+        onOpenChange={setShowExpressInterest}
+        userEmail=""
       />
     </div>
   );

@@ -207,6 +207,7 @@ export function LoginForm() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
@@ -215,6 +216,13 @@ export function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Validate confirm password for sign-up
+    if (isSignUp && password !== confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
 
     try {
       if (isSignUp) {
@@ -316,7 +324,46 @@ export function LoginForm() {
             <Lock className="inline-block mr-2 -mt-1" size={16} />
             Password
           </label>
+          {isSignUp && (
+            <p className="mt-1 text-xs text-gray-500">Minimum 6 characters</p>
+          )}
         </div>
+
+        {/* Confirm Password Input (Sign Up Only) */}
+        {isSignUp && (
+          <div className="relative z-0">
+            <input
+              type="password"
+              id="floating_confirm_password"
+              className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+              placeholder=" "
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              minLength={6}
+              disabled={loading}
+            />
+            <label
+              htmlFor="floating_confirm_password"
+              className="absolute text-sm text-gray-600 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+            >
+              <Lock className="inline-block mr-2 -mt-1" size={16} />
+              Confirm Password
+            </label>
+          </div>
+        )}
+
+        {/* Forgot Password Link (Sign In Only) */}
+        {!isSignUp && (
+          <div className="text-right">
+            <a
+              href="/forgot-password"
+              className="text-sm text-blue-600 hover:text-blue-700 transition"
+            >
+              Forgot Password?
+            </a>
+          </div>
+        )}
 
         <button
           type="submit"
@@ -337,9 +384,11 @@ export function LoginForm() {
       <p className="text-center text-xs text-gray-600">
         {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
         <button
+          type="button"
           onClick={() => {
             setIsSignUp(!isSignUp);
             setError(null);
+            setConfirmPassword("");
           }}
           className="font-semibold text-blue-600 hover:text-blue-700 transition"
           disabled={loading}

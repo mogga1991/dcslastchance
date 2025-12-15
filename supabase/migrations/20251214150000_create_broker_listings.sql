@@ -1,35 +1,47 @@
 -- Create enum types for broker listings
-CREATE TYPE listing_status AS ENUM (
-  'draft',
-  'pending_review',
-  'active',
-  'matched',
-  'under_contract',
-  'leased',
-  'withdrawn',
-  'expired'
-);
+DO $$ BEGIN
+  CREATE TYPE listing_status AS ENUM (
+    'draft',
+    'pending_review',
+    'active',
+    'matched',
+    'under_contract',
+    'leased',
+    'withdrawn',
+    'expired'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE property_type AS ENUM (
-  'office',
-  'warehouse',
-  'retail',
-  'industrial',
-  'medical',
-  'mixed_use',
-  'land',
-  'other'
-);
+DO $$ BEGIN
+  CREATE TYPE property_type AS ENUM (
+    'office',
+    'warehouse',
+    'retail',
+    'industrial',
+    'medical',
+    'mixed_use',
+    'land',
+    'other'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE lease_type AS ENUM (
-  'full_service',
-  'modified_gross',
-  'triple_net',
-  'ground_lease'
-);
+DO $$ BEGIN
+  CREATE TYPE lease_type AS ENUM (
+    'full_service',
+    'modified_gross',
+    'triple_net',
+    'ground_lease'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Create broker_listings table
-CREATE TABLE broker_listings (
+CREATE TABLE IF NOT EXISTS broker_listings (
   -- Identity
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,

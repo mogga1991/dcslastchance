@@ -17,6 +17,7 @@ import {
   Bookmark,
   Settings,
   Menu,
+  HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { ReactNode } from "react";
@@ -83,6 +84,12 @@ export default function DashboardTopNav({ children }: { children: ReactNode }) {
           </SheetContent>
         </Dialog>
         <div className="flex justify-center items-center gap-2 ml-auto">
+          <Link href="/contact" title="Help & Support">
+            <Button variant="ghost" size="sm" className="gap-1.5">
+              <HelpCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Help</span>
+            </Button>
+          </Link>
           <UserProfile mini={true} />
         </div>
       </header>
