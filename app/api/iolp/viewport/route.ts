@@ -1,67 +1,41 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { iolpAdapter, type ViewportBounds } from '@/lib/iolp';
+import { NextRequest, NextResponse } from "next/server";
+import { iolpAdapter } from "@/lib/iolp";
 
-/**
- * GET /api/iolp/viewport
- * Returns GSA properties within map viewport bounds as GeoJSON-like structure
- *
- * Query params:
- * - swLat: number (southwest latitude)
- * - swLng: number (southwest longitude)
- * - neLat: number (northeast latitude)
- * - neLng: number (northeast longitude)
- */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
 
-    // Extract and validate bounds
-    const swLat = parseFloat(searchParams.get('swLat') || '');
-    const swLng = parseFloat(searchParams.get('swLng') || '');
-    const neLat = parseFloat(searchParams.get('neLat') || '');
-    const neLng = parseFloat(searchParams.get('neLng') || '');
+    // Extract viewport bounds
+    const swLat = parseFloat(searchParams.get("swLat") || "0");
+    const swLng = parseFloat(searchParams.get("swLng") || "0");
+    const neLat = parseFloat(searchParams.get("neLat") || "0");
+    const neLng = parseFloat(searchParams.get("neLng") || "0");
 
-    if (isNaN(swLat) || isNaN(swLng) || isNaN(neLat) || isNaN(neLng)) {
+    if (!swLat || !swLng || !neLat || !neLng) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Missing or invalid bounds parameters. Required: swLat, swLng, neLat, neLng'
-        },
+        { error: "Missing viewport bounds parameters" },
         { status: 400 }
       );
     }
 
-    // Validate bounds
-    if (swLat >= neLat || swLng >= neLng) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Invalid bounds: southwest corner must be south and west of northeast corner'
-        },
-        { status: 400 }
-      );
-    }
-
-    const bounds: ViewportBounds = { swLat, swLng, neLat, neLng };
-
-    // Query IOLP data
-    const properties = await iolpAdapter.getPropertiesInViewport(bounds);
+    // Fetch properties in viewport
+    const properties = await iolpAdapter.getPropertiesInViewport({
+      swLat,
+      swLng,
+      neLat,
+      neLng
+    });
 
     return NextResponse.json({
       success: true,
-      data: properties,
-      meta: {
-        count: properties.features.length,
-        bounds
-      }
+      count: properties.features.length,
+      data: properties // Return the full FeatureCollection as "data"
     });
   } catch (error) {
-    console.error('Error fetching IOLP viewport data:', error);
+    console.error("Error fetching IOLP viewport data:", error);
     return NextResponse.json(
       {
-        success: false,
-        error: 'Failed to fetch IOLP data',
-        data: { features: [] }
+        error: error instanceof Error ? error.message : "Failed to fetch IOLP viewport data"
       },
       { status: 500 }
     );

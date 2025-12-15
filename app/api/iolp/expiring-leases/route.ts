@@ -1,140 +1,72 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { iolpAdapter } from '@/lib/iolp';
+import { NextRequest, NextResponse } from "next/server";
+import { iolpAdapter } from "@/lib/iolp";
 
-type UrgencyLevel = 'critical' | 'high' | 'medium' | 'low';
-
-interface LeaseWithUrgency {
-  feature: any;
-  urgency: UrgencyLevel;
-  monthsUntilExpiration: number;
-}
-
-/**
- * Calculate urgency level based on months until expiration
- */
-function calculateUrgency(expirationDate: string): {
-  urgency: UrgencyLevel;
-  monthsUntilExpiration: number;
-} {
-  const today = new Date();
-  const expiration = new Date(expirationDate);
-  const monthsDiff = (expiration.getTime() - today.getTime()) / (1000 * 60 * 60 * 24 * 30);
-
-  let urgency: UrgencyLevel;
-  if (monthsDiff <= 6) {
-    urgency = 'critical';
-  } else if (monthsDiff <= 12) {
-    urgency = 'high';
-  } else if (monthsDiff <= 18) {
-    urgency = 'medium';
-  } else {
-    urgency = 'low';
-  }
-
-  return {
-    urgency,
-    monthsUntilExpiration: Math.round(monthsDiff * 10) / 10
-  };
-}
-
-/**
- * GET /api/iolp/expiring-leases
- * Returns GSA leases expiring within specified timeframe with urgency levels
- *
- * Query params:
- * - monthsAhead: number (optional, default 24)
- * - state: string (optional, two-letter state code)
- */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
 
-    // Extract and validate parameters
-    const monthsAhead = parseInt(searchParams.get('monthsAhead') || '24');
-    const state = searchParams.get('state') || undefined;
+    // Extract parameters
+    const monthsAhead = parseInt(searchParams.get("monthsAhead") || "24");
+    const state = searchParams.get("state") || undefined;
 
-    if (isNaN(monthsAhead) || monthsAhead <= 0 || monthsAhead > 120) {
+    if (monthsAhead < 1 || monthsAhead > 60) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Invalid monthsAhead: must be between 1 and 120'
-        },
-        { status: 400 }
-      );
-    }
-
-    // Validate state code if provided
-    if (state && state.length !== 2) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Invalid state code: must be 2 characters (e.g., "VA", "DC")'
-        },
+        { error: "monthsAhead must be between 1 and 60" },
         { status: 400 }
       );
     }
 
     // Fetch expiring leases
-    const leases = await iolpAdapter.getExpiringLeases(
-      monthsAhead,
-      state?.toUpperCase()
-    );
+    const leases = await iolpAdapter.getExpiringLeases(monthsAhead, state);
 
-    // Add urgency levels to each lease
-    const leasesWithUrgency: LeaseWithUrgency[] = leases.features
-      .filter(f => f.attributes.lease_expiration_date)
-      .map(feature => {
-        const { urgency, monthsUntilExpiration } = calculateUrgency(
-          feature.attributes.lease_expiration_date!
-        );
-        return {
-          feature,
-          urgency,
-          monthsUntilExpiration
-        };
-      });
+    // Calculate days until expiration for each lease
+    const leasesWithDays = leases.features.map(feature => {
+      const expirationDate = feature.attributes.lease_expiration_date;
+      let daysUntilExpiration = null;
+
+      if (expirationDate) {
+        const expDate = new Date(expirationDate);
+        const now = new Date();
+        const diff = expDate.getTime() - now.getTime();
+        daysUntilExpiration = Math.round(diff / (24 * 60 * 60 * 1000));
+      }
+
+      return {
+        ...feature.attributes,
+        latitude: feature.geometry?.y,
+        longitude: feature.geometry?.x,
+        daysUntilExpiration,
+        monthsUntilExpiration: daysUntilExpiration ? Math.round(daysUntilExpiration / 30) : null,
+        urgency: daysUntilExpiration && daysUntilExpiration <= 180 ? 'critical' :
+                 daysUntilExpiration && daysUntilExpiration <= 365 ? 'warning' : 'normal'
+      };
+    });
 
     // Group by urgency
     const grouped = {
-      critical: leasesWithUrgency.filter(l => l.urgency === 'critical'),
-      high: leasesWithUrgency.filter(l => l.urgency === 'high'),
-      medium: leasesWithUrgency.filter(l => l.urgency === 'medium'),
-      low: leasesWithUrgency.filter(l => l.urgency === 'low')
+      critical: leasesWithDays.filter(l => l.urgency === 'critical'),
+      high: leasesWithDays.filter(l => l.urgency === 'warning'),
+      medium: leasesWithDays.filter(l => l.urgency === 'normal'),
+      low: [] as any[]
     };
 
     return NextResponse.json({
       success: true,
       data: {
-        leases: leasesWithUrgency,
+        leases: leasesWithDays,
         grouped
       },
       meta: {
-        total: leasesWithUrgency.length,
+        count: leasesWithDays.length,
         monthsAhead,
-        state: state?.toUpperCase(),
-        counts: {
-          critical: grouped.critical.length,
-          high: grouped.high.length,
-          medium: grouped.medium.length,
-          low: grouped.low.length
-        }
+        state: state || 'all'
       }
     });
   } catch (error) {
-    console.error('Error fetching expiring leases:', error);
+    console.error("Error fetching expiring leases:", error);
     return NextResponse.json(
       {
-        success: false,
-        error: 'Failed to fetch expiring leases',
-        data: {
-          leases: [],
-          grouped: {
-            critical: [],
-            high: [],
-            medium: [],
-            low: []
-          }
-        }
+        error: error instanceof Error ? error.message : "Failed to fetch expiring leases"
       },
       { status: 500 }
     );

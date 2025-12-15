@@ -10,11 +10,11 @@ import type { BrokerListingInput } from '@/types/broker-listing';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const { id } = params;
+    const { id } = await params;
 
     // Fetch the listing
     const { data, error } = await supabase
@@ -39,7 +39,7 @@ export async function GET(
       .update({ views_count: (data.views_count || 0) + 1 })
       .eq('id', id)
       .then(() => {})
-      .catch((err) => console.error('Error incrementing views:', err));
+      .catch((err: Error) => console.error('Error incrementing views:', err));
 
     return NextResponse.json({
       success: true,
@@ -65,11 +65,11 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const { id } = params;
+    const { id } = await params;
 
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -210,11 +210,11 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const { id } = params;
+    const { id } = await params;
 
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();

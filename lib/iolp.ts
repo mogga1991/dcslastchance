@@ -256,11 +256,15 @@ class IOLPAdapter {
 
   /**
    * Calculate Federal Neighborhood Score based on GSA property density
+   * ENHANCED ALGORITHM - Matches broker properties to government demand
+   *
    * Returns score 0-100 based on:
-   * - Property density (properties per square mile)
-   * - Total RSF
-   * - Leased vs owned ratio
-   * - Vacant RSF availability
+   * - Federal density (25%) - More federal presence = higher demand
+   * - Lease activity (25%) - More leases = willingness to lease vs own
+   * - Expiring leases (20%) - Upcoming replacement demand
+   * - Total RSF demand (15%) - Scale of federal operations
+   * - Vacant federal space (10%) - Competition from existing vacancy
+   * - Growth trend (5%) - Increasing or stable federal presence
    */
   async calculateFederalNeighborhoodScore(
     lat: number,
@@ -282,7 +286,7 @@ class IOLPAdapter {
       };
     }
 
-    // Calculate metrics
+    // Calculate base metrics
     const totalProperties = properties.features.length;
     const leasedProperties = properties.features.filter(
       f => f.attributes.owned_or_leased_indicator === 'L'
@@ -305,22 +309,83 @@ class IOLPAdapter {
     const searchAreaSqMiles = Math.PI * radiusMiles * radiusMiles;
     const density = totalProperties / searchAreaSqMiles;
 
-    // Scoring algorithm
-    // - Density: 0-10 properties/sq mi -> 0-40 points
-    // - Total RSF: 0-1M sq ft -> 0-30 points
-    // - Leased properties: 0-50% -> 0-20 points (more leases = more federal activity)
-    // - Vacant RSF: 0-100k sq ft -> 0-10 points (opportunity indicator)
+    // ========== ENHANCED SCORING ALGORITHM ==========
 
-    const densityScore = Math.min(40, (density / 10) * 40);
-    const rsfScore = Math.min(30, (totalRSF / 1000000) * 30);
-    const leaseScore = Math.min(20, (leasedProperties / totalProperties) * 20);
-    const vacantScore = Math.min(10, (vacantRSF / 100000) * 10);
+    // 1. FEDERAL DENSITY SCORE (25 points)
+    // Higher density = more federal activity = higher broker opportunity
+    // Benchmarks: <1 = low, 1-5 = medium, 5-10 = high, >10 = very high
+    const densityScore = Math.min(25, (density / 10) * 25);
 
-    const score = Math.round(densityScore + rsfScore + leaseScore + vacantScore);
+    // 2. LEASE ACTIVITY SCORE (25 points)
+    // Higher % leased = government prefers leasing = good for brokers
+    // Leased properties indicate willingness to pay market rates
+    const leaseRatio = totalProperties > 0 ? leasedProperties / totalProperties : 0;
+    const leaseActivityScore = leaseRatio * 25;
 
-    // Calculate percentile (simplified - would need historical data for true percentile)
-    // Using score as proxy for percentile
-    const percentile = score;
+    // 3. EXPIRING LEASE OPPORTUNITY SCORE (20 points)
+    // Find leases expiring in next 24 months = replacement demand
+    const today = new Date();
+    const twoYearsFromNow = new Date(today);
+    twoYearsFromNow.setMonth(today.getMonth() + 24);
+
+    const expiringLeases = properties.features.filter(f => {
+      if (!f.attributes.lease_expiration_date) return false;
+      const expDate = new Date(f.attributes.lease_expiration_date);
+      return expDate >= today && expDate <= twoYearsFromNow;
+    }).length;
+
+    const expiringRSF = properties.features
+      .filter(f => {
+        if (!f.attributes.lease_expiration_date) return false;
+        const expDate = new Date(f.attributes.lease_expiration_date);
+        return expDate >= today && expDate <= twoYearsFromNow;
+      })
+      .reduce((sum, f) => sum + (f.attributes.building_rsf || 0), 0);
+
+    // Score based on both count and RSF of expiring leases
+    const expiringScore = Math.min(20, (expiringLeases / 5) * 10 + (expiringRSF / 200000) * 10);
+
+    // 4. TOTAL DEMAND SCORE (15 points)
+    // Higher total RSF = larger federal operations = more opportunities
+    // Benchmark: 1M SF = strong market
+    const demandScore = Math.min(15, (totalRSF / 1000000) * 15);
+
+    // 5. VACANCY COMPETITION SCORE (10 points - INVERTED)
+    // Lower federal vacancy = less competition from existing space
+    // High federal vacancy means government has options, bad for brokers
+    const vacancyRate = totalRSF > 0 ? vacantRSF / totalRSF : 0;
+    const vacancyScore = Math.max(0, 10 - (vacancyRate * 20)); // Penalty for high vacancy
+
+    // 6. GROWTH TREND SCORE (5 points)
+    // More recent construction = growing federal presence
+    const recentProperties = properties.features.filter(f => {
+      const year = f.attributes.year_constructed;
+      return year && year >= 2010;
+    }).length;
+    const growthScore = Math.min(5, (recentProperties / totalProperties) * 5);
+
+    // ========== CALCULATE FINAL SCORE ==========
+    const score = Math.round(
+      densityScore +
+      leaseActivityScore +
+      expiringScore +
+      demandScore +
+      vacancyScore +
+      growthScore
+    );
+
+    // Calculate percentile based on scoring thresholds
+    // 0-30 = Poor (bottom 25%)
+    // 31-50 = Fair (25-50%)
+    // 51-70 = Good (50-75%)
+    // 71-85 = Very Good (75-90%)
+    // 86-100 = Excellent (top 10%)
+    let percentile = 0;
+    if (score >= 86) percentile = 95;
+    else if (score >= 71) percentile = 82;
+    else if (score >= 51) percentile = 62;
+    else if (score >= 31) percentile = 37;
+    else percentile = 15;
 
     return {
       score,

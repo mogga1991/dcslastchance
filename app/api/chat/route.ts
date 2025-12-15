@@ -15,8 +15,12 @@ export async function POST(req: Request) {
     },
   });
 
-  if (!protection.authorized || protection.response) {
+  if (protection.response) {
     return protection.response;
+  }
+
+  if (!protection.authorized) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -82,14 +86,11 @@ export async function POST(req: Request) {
     });
 
     const result = streamText({
-      model: openai.responses("gpt-4o"),
+      model: openai("gpt-4o"),
       messages: sanitizedMessages,
-      tools: {
-        web_search_preview: openai.tools.webSearchPreview(),
-      },
     });
 
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error("Chat API error:", error);
     return NextResponse.json(

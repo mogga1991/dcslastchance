@@ -1,102 +1,47 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { iolpAdapter } from '@/lib/iolp';
+import { NextRequest, NextResponse } from "next/server";
+import { iolpAdapter } from "@/lib/iolp";
 
-/**
- * GET /api/iolp/nearby
- * Returns GSA properties near a location AND Federal Neighborhood Score
- *
- * Query params:
- * - lat: number (latitude)
- * - lng: number (longitude)
- * - radiusMiles: number (optional, default 5)
- */
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
 
-    // Extract and validate coordinates
-    const lat = parseFloat(searchParams.get('lat') || '');
-    const lng = parseFloat(searchParams.get('lng') || '');
-    const radiusMiles = parseFloat(searchParams.get('radiusMiles') || '5');
+    // Extract parameters
+    const lat = parseFloat(searchParams.get("lat") || "0");
+    const lng = parseFloat(searchParams.get("lng") || "0");
+    const radiusMiles = parseFloat(searchParams.get("radiusMiles") || "5");
 
-    if (isNaN(lat) || isNaN(lng)) {
+    if (!lat || !lng) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Missing or invalid coordinates. Required: lat, lng'
-        },
+        { error: "Missing lat/lng parameters" },
         { status: 400 }
       );
     }
 
-    // Validate latitude and longitude ranges
-    if (lat < -90 || lat > 90) {
+    if (radiusMiles < 0.1 || radiusMiles > 50) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Invalid latitude: must be between -90 and 90'
-        },
+        { error: "radiusMiles must be between 0.1 and 50" },
         { status: 400 }
       );
     }
 
-    if (lng < -180 || lng > 180) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Invalid longitude: must be between -180 and 180'
-        },
-        { status: 400 }
-      );
-    }
-
-    if (isNaN(radiusMiles) || radiusMiles <= 0 || radiusMiles > 100) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Invalid radius: must be between 0 and 100 miles'
-        },
-        { status: 400 }
-      );
-    }
-
-    // Fetch properties and calculate score in parallel
-    const [properties, federalScore] = await Promise.all([
+    // Fetch nearby properties and calculate score in parallel
+    const [properties, score] = await Promise.all([
       iolpAdapter.getPropertiesNearby(lat, lng, radiusMiles),
       iolpAdapter.calculateFederalNeighborhoodScore(lat, lng, radiusMiles)
     ]);
 
     return NextResponse.json({
       success: true,
-      data: {
-        properties,
-        federalScore
-      },
-      meta: {
-        location: { lat, lng },
-        radiusMiles,
-        count: properties.features.length
-      }
+      location: { lat, lng },
+      radiusMiles,
+      properties: properties.features,
+      neighborhoodScore: score
     });
   } catch (error) {
-    console.error('Error fetching nearby IOLP data:', error);
+    console.error("Error fetching nearby IOLP properties:", error);
     return NextResponse.json(
       {
-        success: false,
-        error: 'Failed to fetch nearby properties',
-        data: {
-          properties: { features: [] },
-          federalScore: {
-            score: 0,
-            totalProperties: 0,
-            leasedProperties: 0,
-            ownedProperties: 0,
-            totalRSF: 0,
-            vacantRSF: 0,
-            density: 0,
-            percentile: 0
-          }
-        }
+        error: error instanceof Error ? error.message : "Failed to fetch nearby properties"
       },
       { status: 500 }
     );

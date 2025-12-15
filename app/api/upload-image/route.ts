@@ -18,8 +18,12 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  if (!protection.authorized || protection.response) {
+  if (protection.response) {
     return protection.response;
+  }
+
+  if (!protection.authorized) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {

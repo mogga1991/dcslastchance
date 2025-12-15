@@ -20,7 +20,7 @@ export async function GET(
     // ✅ UPDATED - Allow viewing if user is in same org
     await requireResourceOrgAccess(session.userId, "analysis", id);
 
-    const analysis = await sql`
+    const analysisResult = await sql`
       SELECT
         a.*,
         u.name as created_by_name,
@@ -30,16 +30,16 @@ export async function GET(
       JOIN "user" u ON a.user_id = u.id
       WHERE a.id = ${id}
       LIMIT 1
-    `;
+    ` as any[];
 
-    if (!analysis[0]) {
+    if (!analysisResult || analysisResult.length === 0) {
       return NextResponse.json(
         { error: "Analysis not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ analysis: analysis[0] });
+    return NextResponse.json({ analysis: analysisResult[0] });
   } catch (error) {
     if (error instanceof AuthError) {
       return NextResponse.json(
@@ -69,7 +69,7 @@ export async function PUT(
 
     const body = await request.json();
 
-    const analysis = await updateAnalysis(id, session.userId, body);
+    const analysis = await updateAnalysis(id, body);
 
     if (!analysis) {
       return NextResponse.json(
