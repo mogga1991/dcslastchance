@@ -1,5 +1,5 @@
-import SimpleAuth from "@/components/ui/simple-auth";
+import { SignInCard } from "@/components/ui/sign-in-card";
 
 export default function SignInPage() {
-  return <SimpleAuth mode="sign-in" />;
+  return <SignInCard />;
 }

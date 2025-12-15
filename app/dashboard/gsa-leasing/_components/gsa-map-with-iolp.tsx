@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { SAMOpportunity } from "@/lib/sam-gov";
-import type { BrokerListing } from "@/types/broker-listing";
+import type { PublicBrokerListing } from "@/types/broker-listing";
 import type { ViewportBounds, IOLPFeatureCollection } from "@/lib/iolp";
 
 interface GSAMapWithIOLPProps {
   opportunities?: SAMOpportunity[];
-  listings?: BrokerListing[];
+  listings?: PublicBrokerListing[];
   selectedOpportunity?: SAMOpportunity | null;
-  selectedListing?: BrokerListing | null;
+  selectedListing?: PublicBrokerListing | null;
   showIOLPLayer?: boolean;
   onIOLPLoadingChange?: (loading: boolean) => void;
   center?: { lat: number; lng: number } | null;

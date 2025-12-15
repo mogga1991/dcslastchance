@@ -237,10 +237,43 @@ export interface BrokerListingsResponse {
 }
 
 /**
+ * Public Broker Listing (excludes private contact information)
+ * Used for public API responses and map/listing displays
+ */
+export type PublicBrokerListing = Omit<
+  BrokerListing,
+  'broker_name' | 'broker_company' | 'broker_email' | 'broker_phone' | 'license_number' | 'brokerage_company'
+>;
+
+/**
  * Response for single broker listing
  */
 export interface BrokerListingResponse {
   success: boolean;
   data?: BrokerListing;
   error?: string;
+}
+
+/**
+ * Response for public broker listing (without contact info)
+ */
+export interface PublicBrokerListingResponse {
+  success: boolean;
+  data?: PublicBrokerListing;
+  error?: string;
+}
+
+/**
+ * Response for listing public broker listings
+ */
+export interface PublicBrokerListingsResponse {
+  success: boolean;
+  data?: PublicBrokerListing[];
+  error?: string;
+  meta?: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
 }

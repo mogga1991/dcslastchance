@@ -1,12 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { iolpAdapter } from '@/lib/iolp';
-import type { BrokerListingInput, BrokerListingFilters } from '@/types/broker-listing';
-import { Pool } from '@neondatabase/serverless';
+import type { BrokerListingInput, BrokerListingFilters, PublicBrokerListing } from '@/types/broker-listing';
+
+/**
+ * List of public fields (excludes private broker contact information)
+ */
+const PUBLIC_LISTING_FIELDS = `
+  id,
+  user_id,
+  lister_role,
+  title,
+  description,
+  property_type,
+  status,
+  street_address,
+  suite_unit,
+  city,
+  state,
+  zipcode,
+  latitude,
+  longitude,
+  total_sf,
+  available_sf,
+  min_divisible_sf,
+  asking_rent_sf,
+  lease_type,
+  available_date,
+  building_class,
+  ada_accessible,
+  parking_spaces,
+  leed_certified,
+  year_built,
+  notes,
+  features,
+  amenities,
+  gsa_eligible,
+  set_aside_eligible,
+  federal_score,
+  federal_score_data,
+  images,
+  views_count,
+  created_at,
+  updated_at,
+  published_at
+`.trim();
 
 /**
  * GET /api/broker-listings
- * List broker listings with optional filters
+ * List broker listings with optional filters (PUBLIC - excludes contact info)
+ *
+ * SECURITY: Broker contact information (name, company, email, phone) is NEVER
+ * returned in public API responses. Contact info is only accessible to:
+ * - The listing owner (via authenticated endpoints)
+ * - FedSpace admin staff (via internal admin tools)
  *
  * Query params (all optional):
  * - status: string | string[] (listing_status enum)
@@ -29,56 +76,93 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    // Parse query parameters
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
+    const offset = parseInt(searchParams.get('offset') || '0');
+    const sortBy = searchParams.get('sort_by') || 'created_at';
+    const sortOrder = (searchParams.get('sort_order') || 'desc') as 'asc' | 'desc';
+
+    // Build query - EXCLUDE private contact fields
+    let query = supabase
+      .from('broker_listings')
+      .select(PUBLIC_LISTING_FIELDS, { count: 'exact' })
+      .eq('status', 'active'); // Only show active listings publicly
+
+    // Apply filters
+    const propertyType = searchParams.get('property_type');
+    if (propertyType) {
+      query = query.eq('property_type', propertyType);
+    }
+
+    const state = searchParams.get('state');
+    if (state) {
+      query = query.eq('state', state.toUpperCase());
+    }
+
+    const city = searchParams.get('city');
+    if (city) {
+      query = query.ilike('city', `%${city}%`);
+    }
+
+    const minSf = searchParams.get('min_sf');
+    if (minSf) {
+      query = query.gte('available_sf', parseInt(minSf));
+    }
+
+    const maxSf = searchParams.get('max_sf');
+    if (maxSf) {
+      query = query.lte('available_sf', parseInt(maxSf));
+    }
+
+    const minRent = searchParams.get('min_rent');
+    if (minRent) {
+      query = query.gte('asking_rent_sf', parseFloat(minRent));
+    }
+
+    const maxRent = searchParams.get('max_rent');
+    if (maxRent) {
+      query = query.lte('asking_rent_sf', parseFloat(maxRent));
+    }
+
+    const gsaEligible = searchParams.get('gsa_eligible');
+    if (gsaEligible === 'true') {
+      query = query.eq('gsa_eligible', true);
+    }
+
+    const search = searchParams.get('search');
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,street_address.ilike.%${search}%`);
+    }
+
+    // Apply sorting
+    const sortColumn = sortBy === 'federal_score' ? 'federal_score' : sortBy;
+    query = query.order(sortColumn, { ascending: sortOrder === 'asc', nullsFirst: false });
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error('Error fetching broker listings:', error);
       return NextResponse.json(
-        { error: "Unauthorized", listings: [] },
-        { status: 401 }
+        {
+          success: false,
+          error: 'Failed to fetch listings',
+          data: []
+        },
+        { status: 500 }
       );
     }
 
-    // Connect to Neon database
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-
-    // Get user's email from Supabase
-    const userEmail = user.email;
-
-    // Find user in Neon by email
-    const userResult = await pool.query(
-      'SELECT id FROM "user" WHERE email = $1 LIMIT 1',
-      [userEmail]
-    );
-
-    if (!userResult.rows[0]) {
-      await pool.end();
-      return NextResponse.json({
-        success: true,
-        data: [],
-        count: 0
-      });
-    }
-
-    const neonUserId = userResult.rows[0].id;
-
-    // Fetch properties from Neon
-    const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 100);
-
-    const result = await pool.query(
-      'SELECT id, address, city, state, total_sf, available_sf FROM property WHERE broker_id = $1 LIMIT $2',
-      [neonUserId, limit]
-    );
-
-    await pool.end();
-
     return NextResponse.json({
       success: true,
-      data: result.rows || [],
+      data: (data || []) as PublicBrokerListing[],
       meta: {
-        total: result.rows.length,
+        total: count || 0,
         limit,
-        offset: 0,
-        hasMore: false
+        offset,
+        hasMore: (count || 0) > offset + limit
       }
     });
   } catch (error) {

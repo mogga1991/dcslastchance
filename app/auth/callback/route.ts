@@ -27,8 +27,8 @@ export async function GET(request: Request) {
         email: data?.user?.email,
       })
 
-      // Redirect to dashboard after successful authentication
-      return NextResponse.redirect(`${origin}/dashboard`)
+      // Redirect to GSA Leasing after successful authentication
+      return NextResponse.redirect(`${origin}/dashboard/gsa-leasing`)
     }
 
     console.log('[Auth Callback] No code provided, redirecting to sign-in')

@@ -9,21 +9,16 @@ import { Button } from "@/components/ui/button";
 import {
   MapPin,
   Building2,
-  DollarSign,
-  Calendar,
-  Phone,
   Mail,
-  User,
-  Briefcase,
   Star,
   Eye,
   CheckCircle2
 } from "lucide-react";
-import type { BrokerListing } from "@/types/broker-listing";
+import type { PublicBrokerListing } from "@/types/broker-listing";
 import { FederalScoreBadge } from "./federal-score-badge";
 
 interface ListingDetailModalProps {
-  listing: BrokerListing | null;
+  listing: PublicBrokerListing | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -207,36 +202,6 @@ export function ListingDetailModal({ listing, open, onOpenChange }: ListingDetai
             </div>
           </div>
 
-          {/* Broker Contact */}
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-semibold text-lg mb-3 flex items-center">
-              <User className="h-5 w-5 mr-2 text-blue-600" />
-              Broker Contact
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center text-sm">
-                <User className="h-4 w-4 mr-2 text-gray-500" />
-                <span className="font-medium">{listing.broker_name}</span>
-              </div>
-              <div className="flex items-center text-sm">
-                <Briefcase className="h-4 w-4 mr-2 text-gray-500" />
-                <span>{listing.broker_company}</span>
-              </div>
-              <div className="flex items-center text-sm">
-                <Mail className="h-4 w-4 mr-2 text-gray-500" />
-                <a href={`mailto:${listing.broker_email}`} className="text-blue-600 hover:underline">
-                  {listing.broker_email}
-                </a>
-              </div>
-              <div className="flex items-center text-sm">
-                <Phone className="h-4 w-4 mr-2 text-gray-500" />
-                <a href={`tel:${listing.broker_phone}`} className="text-blue-600 hover:underline">
-                  {listing.broker_phone}
-                </a>
-              </div>
-            </div>
-          </div>
-
           {/* Stats */}
           <div className="flex items-center justify-between text-sm text-gray-600 pt-4 border-t">
             <div className="flex items-center gap-1">
@@ -252,7 +217,7 @@ export function ListingDetailModal({ listing, open, onOpenChange }: ListingDetai
           <div className="flex gap-3 pt-4">
             <Button className="flex-1 bg-blue-600 hover:bg-blue-700" size="lg">
               <Mail className="h-4 w-4 mr-2" />
-              Contact Broker
+              Express Interest
             </Button>
             <Button variant="outline" className="flex-1" size="lg">
               <Star className="h-4 w-4 mr-2" />

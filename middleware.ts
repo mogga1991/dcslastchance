@@ -84,12 +84,17 @@ export async function middleware(request: NextRequest) {
   )
 
   if (isAuthRoute && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return NextResponse.redirect(new URL('/dashboard/gsa-leasing', request.url))
   }
 
-  // Redirect authenticated users from home page to dashboard
+  // Redirect authenticated users from home page to GSA Leasing
   if (request.nextUrl.pathname === '/' && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return NextResponse.redirect(new URL('/dashboard/gsa-leasing', request.url))
+  }
+
+  // Redirect /dashboard to /dashboard/gsa-leasing
+  if (request.nextUrl.pathname === '/dashboard') {
+    return NextResponse.redirect(new URL('/dashboard/gsa-leasing', request.url))
   }
 
   return response

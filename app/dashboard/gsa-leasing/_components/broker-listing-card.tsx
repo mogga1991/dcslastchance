@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Building2, DollarSign, Calendar, Eye, Star, ExternalLink } from "lucide-react";
-import type { BrokerListing, ListerRole } from "@/types/broker-listing";
+import type { PublicBrokerListing, ListerRole } from "@/types/broker-listing";
 
 // Array of placeholder office/building images from Unsplash
 const buildingImages = [
@@ -49,7 +49,7 @@ function getRoleBadge(role: ListerRole) {
 }
 
 interface BrokerListingCardProps {
-  listing: BrokerListing;
+  listing: PublicBrokerListing;
   isSelected: boolean;
   onClick: () => void;
   onViewDetails: (e: React.MouseEvent) => void;

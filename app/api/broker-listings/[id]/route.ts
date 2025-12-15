@@ -1,12 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { iolpAdapter } from '@/lib/iolp';
-import type { BrokerListingInput } from '@/types/broker-listing';
+import type { BrokerListingInput, PublicBrokerListing } from '@/types/broker-listing';
+
+/**
+ * List of public fields (excludes private broker contact information)
+ */
+const PUBLIC_LISTING_FIELDS = `
+  id,
+  user_id,
+  lister_role,
+  title,
+  description,
+  property_type,
+  status,
+  street_address,
+  suite_unit,
+  city,
+  state,
+  zipcode,
+  latitude,
+  longitude,
+  total_sf,
+  available_sf,
+  min_divisible_sf,
+  asking_rent_sf,
+  lease_type,
+  available_date,
+  building_class,
+  ada_accessible,
+  parking_spaces,
+  leed_certified,
+  year_built,
+  notes,
+  features,
+  amenities,
+  gsa_eligible,
+  set_aside_eligible,
+  federal_score,
+  federal_score_data,
+  images,
+  views_count,
+  created_at,
+  updated_at,
+  published_at
+`.trim();
 
 /**
  * GET /api/broker-listings/[id]
- * Get a single broker listing by ID
+ * Get a single broker listing by ID (PUBLIC - excludes contact info)
  * Also increments the views_count
+ *
+ * SECURITY: Broker contact information (name, company, email, phone) is NEVER
+ * returned in public API responses. Contact info is only accessible to:
+ * - The listing owner (via authenticated endpoints)
+ * - FedSpace admin staff (via internal admin tools)
  */
 export async function GET(
   request: NextRequest,
@@ -16,10 +64,10 @@ export async function GET(
     const supabase = await createClient();
     const { id } = await params;
 
-    // Fetch the listing
+    // Fetch the listing - EXCLUDE private contact fields
     const { data, error } = await supabase
       .from('broker_listings')
-      .select('*')
+      .select(PUBLIC_LISTING_FIELDS)
       .eq('id', id)
       .single();
 
@@ -43,7 +91,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data
+      data: data as PublicBrokerListing
     });
   } catch (error) {
     console.error('Error in GET /api/broker-listings/[id]:', error);
