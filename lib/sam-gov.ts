@@ -88,17 +88,11 @@ export const GSA_LEASE_FILTERS = {
 
   // PSC Codes for Office/Commercial Leasing and Real Property
   // Note: SAM.gov API only accepts one PSC per request, so we'll need to make multiple calls
+  // Optimized to only the most common codes for faster response
   pscCodes: [
-    "X1AA", // Office Buildings (most common)
-    "X1AB", // Administrative Buildings
-    "X1AD", // Commercial Buildings
-    "X1AF", // Mixed-Use Buildings
-    "X1AZ", // Other Real Property
-    "X1BA", // Warehouses
-    "X1BB", // Industrial Buildings
-    "X1BZ", // Other Structures and Facilities
-    "X1CA", // Land (excluding right-of-way)
+    "X1AA", // Office Buildings (most common for GSA leasing)
     "X1DA", // Office Space Rental
+    "X1AB", // Administrative Buildings
     "X1DB", // Parking Space Rental
   ],
 
@@ -146,21 +140,25 @@ export async function fetchGSALeaseOpportunities(
     return `${m}/${d}/${year}`;
   };
 
-  // Default to full year 2024 (SAM.gov API doesn't accept dates before current year)
-  const defaultFrom = formatDate(1, 1, 2024);
-  const defaultTo = formatDate(12, 14, 2024);
-  // Response deadline filter - commented out for now to see all opportunities
-  // const responseDeadlineFrom = formatDate(12, 14, 2024);
+  // Default to current year (rolling 12-month window for more results)
+  const today = new Date();
+  const twelveMonthsAgo = new Date();
+  twelveMonthsAgo.setMonth(today.getMonth() - 12);
+
+  // Use actual year instead of hardcoded to prevent date mismatch issues
+  const defaultFrom = formatDate(twelveMonthsAgo.getMonth() + 1, twelveMonthsAgo.getDate(), twelveMonthsAgo.getFullYear());
+  const defaultTo = formatDate(today.getMonth() + 1, today.getDate(), today.getFullYear());
 
   // SAM.gov API only accepts one PSC per request, so we make multiple calls
   // and merge the results
   const allOpportunities = new Map<string, SAMOpportunity>();
 
   try {
-    // Make a call for each PSC code + one for NAICS only (safety net)
-    const pscCodesToTry = [...GSA_LEASE_FILTERS.pscCodes, null]; // null = NAICS only
+    // Make parallel calls for each PSC code for faster response
+    const pscCodesToTry = [...GSA_LEASE_FILTERS.pscCodes];
 
-    for (const pscCode of pscCodesToTry) {
+    // Make all API calls in parallel (including NAICS-only fallback)
+    const fetchPromises = pscCodesToTry.map(async (pscCode) => {
       const queryParams = new URLSearchParams({
         api_key: apiKey,
 
@@ -168,15 +166,8 @@ export async function fetchGSALeaseOpportunities(
         postedFrom: params.postedFrom || defaultFrom,
         postedTo: params.postedTo || defaultTo,
 
-        // Response deadline filter (commented out to see all opportunities)
-        // rdlfrom: responseDeadlineFrom,
-
         // Notice types
         ptype: GSA_LEASE_FILTERS.noticeTypes.join(","),
-
-        // NAICS code (optional - PSC codes are more accurate for leasing)
-        // Commenting out to maximize results
-        // ncode: GSA_LEASE_FILTERS.naicsCode,
 
         // Pagination (get more per call to reduce API calls)
         limit: String(1000), // Max allowed
@@ -187,38 +178,80 @@ export async function fetchGSALeaseOpportunities(
         ...(params.city && { city: params.city }),
       });
 
-      // Add classification code (PSC) if not null
-      // Use 'ccode' parameter as per SAM.gov API docs
+      // Add classification code (PSC)
       if (pscCode) {
         queryParams.set("ccode", pscCode);
       }
 
-      const response = await fetch(`${baseUrl}?${queryParams.toString()}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // Cache for 5 minutes to avoid rate limiting
-        next: { revalidate: 300 },
+      try {
+        const response = await fetch(`${baseUrl}?${queryParams.toString()}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          // Cache for 5 minutes to avoid rate limiting
+          next: { revalidate: 300 },
+        });
+
+        if (!response.ok) {
+          console.warn(`SAM.gov API warning for PSC ${pscCode}: ${response.status}`);
+          return null;
+        }
+
+        return await response.json() as SAMResponse;
+      } catch (error) {
+        console.warn(`Error fetching PSC ${pscCode}:`, error);
+        return null;
+      }
+    });
+
+    // Add fallback request with keyword search (no PSC filter) for robustness
+    const keywordFallback = async () => {
+      const queryParams = new URLSearchParams({
+        api_key: apiKey,
+        postedFrom: params.postedFrom || defaultFrom,
+        postedTo: params.postedTo || defaultTo,
+        ptype: GSA_LEASE_FILTERS.noticeTypes.join(","),
+        limit: String(1000),
+        offset: String(params.offset || 0),
+        // Use keyword search as fallback
+        keyword: "lease OR leasing OR RLP",
+        ...(params.state && { state: params.state }),
+        ...(params.city && { city: params.city }),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.warn(
-          `SAM.gov API warning for PSC ${pscCode}: ${response.status} - ${errorText}`
-        );
-        continue; // Skip this PSC and continue with others
-      }
+      try {
+        const response = await fetch(`${baseUrl}?${queryParams.toString()}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          next: { revalidate: 300 },
+        });
 
-      const data: SAMResponse = await response.json();
+        if (!response.ok) {
+          console.warn(`SAM.gov API keyword fallback failed: ${response.status}`);
+          return null;
+        }
+
+        return await response.json() as SAMResponse;
+      } catch (error) {
+        console.warn(`Error in keyword fallback:`, error);
+        return null;
+      }
+    };
+
+    // Wait for all requests to complete (including fallback)
+    const results = await Promise.all([...fetchPromises, keywordFallback()]);
+
+    // Merge all results
+    for (const data of results) {
+      if (!data) continue;
 
       // Merge opportunities, deduping by noticeId
-      // SAM.gov API doesn't respect PSC filter, so we filter client-side
       data.opportunitiesData?.forEach((opp) => {
         // Only include opportunities with leasing-specific PSC codes or NAICS
         if (!allOpportunities.has(opp.noticeId)) {
           const pscCode = opp.classificationCode || "";
-          const naicsCode = opp.naicsCode || opp.naicsCodes?.[0] || "";
+          const naicsCode = opp.naicsCode || "";
           const title = (opp.title || "").toLowerCase();
 
           // Accept:
@@ -295,7 +328,6 @@ export async function fetchAllOpportunities(
   const baseUrl = "https://api.sam.gov/opportunities/v2/search";
 
   // Calculate default date range (last 30 days to today)
-  // Note: System clock may be incorrect, so we use 2024 explicitly
   const today = new Date();
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(today.getDate() - 30);
@@ -303,7 +335,7 @@ export async function fetchAllOpportunities(
   const formatDate = (date: Date) => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    const year = 2024; // Use 2024 explicitly due to system clock issue
+    const year = date.getFullYear();
     return `${month}/${day}/${year}`;
   };
 
@@ -388,15 +420,20 @@ export async function fetchOpportunitiesByKeyword(
 
   const baseUrl = "https://api.sam.gov/opportunities/v2/search";
 
-  // Calculate date range (default to full year 2024)
-  const formatDate = (month: number, day: number, year: number) => {
-    const m = String(month).padStart(2, '0');
-    const d = String(day).padStart(2, '0');
-    return `${m}/${d}/${year}`;
+  // Calculate date range (default to last 6 months)
+  const today = new Date();
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(today.getMonth() - 6);
+
+  const formatDate = (date: Date) => {
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const y = date.getFullYear();
+    return `${m}/${d}/${y}`;
   };
 
-  const defaultFrom = formatDate(1, 1, 2024);
-  const defaultTo = formatDate(12, 14, 2024);
+  const defaultFrom = formatDate(sixMonthsAgo);
+  const defaultTo = formatDate(today);
 
   // Notice types relevant to leasing
   const noticeTypes = [
