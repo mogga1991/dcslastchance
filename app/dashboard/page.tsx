@@ -7,6 +7,21 @@ async function getDashboardStats(userId: string) {
   try {
     const supabase = await createClient();
 
+    // Fetch opportunities count from GSA API
+    let opportunitiesCount = 0;
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const response = await fetch(`${baseUrl}/api/gsa-leasing?limit=1`, {
+        cache: 'no-store'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        opportunitiesCount = data.totalRecords || 0;
+      }
+    } catch (err) {
+      console.error('Error fetching opportunities count:', err);
+    }
+
     // Fetch stats in parallel using Supabase directly
     const [brokersResult, savedResult] = await Promise.all([
       // User's broker listings
@@ -21,7 +36,7 @@ async function getDashboardStats(userId: string) {
     ]);
 
     return {
-      gsaOpportunities: 0, // Will be populated from external API in the future
+      gsaOpportunities: opportunitiesCount,
       expiringLeases: 0, // Will be populated from external API in the future
       brokerListings: brokersResult.count || 0,
       savedOpportunities: savedResult.count || 0,
@@ -62,11 +77,11 @@ export default async function Dashboard() {
 
         {/* Stats Grid - 2x2 on desktop, stack on mobile */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Active GSA Opportunities */}
+          {/* Opportunities */}
           <StatCard
             icon={<Building2 className="w-6 h-6" />}
             count={stats.gsaOpportunities}
-            label="Active GSA Opportunities"
+            label="Opportunities"
             href="/dashboard/gsa-leasing"
           />
 
@@ -101,7 +116,7 @@ export default async function Dashboard() {
             <div className="flex items-center justify-between">
               <div className="space-y-2">
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                  Explore GSA Opportunities
+                  Explore Leasing Opportunities
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400">
                   Browse federal leasing opportunities and find matches for your properties

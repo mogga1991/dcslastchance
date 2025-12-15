@@ -43,7 +43,7 @@ export default function DashboardSideBar() {
       ),
     },
     {
-      label: "GSA Leasing",
+      label: "Leasing Opportunities",
       href: "/dashboard/gsa-leasing",
       icon: (
         <Building2

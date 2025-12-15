@@ -51,7 +51,7 @@ export default function DashboardTopNav({ children }: { children: ReactNode }) {
                 <Link prefetch={true} href="/dashboard/gsa-leasing">
                   <Button variant="outline" className="w-full justify-start">
                     <Building2 className="mr-2 h-4 w-4" />
-                    GSA Leasing
+                    Leasing Opportunities
                   </Button>
                 </Link>
               </DialogClose>
