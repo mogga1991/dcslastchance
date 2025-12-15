@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Search, Loader2, Bell, Filter } from "lucide-react";
+import { Loader2, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
 import { SAMOpportunity } from "@/lib/sam-gov";
@@ -18,8 +17,8 @@ import { ListingDetailModal } from "./listing-detail-modal";
 import { OpportunityDetailModal } from "./opportunity-detail-modal";
 import { ExpressInterestModal } from "./express-interest-modal";
 import { ExpiringLeaseCard } from "./expiring-lease-card";
-import { IOLPFiltersComponent, IOLPFilters } from "./iolp-filters";
-import { OpportunityFiltersComponent, OpportunityFilters } from "./opportunity-filters";
+import type { IOLPFilters } from "./iolp-filters";
+import type { OpportunityFilters } from "./opportunity-filters";
 import { FederalScoreCard } from "./federal-score-card";
 import { useExpiringLeases } from "@/lib/hooks/use-iolp";
 import { useToast } from "@/hooks/use-toast";
@@ -608,58 +607,8 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
         <div className="p-4 border-b bg-gray-50">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-lg font-semibold">GSA Leasing</h1>
-            {(activeTab === 'opportunities' || activeTab === 'expiring') && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-                className="h-8 relative"
-              >
-                <Filter className="h-4 w-4 mr-1" />
-                {showFilters ? 'Hide' : 'Filters'}
-                {activeTab === 'expiring' && (iolpFilters.urgencyFilter || iolpFilters.states.length > 0 || iolpFilters.agencies.length > 0 || iolpFilters.minRSF || iolpFilters.hasVacancy || iolpFilters.timeframe !== 24 || iolpFilters.sortBy !== 'expiration') && (
-                  <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
-                    {[
-                      iolpFilters.urgencyFilter ? 1 : 0,
-                      iolpFilters.states.length,
-                      iolpFilters.agencies.length,
-                      iolpFilters.minRSF ? 1 : 0,
-                      iolpFilters.hasVacancy ? 1 : 0,
-                      iolpFilters.timeframe !== 24 ? 1 : 0,
-                      iolpFilters.sortBy !== 'expiration' ? 1 : 0
-                    ].reduce((a, b) => a + b, 0)}
-                  </Badge>
-                )}
-                {activeTab === 'opportunities' && (opportunityFilters.states.length > 0 || opportunityFilters.postedWithin !== 'all' || opportunityFilters.setAsideTypes.length > 0 || opportunityFilters.minRSF || opportunityFilters.maxRSF || opportunityFilters.onlyMatches || opportunityFilters.sortBy !== 'newest') && (
-                  <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
-                    {[
-                      opportunityFilters.states.length,
-                      opportunityFilters.postedWithin !== 'all' ? 1 : 0,
-                      opportunityFilters.setAsideTypes.length,
-                      opportunityFilters.minRSF ? 1 : 0,
-                      opportunityFilters.maxRSF ? 1 : 0,
-                      opportunityFilters.onlyMatches ? 1 : 0,
-                      opportunityFilters.sortBy !== 'newest' ? 1 : 0
-                    ].reduce((a, b) => a + b, 0)}
-                  </Badge>
-                )}
-              </Button>
-            )}
           </div>
 
-          {/* Search */}
-          {activeTab !== 'expiring' && (
-            <div className="relative mb-3">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white"
-              />
-            </div>
-          )}
 
           {/* Federal Footprint Toggle */}
           <div className="space-y-2">
@@ -721,26 +670,6 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
           </div>
         </div>
 
-        {/* Filters (for opportunities) */}
-        {activeTab === 'opportunities' && showFilters && (
-          <OpportunityFiltersComponent
-            filters={opportunityFilters}
-            onChange={setOpportunityFilters}
-            availableStates={availableOpportunityStates}
-            availableSetAsides={availableSetAsides}
-            hasListings={brokerListings.length > 0}
-          />
-        )}
-
-        {/* Filters (for expiring leases) */}
-        {activeTab === 'expiring' && showFilters && (
-          <IOLPFiltersComponent
-            filters={iolpFilters}
-            onChange={setIolpFilters}
-            availableAgencies={availableAgencies}
-            availableStates={availableStates}
-          />
-        )}
 
         {/* Tabs */}
         <Tabs
