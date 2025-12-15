@@ -1,6 +1,5 @@
-'use client'
-import { FedSpaceSignIn } from '@/components/ui/fedspace-sign-in';
+import { SignInCard } from "@/components/ui/sign-in-card";
 
 export default function SignInPage() {
-  return <FedSpaceSignIn />;
+  return <SignInCard />;
 }
