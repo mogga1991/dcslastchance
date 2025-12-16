@@ -181,8 +181,8 @@ export async function fetchGSALeaseOpportunities(
       // Notice types
       ptype: GSA_LEASE_FILTERS.noticeTypes.join(","),
 
-      // Response date filter (only active opportunities)
-      rdlfrom: formatDate(today),
+      // NOTE: Removed rdlfrom filter to show ALL opportunities including those with past deadlines
+      // Users can see the deadline date and decide if they want to pursue expired opportunities
 
       // Pagination
       limit: String(params.limit || 1000),
