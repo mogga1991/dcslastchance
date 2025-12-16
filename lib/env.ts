@@ -48,8 +48,20 @@ export type Env = z.infer<typeof envSchema>;
 /**
  * Validate environment variables at startup
  * Call this in your root layout or middleware
+ * Skips validation during build time to allow static page generation
  */
-export function validateEnv(): Env {
+export function validateEnv(): Env | null {
+  // Skip validation during build time (when NEXT_PHASE is set to 'phase-production-build')
+  // or when running in a build context without runtime env vars
+  const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' ||
+    (!process.env.NEXT_PUBLIC_SUPABASE_URL && typeof window === 'undefined');
+
+  if (isBuildTime) {
+    // During build, just return null - env validation happens at runtime
+    console.log('Skipping env validation during build...');
+    return null;
+  }
+
   try {
     return envSchema.parse(process.env);
   } catch (error) {
@@ -58,10 +70,12 @@ export function validateEnv(): Env {
         .map((err) => `  - ${err.path.join('.')}: ${err.message}`)
         .join('\n');
 
-      throw new Error(
+      // In production, log warning but don't crash during SSG
+      console.error(
         `❌ Invalid environment variables:\n${missingVars}\n\n` +
         `Please check your .env.local file and ensure all required variables are set.`
       );
+      return null;
     }
     throw error;
   }

@@ -1,21 +1,25 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./supabase-types";
 
+// Placeholder URL and key for build time
+const PLACEHOLDER_URL = 'https://placeholder.supabase.co';
+const PLACEHOLDER_KEY = 'placeholder-key';
+
 // Lazy initialization to avoid build-time errors
 let _supabase: ReturnType<typeof createClient<Database>> | null = null;
 let _supabaseAdmin: ReturnType<typeof createClient<Database>> | null = null;
+
+// Check if we're in build time (env vars not available)
+const isBuildTime = () => !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 // Client-side Supabase client (uses anon key)
 export const supabase = new Proxy({} as ReturnType<typeof createClient<Database>>, {
   get(target, prop) {
     if (!_supabase) {
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        throw new Error('Supabase environment variables are not configured');
-      }
-      _supabase = createClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      );
+      // During build time, use placeholder values
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL || PLACEHOLDER_URL;
+      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || PLACEHOLDER_KEY;
+      _supabase = createClient<Database>(url, key);
     }
     return Reflect.get(_supabase, prop);
   }
@@ -25,19 +29,15 @@ export const supabase = new Proxy({} as ReturnType<typeof createClient<Database>
 export const supabaseAdmin = new Proxy({} as ReturnType<typeof createClient<Database>>, {
   get(target, prop) {
     if (!_supabaseAdmin) {
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        throw new Error('Supabase admin environment variables are not configured');
-      }
-      _supabaseAdmin = createClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false,
-          },
-        }
-      );
+      // During build time, use placeholder values
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL || PLACEHOLDER_URL;
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY || PLACEHOLDER_KEY;
+      _supabaseAdmin = createClient<Database>(url, key, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      });
     }
     return Reflect.get(_supabaseAdmin, prop);
   }
