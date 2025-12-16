@@ -53,3 +53,4 @@ AuthKey_8LYJ3Y87D4.p8
 
 # Archived development files
 .archive/
+.env.production
