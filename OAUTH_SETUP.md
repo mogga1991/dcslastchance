@@ -31,7 +31,7 @@ Your Google OAuth credentials are configured in `.env.local`:
 4. Under **Authorized redirect URIs**, add:
    - Development: `http://localhost:3002/auth/callback`
    - Supabase callback: `https://clxqdctofuxqjjonvytm.supabase.co/auth/v1/callback`
-   - Production: `https://your-production-domain.com/auth/callback` (when ready)
+   - Production: ` ` (when ready)
 5. Click **Save**
 
 ## Testing
@@ -49,7 +49,7 @@ After configuration, test the Google OAuth flow:
 
 **"redirect_uri_mismatch" error:**
 - Make sure all redirect URIs are added to your Google Cloud Console
-- Verify the Supabase callback URL matches exactly: `https://clxqdctofuxqjjonvytm.supabase.co/auth/v1/callback`
+- Verify the Supabase callback URL matches exactly: ` 
 
 **"invalid_client" error:**
 - Check that your Client ID and Secret match in both Supabase and `.env.local`

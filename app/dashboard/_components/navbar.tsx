@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/sheet";
 import UserProfile from "@/components/user-profile";
 import {
-  LayoutDashboard,
   Building2,
   PlusCircle,
   Bookmark,
@@ -33,20 +32,12 @@ export default function DashboardTopNav({ children }: { children: ReactNode }) {
           </SheetTrigger>
           <SheetContent side="left">
             <SheetHeader>
-              <Link prefetch={true} href="/dashboard">
+              <Link prefetch={true} href="/dashboard/gsa-leasing">
                 <SheetTitle>FedSpace</SheetTitle>
               </Link>
             </SheetHeader>
             {/* MVP: Mobile navigation - matches desktop sidebar */}
             <div className="flex flex-col space-y-3 mt-[1rem]">
-              <DialogClose asChild>
-                <Link prefetch={true} href="/dashboard">
-                  <Button variant="outline" className="w-full justify-start">
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </Button>
-                </Link>
-              </DialogClose>
               <DialogClose asChild>
                 <Link prefetch={true} href="/dashboard/gsa-leasing">
                   <Button variant="outline" className="w-full justify-start">

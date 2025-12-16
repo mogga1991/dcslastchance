@@ -11,7 +11,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -21,13 +20,9 @@ import {
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
 import { Upload } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
-import AccountManager from "./_components/account-manager";
-import GovernmentContractors from "./_components/contractor/government-contractors";
-import { CompanyProfileForm } from "./_components/company-profile-form";
-import { KpiSummaryStrip } from "../_components/section-cards";
 
 interface UserData {
   id: string;
@@ -57,10 +52,8 @@ const US_STATES = [
 function SettingsContent() {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState("general");
   const [saving, setSaving] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const supabase = createClient();
 
   // Profile form states
@@ -71,14 +64,6 @@ function SettingsContent() {
   // Profile picture upload states
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  // Handle URL tab parameter
-  useEffect(() => {
-    const tab = searchParams.get("tab");
-    if (tab && ["general", "business", "government-contractors", "team-overview"].includes(tab)) {
-      setCurrentTab(tab);
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -104,13 +89,6 @@ function SettingsContent() {
 
     fetchData();
   }, [router, supabase]);
-
-  const handleTabChange = (value: string) => {
-    setCurrentTab(value);
-    const url = new URL(window.location.href);
-    url.searchParams.set("tab", value);
-    router.replace(url.pathname + url.search, { scroll: false });
-  };
 
   const handleUpdateProfile = async () => {
     setSaving(true);
@@ -250,30 +228,7 @@ function SettingsContent() {
         <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
       </div>
 
-      <Tabs
-        value={currentTab}
-        onValueChange={handleTabChange}
-        className="w-full max-w-4xl"
-      >
-        <TabsList>
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="business">Business Information</TabsTrigger>
-          <TabsTrigger value="government-contractors">Government Contractors</TabsTrigger>
-          <TabsTrigger value="team-overview">Team Overview</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="general" className="space-y-6">
-          {/* Dashboard Summary Section */}
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl font-semibold">Dashboard Summary</h2>
-              <p className="text-sm text-muted-foreground">
-                Quick overview of your account metrics and usage
-              </p>
-            </div>
-            <KpiSummaryStrip />
-          </div>
-
+      <div className="w-full max-w-4xl space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Profile information</CardTitle>
@@ -401,20 +356,7 @@ function SettingsContent() {
               </Button>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="business" className="space-y-6">
-          <CompanyProfileForm />
-        </TabsContent>
-
-        <TabsContent value="government-contractors" className="space-y-6">
-          <GovernmentContractors />
-        </TabsContent>
-
-        <TabsContent value="team-overview" className="space-y-6">
-          <AccountManager />
-        </TabsContent>
-      </Tabs>
+      </div>
     </div>
   );
 }

@@ -83,8 +83,16 @@ export function scoreBuilding(
 
   // Certifications
   if (requirement.certifications && property.certifications) {
-    for (const cert of requirement.certifications) {
-      const hasCert = property.certifications.some((pc) =>
+    // Ensure certifications are arrays
+    const reqCerts = Array.isArray(requirement.certifications)
+      ? requirement.certifications
+      : [];
+    const propCerts = Array.isArray(property.certifications)
+      ? property.certifications
+      : [];
+
+    for (const cert of reqCerts) {
+      const hasCert = propCerts.some((pc) =>
         pc.toLowerCase().includes(cert.toLowerCase())
       );
       if (hasCert) {

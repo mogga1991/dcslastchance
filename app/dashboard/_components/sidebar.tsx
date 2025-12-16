@@ -5,9 +5,8 @@ import SidebarUsageStats from "@/components/sidebar-usage-stats";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { FedSpaceLogo, FedSpaceText } from "@/components/brand/fedspace-logo";
+import { FedSpaceLogo } from "@/components/brand/fedspace-logo";
 import {
-  LayoutDashboard,
   Building2,
   Settings,
   LogOut,
@@ -33,15 +32,6 @@ export default function DashboardSideBar() {
 
   // MVP: Core navigation items only
   const links = [
-    {
-      label: "Dashboard",
-      href: "/dashboard",
-      icon: (
-        <LayoutDashboard
-          className="h-5 w-5 flex-shrink-0"
-        />
-      ),
-    },
     {
       label: "Leasing Opportunities",
       href: "/dashboard/gsa-leasing",
@@ -172,7 +162,7 @@ export default function DashboardSideBar() {
 export const Logo = () => {
   return (
     <Link
-      href="/dashboard"
+      href="/dashboard/gsa-leasing"
       className="font-normal flex space-x-2 items-center text-sm py-1 relative z-20"
     >
       <motion.div
@@ -189,7 +179,7 @@ export const Logo = () => {
 export const LogoIcon = () => {
   return (
     <Link
-      href="/dashboard"
+      href="/dashboard/gsa-leasing"
       className="font-normal flex space-x-2 items-center text-sm py-1 relative z-20"
     >
       <FedSpaceLogo variant="mark" size="sm" />
