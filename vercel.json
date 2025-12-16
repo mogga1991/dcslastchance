@@ -3,8 +3,8 @@
   "buildCommand": "next build",
   "crons": [
     {
-      "path": "/api/cron/sync-opportunities?source=both",
-      "schedule": "0 6 * * *"
+      "path": "/api/cron/sync-opportunities?mode=all",
+      "schedule": "0 */6 * * *"
     }
   ]
 }

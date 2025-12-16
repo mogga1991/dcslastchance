@@ -39,8 +39,9 @@ const FedSpaceSignIn: React.FC = () => {
       }
 
       router.push('/dashboard/gsa-leasing');
-    } catch (err) {
-      setError('An unexpected error occurred');
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred');
       setIsLoading(false);
     }
   };
@@ -134,7 +135,7 @@ const FedSpaceSignIn: React.FC = () => {
               <div className="flex justify-end mb-6">
                 <p className="text-sm text-gray-600">
                   Don't have an account?
-                  <Link href="/auth/signup" className="ml-1 font-medium text-indigo-600 hover:text-indigo-500">
+                  <Link href="/sign-up" className="ml-1 font-medium text-indigo-600 hover:text-indigo-500">
                     Sign up
                   </Link>
                 </p>
@@ -206,7 +207,7 @@ const FedSpaceSignIn: React.FC = () => {
                 </div>
 
                 <div className="flex justify-end">
-                  <Link href="/auth/forgot-password" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                  <Link href="/forgot-password" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
                     Forgot your password?
                   </Link>
                 </div>
