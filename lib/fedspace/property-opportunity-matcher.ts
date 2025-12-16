@@ -39,8 +39,9 @@ const WEIGHTS = {
   experience: 10,
 } as const;
 
-// Constraint disqualification rates (for analytics)
-const DISQUALIFICATION_RATES = {
+// Constraint disqualification rates (for analytics and documentation)
+// Exported for reference but not used in runtime calculations
+export const DISQUALIFICATION_RATES = {
   STATE_MATCH: 94,
   RSF_MINIMUM: 67,
   SET_ASIDE: 45,
@@ -575,7 +576,7 @@ function calculateTimelineScore(
  */
 function calculateExperienceScore(
   experience: BrokerExperience,
-  opportunity: OpportunityRequirements
+  _opportunity: OpportunityRequirements
 ): FactorScore {
   let score = 0;
   const breakdown: string[] = [];
@@ -701,8 +702,8 @@ function getPassedConstraints(stoppedAtStage: number): DisqualificationConstrain
  */
 function generateStrengths(
   factors: any,
-  property: PropertyData,
-  opportunity: OpportunityRequirements
+  _property: PropertyData,
+  _opportunity: OpportunityRequirements
 ): string[] {
   const strengths: string[] = [];
 
@@ -730,8 +731,8 @@ function generateStrengths(
  */
 function generateWeaknesses(
   factors: any,
-  property: PropertyData,
-  opportunity: OpportunityRequirements
+  _property: PropertyData,
+  _opportunity: OpportunityRequirements
 ): string[] {
   const weaknesses: string[] = [];
 
@@ -760,7 +761,7 @@ function generateWeaknesses(
 function generateRecommendations(
   factors: any,
   property: PropertyData,
-  opportunity: OpportunityRequirements
+  _opportunity: OpportunityRequirements
 ): string[] {
   const recommendations: string[] = [];
 

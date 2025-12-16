@@ -45,8 +45,6 @@ export async function calculateFederalNeighborhoodScore(
   radiusMiles: number = 5,
   spatialIndex?: FederalPropertyRTree
 ): Promise<FederalNeighborhoodScore> {
-  const startTime = Date.now();
-
   // Use provided index or fetch data and build new index
   const index = spatialIndex ?? (await buildSpatialIndex());
 
@@ -165,7 +163,7 @@ async function buildSpatialIndex(): Promise<FederalPropertyRTree> {
 function calculateMetrics(
   properties: FederalProperty[],
   radiusMiles: number
-) {
+): any {
   const totalProperties = properties.length;
   const leasedProperties = properties.filter((p) => p.type === 'leased').length;
   const ownedProperties = properties.filter((p) => p.type === 'owned').length;

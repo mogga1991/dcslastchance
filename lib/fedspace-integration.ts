@@ -10,7 +10,6 @@ import {
   calculateFederalNeighborhoodScore,
   calculatePropertyOpportunityMatch,
   FederalPropertyRTree,
-  getSpatialIndex,
 } from './fedspace';
 import type {
   FederalProperty,
