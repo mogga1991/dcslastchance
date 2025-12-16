@@ -9,6 +9,8 @@
  * GET /api/fedspace/property-match?propertyId=xxx&opportunityId=yyy
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { calculatePropertyOpportunityMatch } from '@/lib/fedspace';
 import { createClient } from '@/lib/supabase/server';

@@ -16,6 +16,7 @@ import {
 import { Building2, MapPin, Maximize2, FileText, CheckSquare, Upload, User, Check } from "lucide-react";
 import type { BrokerListingInput, PropertyType } from "@/types/broker-listing";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 const US_STATES = [
   "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -157,6 +158,33 @@ export default function ListPropertyClient() {
   };
 
   const handleSubmit = async () => {
+    // Validate required fields before submitting
+    const missingFields: string[] = [];
+
+    if (!formData.street_address) missingFields.push("Street Address");
+    if (!formData.city) missingFields.push("City");
+    if (!formData.state) missingFields.push("State");
+    if (!formData.zipcode) missingFields.push("Zipcode");
+    if (!formData.total_sf) missingFields.push("Total Square Feet");
+    if (!formData.availableDate) missingFields.push("Available Date");
+    if (!formData.building_class) missingFields.push("Building Class");
+    if (!formData.contact_email) missingFields.push("Contact Email");
+    if (!formData.lister_role) missingFields.push("Your Role");
+
+    if (missingFields.length > 0) {
+      toast.error("Missing Required Fields", {
+        description: `Please fill in: ${missingFields.join(', ')}`
+      });
+      return;
+    }
+
+    if (!formData.terms_agreed) {
+      toast.error("Terms Agreement Required", {
+        description: "Please agree to the Terms of Service and Privacy Policy to continue."
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -197,6 +225,8 @@ export default function ListPropertyClient() {
         notes: `Ceiling Height: ${formData.ceiling_height}ft. ${formData.column_spacing ? `Column Spacing: ${formData.column_spacing}ft.` : ''}`,
       };
 
+      console.log('Submitting listing data:', listingData);
+
       const response = await fetch("/api/broker-listings", {
         method: "POST",
         headers: {
@@ -211,12 +241,20 @@ export default function ListPropertyClient() {
         throw new Error(result.error || "Failed to create listing");
       }
 
-      // Success! Redirect to GSA Leasing page
-      alert("Property listed successfully! Redirecting to GSA Leasing to view your listing...");
-      router.push("/dashboard/gsa-leasing");
+      // Success! Redirect to My Properties page
+      toast.success("Property Listed Successfully!", {
+        description: "Your property is now live and will be matched with federal opportunities."
+      });
+
+      // Redirect to my properties after a short delay
+      setTimeout(() => {
+        router.push("/dashboard/my-properties");
+      }, 1500);
     } catch (error) {
       console.error("Error creating listing:", error);
-      alert(error instanceof Error ? error.message : "Failed to create listing. Please try again.");
+      toast.error("Failed to Create Listing", {
+        description: error instanceof Error ? error.message : "Please try again or contact support."
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -717,22 +755,49 @@ export default function ListPropertyClient() {
                 <h2 className="text-lg font-semibold">Photos & Documents</h2>
               </div>
               <p className="text-gray-600 text-sm">
-                Upload property photos and floor plans
+                Upload property photos and floor plans (Optional - you can add photos later)
               </p>
 
               <div className="space-y-6 mt-6">
                 {/* Photo Upload */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="flex flex-col items-center justify-center text-gray-500">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 bg-gray-50 hover:bg-gray-100 transition-colors relative">
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      setFormData((prev) => ({ ...prev, photos: files }));
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div className="flex flex-col items-center justify-center text-gray-500 pointer-events-none">
                     <Upload className="h-12 w-12 mb-3" />
                     <p className="text-sm font-medium mb-1">
-                      Drag and drop files here, or click to browse
+                      {formData.photos.length > 0
+                        ? `${formData.photos.length} file(s) selected`
+                        : "Click to browse or drag and drop files here"}
                     </p>
                     <p className="text-xs text-gray-400">
                       Supports: JPG, PNG, PDF (Max 10MB per file)
                     </p>
                   </div>
                 </div>
+
+                {/* Display selected files */}
+                {formData.photos.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-700">Selected Files:</p>
+                    <ul className="text-sm text-gray-600 space-y-1">
+                      {formData.photos.map((file, idx) => (
+                        <li key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                          <span>{file.name}</span>
+                          <span className="text-xs text-gray-400">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 {/* Floor Plans Button */}
                 <Button variant="outline" className="w-full">
@@ -746,8 +811,7 @@ export default function ListPropertyClient() {
                 {/* Tip Box */}
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-900">
-                    <strong>Tip:</strong> Include exterior photos, lobby, typical floor layouts, and any
-                    recently renovated areas. GSA reviewers appreciate comprehensive visual documentation.
+                    <strong>Note:</strong> Photo uploads are optional for now. You can submit your listing without photos and add them later. Photos selected here are for your reference only and won't be uploaded in this version.
                   </p>
                 </div>
               </div>
@@ -874,7 +938,11 @@ export default function ListPropertyClient() {
                 </div>
 
                 {/* Terms Agreement */}
-                <div className="flex items-start space-x-3 pt-4">
+                <div className={`flex items-start space-x-3 pt-4 p-4 rounded-lg border-2 ${
+                  formData.terms_agreed
+                    ? 'border-green-200 bg-green-50'
+                    : 'border-orange-300 bg-orange-50'
+                }`}>
                   <Checkbox
                     id="terms_agreed"
                     checked={formData.terms_agreed}
@@ -883,8 +951,8 @@ export default function ListPropertyClient() {
                     }
                   />
                   <div className="flex-1">
-                    <Label htmlFor="terms_agreed" className="cursor-pointer text-sm leading-relaxed">
-                      I certify that I am authorized to list this property and that all information
+                    <Label htmlFor="terms_agreed" className="cursor-pointer text-sm leading-relaxed font-medium">
+                      <span className="text-red-500">*</span> I certify that I am authorized to list this property and that all information
                       provided is accurate. I agree to the{" "}
                       <a href="#" className="text-indigo-600 hover:underline">
                         Terms of Service
@@ -895,6 +963,11 @@ export default function ListPropertyClient() {
                       </a>
                       .
                     </Label>
+                    {!formData.terms_agreed && (
+                      <p className="text-xs text-orange-600 mt-1">
+                        ⚠️ You must agree to the terms to submit your listing
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -923,13 +996,20 @@ export default function ListPropertyClient() {
             <div className="flex gap-2">
               <Button variant="outline">Save as Draft</Button>
               {currentStep === 7 ? (
-                <Button
-                  onClick={handleSubmit}
-                  className="bg-indigo-600 hover:bg-indigo-700"
-                  disabled={!formData.terms_agreed || isSubmitting}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Listing"}
-                </Button>
+                <div className="relative group">
+                  <Button
+                    onClick={handleSubmit}
+                    className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!formData.terms_agreed || isSubmitting}
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Listing"}
+                  </Button>
+                  {!formData.terms_agreed && !isSubmitting && (
+                    <div className="absolute bottom-full mb-2 right-0 bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                      Please agree to terms first
+                    </div>
+                  )}
+                </div>
               ) : (
                 <Button onClick={handleNext} className="bg-indigo-600 hover:bg-indigo-700">
                   Next →

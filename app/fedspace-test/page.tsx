@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 export default function FedSpaceTestPage() {
   const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [federalScoreResult, setFederalScoreResult] = useState<any>(null);
-  const [matchScoreResult, setMatchScoreResult] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [analyticsResult, setAnalyticsResult] = useState<any>(null);
 
   // Test Federal Neighborhood Score

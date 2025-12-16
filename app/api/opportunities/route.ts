@@ -30,7 +30,6 @@ export async function GET(request: NextRequest) {
     try {
       // Build where conditions
       const conditions = [];
-      const params: any = {};
 
       // Filter by source
       if (source !== "all") {
@@ -55,11 +54,6 @@ export async function GET(request: NextRequest) {
       // Only show active opportunities with future deadlines
       const today = new Date().toISOString();
       conditions.push(sql`(response_deadline IS NULL OR response_deadline >= ${today})`);
-
-      // Combine all conditions
-      const whereClause = conditions.length > 0
-        ? sql` WHERE ${sql.unsafe(conditions.map(() => '?').join(' AND '))}`
-        : sql``;
 
       // Fetch opportunities
       let opportunities;
@@ -135,6 +129,7 @@ export async function GET(request: NextRequest) {
       await sql.end();
 
       // Transform database records to match SAMOpportunity interface
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const transformedData = opportunities?.map((opp: any) => ({
         noticeId: opp.notice_id,
         title: opp.title,

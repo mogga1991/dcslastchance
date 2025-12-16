@@ -77,6 +77,7 @@ const STATE_COORDINATES: { [key: string]: { lat: number; lng: number } } = {
 // Declare google maps types
 declare global {
   interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     google: any;
     initGoogleMaps: () => void;
   }

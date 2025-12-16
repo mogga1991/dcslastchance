@@ -17,6 +17,7 @@ import Constraints from "./sections/constraints";
 
 export default function GovernmentContractors() {
   const [activeSection, setActiveSection] = useState("company");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [completeness, setCompleteness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const _supabase = createClient();
@@ -86,6 +87,7 @@ export default function GovernmentContractors() {
                   Missing Items:
                 </p>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {completeness.missing.map((item: any, idx: number) => (
                     <li key={idx} className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-2">
                       <span className="text-red-500 mt-0.5">•</span>

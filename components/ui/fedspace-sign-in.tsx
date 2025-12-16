@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -40,6 +41,7 @@ const FedSpaceSignIn: React.FC = () => {
 
       router.push('/dashboard/gsa-leasing');
       router.refresh();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred');
       setIsLoading(false);
@@ -58,11 +60,13 @@ const FedSpaceSignIn: React.FC = () => {
             <div className="hidden md:block w-full md:w-3/5 bg-gray-100 p-6">
               <div className="grid grid-cols-2 grid-rows-3 gap-4 h-full overflow-hidden">
                 {/* Top left - Office Building */}
-                <div className="overflow-hidden rounded-xl">
-                  <img
+                <div className="overflow-hidden rounded-xl relative">
+                  <Image
                     src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80"
                     alt="Modern office building"
-                    className="w-full h-full object-cover"
+                    className="object-cover"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 40vw"
                   />
                 </div>
 
@@ -81,20 +85,24 @@ const FedSpaceSignIn: React.FC = () => {
                 </div>
 
                 {/* Middle left - Conference Room */}
-                <div className="overflow-hidden rounded-xl">
-                  <img
+                <div className="overflow-hidden rounded-xl relative">
+                  <Image
                     src="https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=800&q=80"
                     alt="Conference room"
-                    className="w-full h-full object-cover"
+                    className="object-cover"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 40vw"
                   />
                 </div>
 
                 {/* Middle right - Office Interior */}
-                <div className="overflow-hidden rounded-xl">
-                  <img
+                <div className="overflow-hidden rounded-xl relative">
+                  <Image
                     src="https://images.unsplash.com/photo-1497215842964-222b430dc094?w=800&q=80"
                     alt="Modern office interior"
-                    className="w-full h-full object-cover"
+                    className="object-cover"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 40vw"
                   />
                 </div>
 
@@ -113,11 +121,13 @@ const FedSpaceSignIn: React.FC = () => {
                 </div>
 
                 {/* Bottom right - Office Workspace */}
-                <div className="overflow-hidden rounded-xl">
-                  <img
+                <div className="overflow-hidden rounded-xl relative">
+                  <Image
                     src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80"
                     alt="Office workspace"
-                    className="w-full h-full object-cover"
+                    className="object-cover"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 40vw"
                   />
                 </div>
               </div>

@@ -195,6 +195,7 @@ function SettingsContent() {
       if (updatedUser) {
         setUser(updatedUser as UserData);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Error uploading profile picture:", error);
       toast.error(error.message || "Failed to upload profile picture");

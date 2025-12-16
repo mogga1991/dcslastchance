@@ -16,6 +16,7 @@ interface CompanyEligibilityProps {
 export default function CompanyEligibility({ onUpdate }: CompanyEligibilityProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [profile, setProfile] = useState<any>({
     legal_name: "",
     dba_name: "",

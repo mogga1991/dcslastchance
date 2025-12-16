@@ -14,6 +14,7 @@ interface CapabilitiesCapacityProps {
 }
 
 export default function CapabilitiesCapacity({ onUpdate }: CapabilitiesCapacityProps) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);

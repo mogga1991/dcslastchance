@@ -69,11 +69,8 @@ export default function GSAMapWithIOLP({
   onViewportChange,
 }: GSAMapWithIOLPProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const map = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markers = useRef<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const iolpMarkers = useRef<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [iolpData, setIolpData] = useState<IOLPFeatureCollection>({ features: [] });
