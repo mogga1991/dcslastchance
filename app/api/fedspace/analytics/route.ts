@@ -283,7 +283,7 @@ async function getMyPropertiesAnalytics(supabase: any, userId: string) {
 /**
  * POST: Clear expired cache entries
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const supabase = await createClient();
 

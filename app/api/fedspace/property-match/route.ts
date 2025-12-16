@@ -376,7 +376,7 @@ async function storeMatchScore(
   opportunityId: string,
   noticeId: string,
   matchResult: any
-) {
+): Promise<void> {
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
   await supabase.from('property_match_scores').upsert(
