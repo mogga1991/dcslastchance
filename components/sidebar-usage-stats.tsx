@@ -111,25 +111,26 @@ export default function SidebarUsageStats({ mini = false }: { mini?: boolean }) 
   }
 
   // Calculate progress percentage
-  const analysisProgress = (stats.analysesUsed / stats.analysesLimit) * 100;
+  const analysisProgress = ((stats.analysesUsed ?? 0) / (stats.analysesLimit ?? 1)) * 100;
 
   // Determine bid score badge
   let bidScoreBadge: StatRowProps["badge"] | undefined;
-  if (stats.totalAnalyses > 0) {
-    if (stats.avgBidScore >= 75) {
+  if ((stats.totalAnalyses ?? 0) > 0) {
+    const avgScore = stats.avgBidScore ?? 0;
+    if (avgScore >= 75) {
       bidScoreBadge = { text: "Strong", variant: "success" };
-    } else if (stats.avgBidScore >= 60) {
+    } else if (avgScore >= 60) {
       bidScoreBadge = { text: "Conditional", variant: "warning" };
-    } else if (stats.avgBidScore >= 40) {
+    } else if (avgScore >= 40) {
       bidScoreBadge = { text: "Evaluate", variant: "warning" };
-    } else if (stats.avgBidScore > 0) {
+    } else if (avgScore > 0) {
       bidScoreBadge = { text: "Weak", variant: "danger" };
     }
   }
 
   // Determine deadline badge
   let deadlineBadge: StatRowProps["badge"] | undefined;
-  if (stats.daysUntilNextDeadline !== null) {
+  if (stats.daysUntilNextDeadline !== null && stats.daysUntilNextDeadline !== undefined) {
     if (stats.daysUntilNextDeadline <= 3) {
       deadlineBadge = { text: `${stats.daysUntilNextDeadline}d`, variant: "danger" };
     } else if (stats.daysUntilNextDeadline <= 7) {
@@ -158,10 +159,10 @@ export default function SidebarUsageStats({ mini = false }: { mini?: boolean }) 
         <StatRow
           icon={<TrendingUp className="h-4 w-4" />}
           label="Analyses"
-          value={`${stats.analysesUsed}/${stats.analysesLimit}`}
+          value={`${stats.analysesUsed ?? 0}/${stats.analysesLimit ?? 0}`}
           badge={
-            stats.analysesLimit - stats.analysesUsed > 0
-              ? { text: `${stats.analysesLimit - stats.analysesUsed} left`, variant: "info" }
+            (stats.analysesLimit ?? 0) - (stats.analysesUsed ?? 0) > 0
+              ? { text: `${(stats.analysesLimit ?? 0) - (stats.analysesUsed ?? 0)} left`, variant: "info" }
               : { text: "Limit reached", variant: "warning" }
           }
           progress={analysisProgress}
@@ -170,11 +171,11 @@ export default function SidebarUsageStats({ mini = false }: { mini?: boolean }) 
         />
 
         {/* Credits */}
-        {stats.credits > 0 && (
+        {(stats.credits ?? 0) > 0 && (
           <StatRow
             icon={<CreditCard className="h-4 w-4" />}
             label="Credits"
-            value={stats.credits}
+            value={stats.credits ?? 0}
             badge={{ text: "Active", variant: "success" }}
             href="/dashboard/upgrade"
             mini={mini}
@@ -182,11 +183,11 @@ export default function SidebarUsageStats({ mini = false }: { mini?: boolean }) 
         )}
 
         {/* Upcoming Deadlines */}
-        {stats.upcomingDeadlines > 0 && (
+        {(stats.upcomingDeadlines?.length ?? 0) > 0 && (
           <StatRow
             icon={<Calendar className="h-4 w-4" />}
             label="Deadlines"
-            value={stats.upcomingDeadlines}
+            value={stats.upcomingDeadlines?.length ?? 0}
             badge={deadlineBadge}
             href="/dashboard/my-proposals"
             mini={mini}
@@ -194,11 +195,11 @@ export default function SidebarUsageStats({ mini = false }: { mini?: boolean }) 
         )}
 
         {/* Avg Bid Score */}
-        {stats.totalAnalyses > 0 && (
+        {(stats.totalAnalyses ?? 0) > 0 && (
           <StatRow
             icon={<Target className="h-4 w-4" />}
             label="Avg Score"
-            value={stats.avgBidScore}
+            value={stats.avgBidScore ?? 0}
             badge={bidScoreBadge}
             href="/dashboard"
             mini={mini}
@@ -210,7 +211,7 @@ export default function SidebarUsageStats({ mini = false }: { mini?: boolean }) 
         <div className="mt-3 pt-3 border-t border-white/10">
           <div className="flex items-center justify-between text-xs">
             <span className="text-white/60">{stats.planName} Plan</span>
-            {stats.daysUntilReset > 0 && (
+            {(stats.daysUntilReset ?? 0) > 0 && (
               <span className="text-white/60">Resets in {stats.daysUntilReset}d</span>
             )}
           </div>

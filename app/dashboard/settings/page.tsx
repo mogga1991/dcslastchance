@@ -33,6 +33,10 @@ interface UserData {
     avatar_url?: string;
     country?: string;
     state?: string;
+    phone?: string;
+    lister_role?: 'owner' | 'broker' | 'agent' | 'salesperson';
+    license_number?: string;
+    brokerage_company?: string;
   };
 }
 
@@ -60,6 +64,10 @@ function SettingsContent() {
   const [fullName, setFullName] = useState("");
   const [country, setCountry] = useState("United States");
   const [state, setState] = useState("");
+  const [phone, setPhone] = useState("");
+  const [listerRole, setListerRole] = useState<'owner' | 'broker' | 'agent' | 'salesperson' | ''>('');
+  const [licenseNumber, setLicenseNumber] = useState("");
+  const [brokerageCompany, setBrokerageCompany] = useState("");
 
   // Profile picture upload states
   const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -79,6 +87,10 @@ function SettingsContent() {
         setFullName(user.user_metadata?.full_name || user.user_metadata?.name || "");
         setCountry(user.user_metadata?.country || "United States");
         setState(user.user_metadata?.state || "");
+        setPhone(user.user_metadata?.phone || "");
+        setListerRole(user.user_metadata?.lister_role || '');
+        setLicenseNumber(user.user_metadata?.license_number || "");
+        setBrokerageCompany(user.user_metadata?.brokerage_company || "");
       } catch (error) {
         console.error("Error fetching user data:", error);
         toast.error("Failed to load user data");
@@ -99,6 +111,10 @@ function SettingsContent() {
           name: fullName,
           country: country,
           state: state,
+          phone: phone,
+          lister_role: listerRole || undefined,
+          license_number: licenseNumber || undefined,
+          brokerage_company: brokerageCompany || undefined,
         }
       });
 
@@ -350,6 +366,83 @@ function SettingsContent() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Phone */}
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+1 (555) 123-4567"
+                  className="bg-white border-gray-300"
+                />
+              </div>
+
+              {/* Lister Role */}
+              <div className="space-y-2">
+                <Label htmlFor="listerRole">Your Role</Label>
+                <Select value={listerRole} onValueChange={(value) => setListerRole(value as 'owner' | 'broker' | 'agent' | 'salesperson')}>
+                  <SelectTrigger className="bg-white border-gray-300">
+                    <SelectValue placeholder="Select your role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="owner">Property Owner</SelectItem>
+                    <SelectItem value="broker">Broker</SelectItem>
+                    <SelectItem value="agent">Real Estate Agent</SelectItem>
+                    <SelectItem value="salesperson">Salesperson</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-gray-500">
+                  This helps us auto-fill your information when listing properties
+                </p>
+              </div>
+
+              {/* License Number - Show only for broker/agent/salesperson */}
+              {listerRole && listerRole !== 'owner' && (
+                <div className="space-y-2">
+                  <Label htmlFor="licenseNumber">
+                    Real Estate License Number
+                    {(listerRole === 'broker' || listerRole === 'agent') && (
+                      <span className="text-red-500 ml-1">*</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="licenseNumber"
+                    value={licenseNumber}
+                    onChange={(e) => setLicenseNumber(e.target.value)}
+                    placeholder="Enter your license number"
+                    className="bg-white border-gray-300"
+                    required={listerRole === 'broker' || listerRole === 'agent'}
+                  />
+                  <p className="text-sm text-gray-500">
+                    {listerRole === 'salesperson'
+                      ? 'Optional for salespersons'
+                      : 'Required for brokers and agents'}
+                  </p>
+                </div>
+              )}
+
+              {/* Brokerage Company - Show only for broker/agent/salesperson */}
+              {listerRole && listerRole !== 'owner' && (
+                <div className="space-y-2">
+                  <Label htmlFor="brokerageCompany">
+                    Brokerage Company <span className="text-red-500 ml-1">*</span>
+                  </Label>
+                  <Input
+                    id="brokerageCompany"
+                    value={brokerageCompany}
+                    onChange={(e) => setBrokerageCompany(e.target.value)}
+                    placeholder="Enter your brokerage company name"
+                    className="bg-white border-gray-300"
+                    required
+                  />
+                  <p className="text-sm text-gray-500">
+                    Name of the company you work for
+                  </p>
+                </div>
+              )}
 
               <Button onClick={handleUpdateProfile} disabled={saving}>
                 {saving ? "Saving..." : "Save information"}

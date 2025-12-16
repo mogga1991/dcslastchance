@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { iolpAdapter } from '@/lib/iolp';
-import type { BrokerListingInput, BrokerListingFilters, PublicBrokerListing } from '@/types/broker-listing';
+import type { BrokerListingInput, PublicBrokerListing } from '@/types/broker-listing';
 
 /**
  * List of public fields (excludes private broker contact information)
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: (data || []) as PublicBrokerListing[],
+      data: (data || []) as unknown as PublicBrokerListing[],
       meta: {
         total: count || 0,
         limit,
@@ -238,7 +238,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate federal score with coordinates (if provided)
     let federalScore: number | undefined;
-    let federalScoreData: any;
+    let federalScoreData: Record<string, unknown> | undefined;
     let latitude = input.latitude;
     let longitude = input.longitude;
 

@@ -468,9 +468,9 @@ const SignIn = () => {
         setError('Sign in completed but no user data returned.');
         setIsLoading(false);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Unexpected error during sign in:', err);
-      setError(err.message || 'An unexpected error occurred');
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
       setIsLoading(false);
     }
   };
@@ -491,7 +491,7 @@ const SignIn = () => {
         setError(error.message);
         setIsLoading(false);
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
       setIsLoading(false);
     }

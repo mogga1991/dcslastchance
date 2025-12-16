@@ -346,7 +346,7 @@ export default function PricingSection() {
 
                   <div className="space-y-2 pt-4 border-t border-neutral-200">
                     <h4 className="font-medium text-sm text-gray-900 mb-3">
-                      What's included:
+                      What&apos;s included:
                     </h4>
                     <ul className="space-y-2">
                       {plan.features.map((feature, featureIndex) => (

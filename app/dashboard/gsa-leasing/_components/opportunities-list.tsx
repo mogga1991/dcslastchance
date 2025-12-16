@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -48,18 +48,14 @@ interface OpportunitiesListProps {
   onLocationSelect?: (opportunities: SAMOpportunity[]) => void;
 }
 
-export default function OpportunitiesList({ onLocationSelect }: OpportunitiesListProps) {
+export default function OpportunitiesList({ }: OpportunitiesListProps) {
   const [opportunities, setOpportunities] = useState<SAMOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [selectedState, setSelectedState] = useState<string>("");
+  const [selectedState] = useState<string>("");
 
-  useEffect(() => {
-    fetchOpportunities();
-  }, [selectedState]);
-
-  const fetchOpportunities = async () => {
+  const fetchOpportunities = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -84,7 +80,11 @@ export default function OpportunitiesList({ onLocationSelect }: OpportunitiesLis
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedState]);
+
+  useEffect(() => {
+    fetchOpportunities();
+  }, [fetchOpportunities]);
 
   const getDaysUntilDeadline = (deadline: string): number => {
     const deadlineDate = new Date(deadline);

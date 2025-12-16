@@ -57,7 +57,7 @@ export default function ContactPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Get in Touch</h1>
           <p className="text-xl text-gray-600">
-            Have questions about FedSpace? We're here to help.
+            Have questions about FedSpace? We&apos;re here to help.
           </p>
         </div>
 
@@ -170,7 +170,7 @@ export default function ContactPage() {
                     What is the Federal Neighborhood Score?
                   </h3>
                   <p className="text-sm text-gray-600">
-                    It's our proprietary metric that shows federal presence density within a
+                    It&apos;s our proprietary metric that shows federal presence density within a
                     5-mile radius of a location.
                   </p>
                 </div>

@@ -141,7 +141,7 @@ const Divider = ({ text }: { text: string }) => (
   </div>
 );
 
-const SocialButton = ({ provider, onClick, children }: { provider: "google"; onClick: () => void; children: React.ReactNode }) => (
+const SocialButton = ({ provider: _provider, onClick, children }: { provider: "google"; onClick: () => void; children: React.ReactNode }) => (
   <Button variant="outline" onClick={onClick} fullWidth>
     <GoogleIcon className="h-5 w-5" />
     {children}
@@ -277,9 +277,9 @@ const SignUp = () => {
         setError('Signup completed but no user data returned. Please try signing in.');
         setIsLoading(false);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Unexpected error during signup:', err);
-      setError(err.message || 'An unexpected error occurred');
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
       setIsLoading(false);
     }
   };
@@ -300,7 +300,7 @@ const SignUp = () => {
         setError(error.message);
         setIsLoading(false);
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
       setIsLoading(false);
     }

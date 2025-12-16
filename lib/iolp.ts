@@ -60,6 +60,7 @@ export interface FederalNeighborhoodScore {
   vacantRSF: number;
   density: number; // properties per square mile
   percentile: number; // 0-100
+  [key: string]: unknown; // Allow additional properties for type compatibility
 }
 
 export interface ViewportBounds {

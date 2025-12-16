@@ -72,7 +72,7 @@ export default function Testimonials() {
                     <Card>
                         <CardContent className="h-full pt-6">
                             <blockquote className="grid h-full grid-rows-[1fr_auto] gap-6">
-                                <p>As a small business, we can't afford to waste resources on losing bids. ProposalIQ's bid scoring has been incredibly accurate in helping us identify which opportunities to pursue. Absolutely essential tool!</p>
+                                <p>As a small business, we can&apos;t afford to waste resources on losing bids. ProposalIQ's bid scoring has been incredibly accurate in helping us identify which opportunities to pursue. Absolutely essential tool!</p>
 
                                 <div className="grid items-center gap-3 [grid-template-columns:auto_1fr]">
                                     <Avatar className="size-12">

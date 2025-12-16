@@ -158,7 +158,7 @@ export function QualificationCheckModal({
               Check if your company qualifies for this opportunity based on your company profile.
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">What we'll check:</h4>
+              <h4 className="font-medium text-blue-900 mb-2">What we&apos;ll check:</h4>
               <ul className="text-sm text-blue-800 space-y-1">
                 <li>• NAICS code match</li>
                 <li>• Set-aside certification requirements</li>

@@ -67,6 +67,9 @@ export interface SAMOpportunity {
     href: string;
   }>;
   resourceLinks: string[];
+  // Additional properties used in the application
+  fullParentPathName?: string;
+  modifiedDate?: string;
 }
 
 export interface SAMResponse {

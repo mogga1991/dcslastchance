@@ -3,7 +3,7 @@
  * Handles PDF uploads, signed URL generation, and document management
  */
 
-import { supabase, supabaseAdmin } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 const BUCKET_NAME = "piq-documents";
 
@@ -20,9 +20,11 @@ export type DocumentMetadata = {
   opportunity_id: string;
   filename: string;
   storage_path: string;
-  mime_type: string;
-  size_bytes: number;
-  page_count?: number;
+  mime_type: string | null;
+  size_bytes: number | null;
+  page_count?: number | null;
+  extracted_text?: string | null;
+  extracted_meta?: Record<string, unknown>;
   created_at: string;
 };
 
@@ -30,7 +32,7 @@ export type DocumentMetadata = {
  * Upload a document to Supabase Storage and create database record
  */
 export async function uploadDocument(params: UploadDocumentParams): Promise<DocumentMetadata> {
-  const { orgId, opportunityId, file, userId } = params;
+  const { orgId, opportunityId, file } = params;
 
   // Generate unique storage path: org_id/opportunity_id/filename_timestamp
   const timestamp = Date.now();
@@ -69,7 +71,13 @@ export async function uploadDocument(params: UploadDocumentParams): Promise<Docu
     throw new Error(`Failed to create document record: ${dbError.message}`);
   }
 
-  return docData;
+  // Transform Json type to match DocumentMetadata
+  return {
+    ...docData,
+    extracted_meta: docData.extracted_meta && typeof docData.extracted_meta === 'object'
+      ? docData.extracted_meta as Record<string, unknown>
+      : undefined
+  };
 }
 
 /**
@@ -174,7 +182,7 @@ export async function updateDocumentMetadata(
 ) {
   const { error } = await supabase
     .from("piq_documents")
-    .update(updates)
+    .update(updates as any)
     .eq("id", documentId);
 
   if (error) {

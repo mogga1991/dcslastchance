@@ -14,7 +14,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
-import { sql } from "./db";
+import { sql, query } from "./db";
 
 // ============================================
 // TYPES
@@ -50,7 +50,7 @@ export interface UserRecord {
  *   // session.userId is guaranteed to exist
  * }
  */
-export async function requireAuth(request?: NextRequest): Promise<AuthSession> {
+export async function requireAuth(_request?: NextRequest): Promise<AuthSession> {
   const supabase = await createClient();
   const { data: { user: authUser } } = await supabase.auth.getUser();
 
@@ -61,12 +61,12 @@ export async function requireAuth(request?: NextRequest): Promise<AuthSession> {
   const userId = authUser.id;
 
   // Fetch user details including org and role from database
-  const userResult = await sql<UserRecord>`
+  const userResult = await sql`
     SELECT id, email, role, organization_id, account_manager_id
     FROM "user"
     WHERE id = ${userId}
     LIMIT 1
-  `;
+  ` as unknown as UserRecord[];
 
   const user = userResult[0];
 
@@ -114,12 +114,12 @@ export async function requireOrgAccess(
   userId: string,
   targetOrgId: string
 ): Promise<void> {
-  const userResult = await sql<{ organization_id: string | null }>`
+  const userResult = await sql`
     SELECT organization_id
     FROM "user"
     WHERE id = ${userId}
     LIMIT 1
-  `;
+  ` as unknown as { organization_id: string | null }[];
 
   const user = userResult[0];
 
@@ -147,7 +147,7 @@ export async function requireResourceOrgAccess(
   table: string,
   resourceId: string
 ): Promise<void> {
-  const query = `
+  const queryText = `
     SELECT r.organization_id
     FROM "${table}" r
     JOIN "user" u ON r.user_id = u.id
@@ -155,7 +155,7 @@ export async function requireResourceOrgAccess(
     LIMIT 1
   `;
 
-  const result = await sql(query, [resourceId]);
+  const result = await query(queryText, [resourceId]);
   const resource = result[0] as { organization_id: string | null } | undefined;
 
   if (!resource) {
@@ -167,7 +167,7 @@ export async function requireResourceOrgAccess(
     const ownerQuery = `
       SELECT user_id FROM "${table}" WHERE id = $1 LIMIT 1
     `;
-    const ownerResult = await sql(ownerQuery, [resourceId]);
+    const ownerResult = await query(ownerQuery, [resourceId]);
     const owner = ownerResult[0] as { user_id: string } | undefined;
 
     if (owner?.user_id !== userId) {
@@ -196,12 +196,12 @@ export async function requireRole(
   userId: string,
   allowedRoles: UserRole[]
 ): Promise<UserRole> {
-  const userResult = await sql<{ role: UserRole }>`
+  const userResult = await sql`
     SELECT role
     FROM "user"
     WHERE id = ${userId}
     LIMIT 1
-  `;
+  ` as unknown as { role: UserRole }[];
 
   const user = userResult[0];
 
@@ -251,11 +251,11 @@ export async function requireOwnership(
   table: string,
   resourceId: string
 ): Promise<void> {
-  const query = `
+  const queryText = `
     SELECT user_id FROM "${table}" WHERE id = $1 LIMIT 1
   `;
 
-  const result = await sql(query, [resourceId]);
+  const result = await query(queryText, [resourceId]);
   const resource = result[0] as { user_id: string } | undefined;
 
   if (!resource) {
@@ -299,13 +299,13 @@ export async function requireCredits(
   userId: string,
   requiredAmount: number = 1
 ): Promise<number> {
-  const result = await sql<{ balance_after: number }>`
+  const result = await sql`
     SELECT balance_after
     FROM credit_transaction
     WHERE user_id = ${userId}
     ORDER BY "createdAt" DESC
     LIMIT 1
-  `;
+  ` as unknown as { balance_after: number }[];
 
   const currentBalance = result[0]?.balance_after || 0;
 
@@ -372,12 +372,12 @@ export async function withAuthErrorHandling<T>(
  * Get user's full details
  */
 export async function getUserDetails(userId: string): Promise<UserRecord> {
-  const result = await sql<UserRecord>`
+  const result = await sql`
     SELECT id, email, role, organization_id, account_manager_id
     FROM "user"
     WHERE id = ${userId}
     LIMIT 1
-  `;
+  ` as unknown as UserRecord[];
 
   const user = result[0];
 
@@ -406,12 +406,12 @@ export async function getOrgMembers(userId: string): Promise<UserRecord[]> {
     throw new AuthError("User is not part of an organization", 400);
   }
 
-  const members = await sql<UserRecord>`
+  const members = await sql`
     SELECT id, email, role, organization_id, account_manager_id
     FROM "user"
     WHERE organization_id = ${user.organization_id}
     ORDER BY role, email
-  `;
+  ` as unknown as UserRecord[];
 
   return members;
 }

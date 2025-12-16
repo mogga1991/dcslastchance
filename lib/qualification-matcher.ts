@@ -73,7 +73,7 @@ export function checkQualification(
   const recommendations: string[] = [];
   const blockers: string[] = [];
 
-  Object.entries(checks).forEach(([key, check]) => {
+  Object.entries(checks).forEach(([_key, check]) => {
     if (check.status === "fail") {
       blockers.push(check.details);
     } else if (check.status === "partial") {
@@ -133,16 +133,23 @@ function checkNaicsMatch(
 
   // Check for same industry (first 2 digits)
   const oppPrefix = oppNaics.substring(0, 2);
+
+  // Helper to get NAICS code as string
+  const getNaicsString = (code: string | { code: string; name: string }): string => {
+    return typeof code === 'string' ? code : code.code;
+  };
+
   const hasRelatedNaics =
     profile.primary_naics?.startsWith(oppPrefix) ||
-    profile.naics_codes?.some((code) => code.startsWith(oppPrefix));
+    profile.naics_codes?.some((code) => getNaicsString(code).startsWith(oppPrefix));
 
   if (hasRelatedNaics) {
+    const firstCode = profile.naics_codes?.[0];
     return {
       status: "partial",
       score: 60,
       required: oppNaics,
-      yours: profile.primary_naics || profile.naics_codes?.[0] || "None",
+      yours: profile.primary_naics || (firstCode ? getNaicsString(firstCode) : "None"),
       details: `Related industry sector (${oppPrefix}), but not exact match. May still be eligible.`,
     };
   }
@@ -325,7 +332,9 @@ function checkGeographicMatch(
   opportunity: SAMOpportunity,
   profile: CompanyProfile
 ): QualificationCheck {
-  const oppState = opportunity.officeAddress?.state || opportunity.placeOfPerformance?.state;
+  // Extract state code from either simple string or object format
+  const rawState = opportunity.officeAddress?.state || opportunity.placeOfPerformance?.state;
+  const oppState = typeof rawState === 'string' ? rawState : (rawState?.code || rawState?.name || '');
 
   if (!oppState) {
     return {
@@ -339,7 +348,7 @@ function checkGeographicMatch(
 
   const coverage = profile.geographic_coverage || [];
 
-  if (coverage.includes(oppState)) {
+  if (coverage.includes(oppState as any)) {
     return {
       status: "pass",
       score: 100,

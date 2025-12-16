@@ -2,13 +2,13 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Shield as _Shield, AlertCircle, CheckCircle2 } from "lucide-react";
 
 interface ComplianceRiskProps {
   onUpdate?: () => void;
 }
 
-export default function ComplianceRisk({ onUpdate }: ComplianceRiskProps) {
+export default function ComplianceRisk({ onUpdate: _onUpdate }: ComplianceRiskProps) {
   const complianceItems = [
     { name: "Insurance COI", status: "missing", required: true },
     { name: "Bonding Capacity", status: "missing", required: true },

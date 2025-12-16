@@ -10,10 +10,7 @@ import {
   AlertTriangle,
   TrendingUp,
   Building2,
-  Calendar,
-  Sparkles,
   ArrowRight,
-  Check,
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -138,11 +135,11 @@ export default function LandingPage() {
                 <AlertTriangle className="h-6 w-6 text-orange-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                You're missing opportunities because you can't see where federal presence is
+                You&apos;re missing opportunities because you can&apos;t see where federal presence is
                 growing
               </h3>
               <p className="text-gray-600">
-                Without visibility into federal building locations and trends, you're always
+                Without visibility into federal building locations and trends, you&apos;re always
                 reacting instead of leading.
               </p>
             </div>
@@ -153,7 +150,7 @@ export default function LandingPage() {
                 <TrendingUp className="h-6 w-6 text-yellow-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                Lease expirations mean future RFPs—but you can't predict them
+                Lease expirations mean future RFPs—but you can&apos;t predict them
               </h3>
               <p className="text-gray-600">
                 By the time an RFP is posted, your competitors are already preparing. You need
@@ -203,7 +200,7 @@ export default function LandingPage() {
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
                   Know which federal leases expire in the next 24 months. Get ahead of RFPs
-                  before they're even posted on SAM.gov.
+                  before they&apos;re even posted on SAM.gov.
                 </p>
               </div>
             </div>

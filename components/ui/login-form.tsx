@@ -83,7 +83,7 @@ export function SmokeyBackground({
   backdropBlurAmount = "sm",
   color = "#60A5FA", // Light blue for light mode
   className = "",
-}: SmokeyBackgroundProps): JSX.Element {
+}: SmokeyBackgroundProps): React.ReactElement {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
@@ -149,7 +149,7 @@ export function SmokeyBackground({
     const iMouseLocation = gl.getUniformLocation(program, "iMouse");
     const uColorLocation = gl.getUniformLocation(program, "u_color");
 
-    let startTime = Date.now();
+    const startTime = Date.now();
     const [r, g, b] = hexToRgb(color);
     gl.uniform3f(uColorLocation, r, g, b);
 
@@ -258,9 +258,9 @@ export function LoginForm() {
         // Redirect to dashboard
         window.location.href = "/dashboard";
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Auth error:", error);
-      setError(error.message || (isSignUp ? "Failed to sign up" : "Failed to sign in"));
+      setError(error instanceof Error ? error.message : (isSignUp ? "Failed to sign up" : "Failed to sign in"));
       setLoading(false);
     }
   };

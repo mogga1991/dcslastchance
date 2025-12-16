@@ -6,13 +6,14 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
 
     // Extract parameters
-    const lat = parseFloat(searchParams.get("lat") || "0");
-    const lng = parseFloat(searchParams.get("lng") || "0");
+    const lat = parseFloat(searchParams.get("lat") || "");
+    const lng = parseFloat(searchParams.get("lng") || "");
     const radiusMiles = parseFloat(searchParams.get("radiusMiles") || "5");
 
-    if (!lat || !lng) {
+    // ✅ FIXED: Use isNaN() to properly validate coordinates (lat=0 and lng=0 are valid!)
+    if (isNaN(lat) || isNaN(lng)) {
       return NextResponse.json(
-        { error: "Missing lat/lng parameters" },
+        { error: "Missing or invalid lat/lng parameters" },
         { status: 400 }
       );
     }

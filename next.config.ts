@@ -4,10 +4,10 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: false,
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false, // ✅ FIXED: Now TypeScript errors will block builds
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false, // ✅ FIXED: Now ESLint errors will block builds
   },
   images: {
     remotePatterns: [

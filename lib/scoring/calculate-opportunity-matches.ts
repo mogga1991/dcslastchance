@@ -1,5 +1,5 @@
 import type { SAMOpportunity } from '@/lib/sam-gov';
-import type { BrokerListing } from '@/types/broker-listing';
+import type { BrokerListing, PublicBrokerListing } from '@/types/broker-listing';
 import { calculateMatchScore } from './calculate-match-score';
 import { extractOpportunityRequirements } from './extract-opportunity-requirements';
 import type { MatchScoreResult, ExperienceProfile } from './types';
@@ -10,10 +10,10 @@ import type { MatchScoreResult, ExperienceProfile } from './types';
  */
 export function calculateOpportunityMatchScores(
   opportunity: SAMOpportunity,
-  listings: BrokerListing[]
+  listings: (BrokerListing | PublicBrokerListing)[]
 ): {
   bestMatch: MatchScoreResult | null;
-  matchingListings: Array<{ listing: BrokerListing; score: MatchScoreResult }>;
+  matchingListings: Array<{ listing: BrokerListing | PublicBrokerListing; score: MatchScoreResult }>;
 } {
   if (listings.length === 0) {
     return { bestMatch: null, matchingListings: [] };
@@ -107,7 +107,7 @@ export function calculateOpportunityMatchScores(
  */
 export function calculateAllOpportunityMatches(
   opportunities: SAMOpportunity[],
-  listings: BrokerListing[]
+  listings: (BrokerListing | PublicBrokerListing)[]
 ): Map<string, MatchScoreResult> {
   const matchMap = new Map<string, MatchScoreResult>();
 

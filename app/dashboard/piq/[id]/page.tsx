@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
@@ -46,11 +45,13 @@ async function getAnalysisData(analysisId: string) {
     .single();
 
   // Get document
-  const { data: document } = await supabaseAdmin
-    .from("piq_documents")
-    .select("*")
-    .eq("id", analysis.document_id)
-    .single();
+  const { data: document } = analysis.document_id
+    ? await supabaseAdmin
+        .from("piq_documents")
+        .select("*")
+        .eq("id", analysis.document_id)
+        .single()
+    : { data: null };
 
   return {
     analysis: analysis.analysis as OpportunityAnalysis,

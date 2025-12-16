@@ -1,7 +1,40 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { CompanyProfile, Analysis, AnalysisCredit } from "@/lib/services";
+
+// Define types locally to avoid import conflicts with lib/db.ts
+interface CompanyProfile {
+  id: string;
+  user_id: string;
+  naics_codes?: string[];
+  core_competencies?: string[];
+  certifications?: string[];
+  [key: string]: any;
+}
+
+interface Analysis {
+  id: string;
+  user_id: string;
+  document_name?: string;
+  extracted_data: any;
+  bid_score?: number;
+  status?: string;
+  title?: string;
+  agency?: string;
+  solicitation_number?: string;
+  created_at?: string;
+  createdAt?: Date;
+  [key: string]: any;
+}
+
+interface AnalysisCredit {
+  id: string;
+  user_id: string;
+  credits: number;
+  source: string;
+  expires_at?: Date;
+  createdAt: Date;
+}
 
 // ============================================
 // COMPANY PROFILE HOOK

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
  * GET /api/iolp/alerts
  * Get all lease expiration alerts for the authenticated user
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createClient();
 

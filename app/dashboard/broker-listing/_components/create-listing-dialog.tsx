@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +23,6 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Loader2, ChevronDown, ChevronUp } from "lucide-react";
-import { cn } from "@/lib/utils";
 import type { BrokerListingInput, BuildingClass } from "@/types/broker-listing";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -46,8 +46,44 @@ export function CreateListingDialog({ onSubmit, userEmail }: CreateListingDialog
   const [showAdditionalDetails, setShowAdditionalDetails] = useState(false);
   const [selectedState, setSelectedState] = useState<string>("");
   const [selectedBuildingClass, setSelectedBuildingClass] = useState<BuildingClass | "">("");
+  const [selectedListerRole, setSelectedListerRole] = useState<'owner' | 'broker' | 'agent' | 'salesperson' | ''>('');
+  const [userProfile, setUserProfile] = useState<{
+    name?: string;
+    email?: string;
+    phone?: string;
+    lister_role?: string;
+    license_number?: string;
+    brokerage_company?: string;
+  }>({});
   const { toast } = useToast();
   const router = useRouter();
+  const supabase = createClient();
+
+  // Load user profile data
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserProfile({
+            name: user.user_metadata?.full_name || user.user_metadata?.name,
+            email: user.email,
+            phone: user.user_metadata?.phone,
+            lister_role: user.user_metadata?.lister_role,
+            license_number: user.user_metadata?.license_number,
+            brokerage_company: user.user_metadata?.brokerage_company,
+          });
+          setSelectedListerRole(user.user_metadata?.lister_role || '');
+        }
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+      }
+    };
+
+    if (open) {
+      loadUserProfile();
+    }
+  }, [open, supabase]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -66,6 +102,13 @@ export function CreateListingDialog({ onSubmit, userEmail }: CreateListingDialog
         available_date: formData.get("available_date") as string,
         building_class: selectedBuildingClass as BuildingClass,
         broker_email: formData.get("broker_email") as string,
+
+        // Contact/Lister information
+        broker_name: formData.get("broker_name") as string || undefined,
+        broker_phone: formData.get("broker_phone") as string || undefined,
+        lister_role: selectedListerRole as 'owner' | 'broker' | 'agent' | 'salesperson' | undefined,
+        license_number: formData.get("license_number") as string || undefined,
+        brokerage_company: formData.get("brokerage_company") as string || undefined,
 
         // Optional fields
         ada_accessible: formData.get("ada_accessible") === "on",
@@ -250,17 +293,96 @@ export function CreateListingDialog({ onSubmit, userEmail }: CreateListingDialog
             <h3 className="font-semibold text-sm">Contact Information</h3>
 
             <div className="space-y-2">
-              <Label htmlFor="broker_email">
-                Contact Email <span className="text-red-500">*</span>
+              <Label htmlFor="lister_role">
+                Your Role <span className="text-red-500">*</span>
+              </Label>
+              <Select value={selectedListerRole} onValueChange={(value) => setSelectedListerRole(value as 'owner' | 'broker' | 'agent' | 'salesperson')} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="owner">Property Owner</SelectItem>
+                  <SelectItem value="broker">Broker</SelectItem>
+                  <SelectItem value="agent">Real Estate Agent</SelectItem>
+                  <SelectItem value="salesperson">Salesperson</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="broker_name">
+                Full Name <span className="text-red-500">*</span>
               </Label>
               <Input
-                id="broker_email"
-                name="broker_email"
-                type="email"
-                defaultValue={userEmail}
-                placeholder="you@example.com"
+                id="broker_name"
+                name="broker_name"
+                defaultValue={userProfile.name}
+                placeholder="John Smith"
                 required
               />
+            </div>
+
+            {selectedListerRole && selectedListerRole !== 'owner' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="brokerage_company">
+                    Brokerage Company <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="brokerage_company"
+                    name="brokerage_company"
+                    defaultValue={userProfile.brokerage_company}
+                    placeholder="ABC Commercial Real Estate"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="license_number">
+                    License Number
+                    {(selectedListerRole === 'broker' || selectedListerRole === 'agent') && (
+                      <span className="text-red-500 ml-1">*</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="license_number"
+                    name="license_number"
+                    defaultValue={userProfile.license_number}
+                    placeholder="Enter license number"
+                    required={selectedListerRole === 'broker' || selectedListerRole === 'agent'}
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="broker_email">
+                  Email <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="broker_email"
+                  name="broker_email"
+                  type="email"
+                  defaultValue={userProfile.email || userEmail}
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="broker_phone">
+                  Phone <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="broker_phone"
+                  name="broker_phone"
+                  type="tel"
+                  defaultValue={userProfile.phone}
+                  placeholder="(555) 123-4567"
+                  required
+                />
+              </div>
             </div>
           </div>
 

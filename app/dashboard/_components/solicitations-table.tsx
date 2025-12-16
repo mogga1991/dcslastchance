@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -14,7 +13,6 @@ import {
 import { Search, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import type { SAMOpportunity } from "@/lib/sam-gov";
 import { SolicitationDetailPanel } from "./solicitation-detail-panel";
-import { getDaysUntilDeadline } from "@/lib/sam-gov";
 
 export function SolicitationsTable() {
   const [opportunities, setOpportunities] = useState<SAMOpportunity[]>([]);
@@ -34,11 +32,7 @@ export function SolicitationsTable() {
   const [totalRecords, setTotalRecords] = useState(0);
   const limit = 25;
 
-  useEffect(() => {
-    fetchOpportunities();
-  }, [currentPage, noticeType, department, sortBy]);
-
-  const fetchOpportunities = async () => {
+  const fetchOpportunities = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -71,7 +65,11 @@ export function SolicitationsTable() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, noticeType, department]);
+
+  useEffect(() => {
+    fetchOpportunities();
+  }, [fetchOpportunities]);
 
   const handleRowClick = (opportunity: SAMOpportunity) => {
     setSelectedOpportunity(opportunity);
@@ -158,45 +156,47 @@ export function SolicitationsTable() {
       </div>
 
       {/* Filters */}
-      <div className="px-6 py-4 border-b bg-gray-50 flex gap-4">
-        <div className="relative flex-1">
+      <div className="px-4 sm:px-6 py-4 border-b bg-gray-50 flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             type="text"
             placeholder="Search by keyword, notice ID, or agency..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 w-full"
           />
         </div>
 
-        <Select value={noticeType} onValueChange={setNoticeType}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Notice Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="o">Combined Synopsis/Solicitation</SelectItem>
-            <SelectItem value="p">Presolicitation</SelectItem>
-            <SelectItem value="k">Solicitation</SelectItem>
-            <SelectItem value="r">Sources Sought</SelectItem>
-            <SelectItem value="s">Special Notice</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
+          <Select value={noticeType} onValueChange={setNoticeType}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Notice Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="o">Combined Synopsis/Solicitation</SelectItem>
+              <SelectItem value="p">Presolicitation</SelectItem>
+              <SelectItem value="k">Solicitation</SelectItem>
+              <SelectItem value="r">Sources Sought</SelectItem>
+              <SelectItem value="s">Special Notice</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Select value={department} onValueChange={setDepartment}>
-          <SelectTrigger className="w-[220px]">
-            <SelectValue placeholder="Agency" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Agencies</SelectItem>
-            <SelectItem value="DEPT OF DEFENSE">Dept of Defense</SelectItem>
-            <SelectItem value="VETERANS AFFAIRS, DEPARTMENT OF">Veterans Affairs</SelectItem>
-            <SelectItem value="General Services Administration">General Services Admin</SelectItem>
-            <SelectItem value="DEPT OF HOMELAND SECURITY">Homeland Security</SelectItem>
-            <SelectItem value="DEPT OF ENERGY">Energy</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={department} onValueChange={setDepartment}>
+            <SelectTrigger className="w-full sm:w-[220px]">
+              <SelectValue placeholder="Agency" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Agencies</SelectItem>
+              <SelectItem value="DEPT OF DEFENSE">Dept of Defense</SelectItem>
+              <SelectItem value="VETERANS AFFAIRS, DEPARTMENT OF">Veterans Affairs</SelectItem>
+              <SelectItem value="General Services Administration">General Services Admin</SelectItem>
+              <SelectItem value="DEPT OF HOMELAND SECURITY">Homeland Security</SelectItem>
+              <SelectItem value="DEPT OF ENERGY">Energy</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Table */}
@@ -222,28 +222,28 @@ export function SolicitationsTable() {
               className="p-8 cursor-pointer transition-all hover:bg-blue-50/30 border-b border-gray-100 last:border-b-0"
             >
               {/* SAM.gov Style Layout */}
-              <div className="flex gap-8">
+              <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                 {/* Left: Main Content */}
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   {/* Title */}
-                  <h3 className="text-lg font-semibold text-[#005EA2] hover:underline mb-3 leading-snug">
+                  <h3 className="text-base sm:text-lg font-semibold text-[#005EA2] hover:underline mb-3 leading-snug">
                     {opportunity.title}
                   </h3>
 
                   {/* Notice ID */}
-                  <p className="text-sm font-medium text-gray-900 mb-3">
+                  <p className="text-xs sm:text-sm font-medium text-gray-900 mb-3 break-all">
                     Notice ID: <span className="font-mono">{opportunity.solicitationNumber || opportunity.noticeId}</span>
                   </p>
 
                   {/* Description */}
-                  <p className="text-sm text-gray-700 leading-relaxed line-clamp-2 mb-4">
+                  <p className="text-xs sm:text-sm text-gray-700 leading-relaxed line-clamp-2 mb-4">
                     {typeof opportunity.description === "string" && opportunity.description.startsWith("http")
                       ? "View full description on SAM.gov"
                       : opportunity.description || "No description available"}
                   </p>
 
                   {/* Agency Info - SAM.gov style */}
-                  <div className="grid grid-cols-3 gap-x-8 gap-y-2 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 lg:gap-x-8 gap-y-2 text-xs sm:text-sm">
                     <div>
                       <span className="text-gray-600">Department/Ind.Agency</span>
                       <p className="font-medium text-[#005EA2] mt-0.5">
@@ -266,7 +266,7 @@ export function SolicitationsTable() {
                 </div>
 
                 {/* Right: Metadata Sidebar - SAM.gov style */}
-                <div className="w-64 flex-shrink-0 bg-gray-50 -mr-8 -my-8 p-6 border-l border-gray-200">
+                <div className="w-full lg:w-64 flex-shrink-0 bg-gray-50 lg:-mr-8 lg:-my-8 p-4 lg:p-6 lg:border-l border-t lg:border-t-0 border-gray-200 rounded lg:rounded-none">
                   <div className="space-y-4">
                     {/* Contract Opportunities Badge */}
                     <div className="bg-white border border-gray-300 px-3 py-1.5 rounded text-center">
@@ -339,28 +339,30 @@ export function SolicitationsTable() {
 
       {/* Pagination */}
       {!loading && opportunities.length > 0 && (
-        <div className="px-6 py-4 border-t flex items-center justify-between">
-          <div className="text-sm text-gray-600">
+        <div className="px-4 sm:px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
             Page {currentPage} of {totalPages}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 order-1 sm:order-2 w-full sm:w-auto">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
+              className="flex-1 sm:flex-none h-10"
             >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Previous
+              <ChevronLeft className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Previous</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
+              className="flex-1 sm:flex-none h-10"
             >
-              Next
-              <ChevronRight className="h-4 w-4 ml-1" />
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="h-4 w-4 sm:ml-1" />
             </Button>
           </div>
         </div>

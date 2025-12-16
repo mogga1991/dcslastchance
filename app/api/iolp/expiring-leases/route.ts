@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       critical: leasesWithDays.filter(l => l.urgency === 'critical'),
       high: leasesWithDays.filter(l => l.urgency === 'warning'),
       medium: leasesWithDays.filter(l => l.urgency === 'normal'),
-      low: [] as any[]
+      low: [] as typeof leasesWithDays
     };
 
     return NextResponse.json({

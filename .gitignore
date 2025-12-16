@@ -50,3 +50,6 @@ AuthKey_8LYJ3Y87D4.p8
 # Prevent .env clean files from being committed
 *.env.local.clean
 *.env.local.clean-example
+
+# Archived development files
+.archive/

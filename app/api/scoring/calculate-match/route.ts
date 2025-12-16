@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         .eq('user_id', property.broker_id || property.owner_id)
         .single();
       brokerProfile = data;
-    } catch (err) {
+    } catch {
       console.log('Broker profile not found, using defaults');
     }
 
@@ -215,12 +215,12 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper function to extract requirements from opportunity
-function extractRequirementsFromOpportunity(opportunity: any) {
+function extractRequirementsFromOpportunity(opportunity: Record<string, unknown>) {
   // Parse location requirements
   const locationRequirement: LocationRequirement = {
-    city: opportunity.pop_city_name || null,
-    state: opportunity.pop_state_code || 'DC',
-    zip: opportunity.pop_zip || null,
+    city: typeof opportunity.pop_city_name === 'string' ? opportunity.pop_city_name : null,
+    state: typeof opportunity.pop_state_code === 'string' ? opportunity.pop_state_code : 'DC',
+    zip: typeof opportunity.pop_zip === 'string' ? opportunity.pop_zip : null,
     delineatedArea: null, // Would need to parse from description/full_data
     radiusMiles: 10, // Default 10 mile radius for GSA opportunities
     centralPoint: null, // Would need geocoding from city/state
@@ -264,17 +264,17 @@ function extractRequirementsFromOpportunity(opportunity: any) {
   };
 
   // Parse timeline requirements
-  const occupancyDate = opportunity.response_deadline
-    ? new Date(new Date(opportunity.response_deadline).getTime() + 90 * 24 * 60 * 60 * 1000) // 90 days after deadline
-    : new Date(Date.now() + 180 * 24 * 60 * 60 * 1000); // 180 days from now
+  const responseDeadline = typeof opportunity.response_deadline === 'string' || typeof opportunity.response_deadline === 'number' || opportunity.response_deadline instanceof Date
+    ? new Date(opportunity.response_deadline)
+    : new Date();
+
+  const occupancyDate = new Date(responseDeadline.getTime() + 90 * 24 * 60 * 60 * 1000); // 90 days after deadline
 
   const timelineRequirement: TimelineRequirement = {
     occupancyDate,
     firmTermMonths: 60, // 5 years is typical
     totalTermMonths: 240, // 20 years with options
-    responseDeadline: opportunity.response_deadline
-      ? new Date(opportunity.response_deadline)
-      : new Date(),
+    responseDeadline,
   };
 
   return {

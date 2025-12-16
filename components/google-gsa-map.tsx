@@ -87,7 +87,9 @@ export default function GoogleGSAMap({
   selectedOpportunity,
 }: GoogleGSAMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const map = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markers = useRef<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 

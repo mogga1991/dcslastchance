@@ -58,7 +58,7 @@ export default function PricingTable({
     checkAuth();
   }, []);
 
-  const handleCheckout = async (productId: string, slug: string) => {
+  const _handleCheckout = async (productId: string, slug: string) => {
     if (isAuthenticated === false) {
       router.push("/sign-in");
       return;
@@ -76,7 +76,7 @@ export default function PricingTable({
     }
   };
 
-  const handleManageSubscription = async () => {
+  const _handleManageSubscription = async () => {
     try {
       await authClient.customer.portal();
     } catch (error) {
@@ -85,10 +85,10 @@ export default function PricingTable({
     }
   };
 
-  const STARTER_TIER = process.env.NEXT_PUBLIC_STARTER_TIER || "placeholder-tier";
-  const STARTER_SLUG = process.env.NEXT_PUBLIC_STARTER_SLUG || "placeholder-slug";
+  const _STARTER_TIER = process.env.NEXT_PUBLIC_STARTER_TIER || "placeholder-tier";
+  const _STARTER_SLUG = process.env.NEXT_PUBLIC_STARTER_SLUG || "placeholder-slug";
 
-  const isCurrentPlan = (tierProductId: string) => {
+  const _isCurrentPlan = (tierProductId: string) => {
     return (
       subscriptionDetails.hasSubscription &&
       subscriptionDetails.subscription?.productId === tierProductId &&
@@ -96,7 +96,7 @@ export default function PricingTable({
     );
   };
 
-  const formatDate = (date: Date) => {
+  const _formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -105,26 +105,26 @@ export default function PricingTable({
   };
 
   return (
-    <section className="flex flex-col items-center justify-center px-4 mb-24 w-full">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold tracking-tight mb-4">
+    <section className="flex flex-col items-center justify-center px-4 sm:px-6 mb-24 w-full">
+      <div className="text-center mb-8 sm:mb-12">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-3 sm:mb-4">
           Choose Your Plan
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
           Scale your business with our flexible pricing options. Start free and
           upgrade as you grow.
         </p>
       </div>
 
       {/* Pay-Per-Proposal Section */}
-      <div className="w-full max-w-6xl mb-16">
+      <div className="w-full max-w-6xl mb-16 px-4">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-semibold mb-2">Pay Per Proposal</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-2">Pay Per Proposal</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">
             No subscription needed. Pay only for what you use.
           </p>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Quick Scan</CardTitle>

@@ -7,6 +7,7 @@ import type { MatchScoreResult } from './types';
 
 export function generateMockPropertyScore(propertyId: string): MatchScoreResult {
   // Mock property data based on the broker listings
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mockProperties: Record<string, any> = {
     '1': {
       // Capitol Gateway Office Plaza

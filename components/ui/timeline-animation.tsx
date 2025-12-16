@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 interface TimelineContentProps {
   children: React.ReactNode
   animationNum: number
-  timelineRef?: React.RefObject<HTMLElement>
+  timelineRef?: React.RefObject<HTMLElement | null>
   customVariants?: Variants
   className?: string
   as?: ElementType
@@ -17,7 +17,7 @@ interface TimelineContentProps {
 export function TimelineContent({
   children,
   animationNum,
-  timelineRef,
+  timelineRef: _timelineRef,
   customVariants,
   className,
   as: Component = "div",

@@ -90,10 +90,10 @@ export interface Opportunity {
   pop_zip?: string;
   pop_country?: string;
   url?: string;
-  resource_links?: any;
+  resource_links?: Record<string, unknown>;
   status?: string;
   active?: boolean;
-  raw_data?: any;
+  raw_data?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -119,7 +119,7 @@ export interface OpportunityMatch {
   gaps?: string[];
   matching_capabilities?: string[];
   relevant_past_performance?: string[];
-  ai_analysis?: any;
+  ai_analysis?: Record<string, unknown>;
   win_probability?: number;
   user_action?: string;
   notes?: string;
@@ -135,16 +135,16 @@ export interface Analysis {
   document_name?: string;
   document_url?: string;
   document_type?: string;
-  extracted_data: any;
+  extracted_data: Record<string, unknown>;
   bid_score?: number;
   bid_recommendation?: string;
-  score_breakdown?: any;
-  ai_analysis?: any;
+  score_breakdown?: Record<string, unknown>;
+  ai_analysis?: Record<string, unknown>;
   strengths?: string[];
   weaknesses?: string[];
   gaps?: string[];
   recommended_actions?: string[];
-  compliance_matrix?: any;
+  compliance_matrix?: Record<string, unknown>;
   status?: string;
   decision?: string;
   createdAt: Date;
@@ -169,13 +169,15 @@ function getSQL() {
 }
 
 export const sql = new Proxy({} as ReturnType<typeof neon>, {
-  apply: (target, thisArg, argumentsList) => {
-    return getSQL().apply(thisArg, argumentsList);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  apply: (_target: unknown, _thisArg: any, argumentsList: any[]) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (getSQL() as any)(...argumentsList);
   },
   get: (target, prop) => {
     return getSQL()[prop as keyof ReturnType<typeof neon>];
   }
-});
+}) as ReturnType<typeof neon>;
 
 // ============================================================================
 // QUERY HELPERS
@@ -183,10 +185,12 @@ export const sql = new Proxy({} as ReturnType<typeof neon>, {
 
 export async function query<T = any>(
   queryText: string,
-  params?: any[]
+  params?: unknown[]
 ): Promise<T[]> {
   try {
-    return await sql(queryText, params);
+    const sqlFunc = getSQL() as any;
+    const result = await sqlFunc(queryText, params || []);
+    return result as T[];
   } catch (error) {
     console.error("Database query error:", error);
     throw error;
@@ -195,11 +199,12 @@ export async function query<T = any>(
 
 export async function queryOne<T = any>(
   queryText: string,
-  params?: any[]
+  params?: unknown[]
 ): Promise<T | null> {
   try {
-    const result = await sql(queryText, params);
-    return result[0] || null;
+    const sqlFunc = getSQL() as any;
+    const result = await sqlFunc(queryText, params || []);
+    return (result as any)[0] || null;
   } catch (error) {
     console.error("Database query error:", error);
     throw error;
@@ -221,7 +226,7 @@ export async function transaction<T>(
 // Generic CRUD helpers with proper parameter placeholders
 export async function insert<T = any>(
   table: string,
-  data: Record<string, any>
+  data: Record<string, unknown>
 ): Promise<T> {
   const keys = Object.keys(data);
   const values = Object.values(data);
@@ -242,7 +247,7 @@ export async function insert<T = any>(
 export async function update<T = any>(
   table: string,
   id: string,
-  data: Record<string, any>
+  data: Record<string, unknown>
 ): Promise<T> {
   const keys = Object.keys(data);
   const values = Object.values(data);

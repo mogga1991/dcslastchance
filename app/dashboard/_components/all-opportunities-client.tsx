@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Calendar, ExternalLink, Loader2, DollarSign } from "lucide-react";
+import { Search, MapPin, Calendar, ExternalLink, Loader2 } from "lucide-react";
 import { SAMOpportunity } from "@/lib/sam-gov";
 import { Card } from "@/components/ui/card";
 

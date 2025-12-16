@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Building2, DollarSign, Calendar, Eye, Star, ExternalLink } from "lucide-react";
+import { MapPin, Eye, Star, ExternalLink } from "lucide-react";
+import Image from "next/image";
 import type { PublicBrokerListing, ListerRole } from "@/types/broker-listing";
 
 // Array of placeholder office/building images from Unsplash
@@ -99,25 +100,27 @@ export function BrokerListingCard({ listing, isSelected, onClick, onViewDetails 
       onClick={onClick}
     >
       {/* Image Section */}
-      <div className="relative h-48 overflow-hidden bg-gray-200">
-        <img
+      <div className="relative h-36 sm:h-44 overflow-hidden bg-gray-200">
+        <Image
           src={getImageForListing(listing.id)}
           alt={listing.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
 
         {/* Property Class Badge - Top Right */}
-        <div className="absolute top-3 right-3">
-          <Badge className="bg-white/90 text-gray-800 font-semibold shadow-sm">
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
+          <Badge className="bg-white/90 text-gray-800 font-semibold shadow-sm text-xs">
             {getPropertyClass(listing.property_type)}
           </Badge>
         </div>
 
         {/* GSA Eligible Badge - Top Left */}
         {listing.gsa_eligible && (
-          <div className="absolute top-3 left-3">
-            <Badge className="bg-green-600 text-white font-semibold shadow-sm">
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
+            <Badge className="bg-green-600 text-white font-semibold shadow-sm text-xs">
               GSA Eligible
             </Badge>
           </div>
@@ -125,10 +128,10 @@ export function BrokerListingCard({ listing, isSelected, onClick, onViewDetails 
 
         {/* Federal Score - Bottom Right */}
         {scoreInfo && (
-          <div className="absolute bottom-3 right-3">
-            <div className="bg-white/95 rounded-lg px-3 py-2 shadow-md">
-              <div className="text-xs text-gray-600 font-medium">Federal Score</div>
-              <div className={`text-2xl font-bold ${scoreInfo.color}`}>
+          <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
+            <div className="bg-white/95 rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 shadow-md">
+              <div className="text-xs text-gray-600 font-medium">Score</div>
+              <div className={`text-xl sm:text-2xl font-bold ${scoreInfo.color}`}>
                 {scoreInfo.grade}
               </div>
               <div className="text-xs text-gray-500">{listing.federal_score}/100</div>
@@ -138,11 +141,11 @@ export function BrokerListingCard({ listing, isSelected, onClick, onViewDetails 
       </div>
 
       {/* Content Section */}
-      <div className="p-4 space-y-3">
+      <div className="p-3 sm:p-4 space-y-3">
         {/* Title */}
         <div>
-          <h3 className="font-bold text-base line-clamp-2 mb-1">{listing.title}</h3>
-          <div className="flex items-center text-sm text-gray-600 mb-2">
+          <h3 className="font-bold text-sm sm:text-base line-clamp-2 mb-1">{listing.title}</h3>
+          <div className="flex items-center text-xs sm:text-sm text-gray-600 mb-2">
             <MapPin className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
             <span className="truncate">{listing.city}, {listing.state} {listing.zipcode}</span>
           </div>
@@ -158,7 +161,7 @@ export function BrokerListingCard({ listing, isSelected, onClick, onViewDetails 
         </div>
 
         {/* Key Metrics - Three Columns */}
-        <div className="grid grid-cols-3 gap-2 py-3 border-y">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 py-3 border-y text-xs sm:text-sm">
           <div className="text-center">
             <div className="text-xs text-gray-500 mb-0.5">Available SF</div>
             <div className="font-bold text-sm">{formatSquareFeet(listing.available_sf)}</div>
@@ -216,7 +219,7 @@ export function BrokerListingCard({ listing, isSelected, onClick, onViewDetails 
       </div>
 
       {/* Footer - Stats & Actions */}
-      <div className="px-4 py-3 bg-gray-50 border-t flex items-center justify-between">
+      <div className="px-3 sm:px-4 py-3 bg-gray-50 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0">
         <div className="flex items-center gap-4 text-xs text-gray-600">
           <div className="flex items-center gap-1">
             <Eye className="h-3.5 w-3.5" />
@@ -226,7 +229,7 @@ export function BrokerListingCard({ listing, isSelected, onClick, onViewDetails 
         <Button
           size="sm"
           onClick={onViewDetails}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className="bg-blue-600 hover:bg-blue-700 text-white h-10 w-full sm:w-auto"
         >
           View Details
           <ExternalLink className="h-3.5 w-3.5 ml-1.5" />

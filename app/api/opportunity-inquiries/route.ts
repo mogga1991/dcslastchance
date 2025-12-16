@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
 
     // Build query
     let query = `SELECT * FROM opportunity_inquiries WHERE user_email = $1`;
-    const params: any[] = [userEmail];
+    const params: (string | number)[] = [userEmail || ''];
 
     // Add status filter if provided
     if (status) {

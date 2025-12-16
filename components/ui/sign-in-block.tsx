@@ -203,7 +203,7 @@ const SignInBlock = () => {
 
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link
                 href="/sign-up"
                 className="text-foreground decoration-0 no-underline font-normal hover:underline"

@@ -58,7 +58,7 @@ const SET_ASIDE_CERTIFICATIONS: { value: SetAsideCertification; label: string }[
 ];
 
 export function CompanyProfileForm() {
-  const [profile, setProfile] = useState<CompanyProfile | null>(null);
+  const [_profile, setProfile] = useState<CompanyProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
@@ -85,6 +85,7 @@ export function CompanyProfileForm() {
   // Fetch existing profile
   useEffect(() => {
     fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchProfile = async () => {

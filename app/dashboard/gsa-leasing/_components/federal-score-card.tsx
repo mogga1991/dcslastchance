@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Info, TrendingUp, Building2, Calendar, FileText, Home, Users, BarChart3, AlertCircle } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Info, TrendingUp, Building2, Calendar, FileText, Home, BarChart3, AlertCircle } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -43,21 +43,13 @@ interface FederalScoreCardProps {
 export function FederalScoreCard({ latitude, longitude, radiusMiles = 5, className }: FederalScoreCardProps) {
   const [scoreData, setScoreData] = useState<FederalScoreData | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState(false);
 
-  useEffect(() => {
-    if (latitude && longitude) {
-      fetchScore();
-    }
-  }, [latitude, longitude, radiusMiles]);
-
-  const fetchScore = async () => {
+  const fetchScore = useCallback(async () => {
     if (!latitude || !longitude) return;
 
     try {
       setLoading(true);
-      setError(null);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
@@ -87,7 +79,6 @@ export function FederalScoreCard({ latitude, longitude, radiusMiles = 5, classNa
           percentile: data.percentile,
         });
         setIsDemo(false); // We got real data
-        setError(null);
       }
     } catch (err) {
       // Check if this is an abort error (from timeout or manual abort)
@@ -100,11 +91,16 @@ export function FederalScoreCard({ latitude, longitude, radiusMiles = 5, classNa
       // Instead of showing error, fall back to demo data
       setScoreData(DEMO_SCORE_DATA);
       setIsDemo(true);
-      setError(null); // Clear error since we're showing demo data
     } finally {
       setLoading(false);
     }
-  };
+  }, [latitude, longitude, radiusMiles]);
+
+  useEffect(() => {
+    if (latitude && longitude) {
+      fetchScore();
+    }
+  }, [fetchScore, latitude, longitude]);
 
   const getScoreLabel = (score: number): { label: string; color: string; bgColor: string } => {
     if (score >= 80) {

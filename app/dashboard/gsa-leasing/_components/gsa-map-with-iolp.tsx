@@ -49,6 +49,7 @@ const STATE_COORDINATES: { [key: string]: { lat: number; lng: number } } = {
 };
 
 // Declare google maps types
+/* eslint-disable @typescript-eslint/no-explicit-any */
 declare global {
   interface Window {
     google: any;
@@ -68,8 +69,11 @@ export default function GSAMapWithIOLP({
   onViewportChange,
 }: GSAMapWithIOLPProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const map = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markers = useRef<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const iolpMarkers = useRef<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [iolpData, setIolpData] = useState<IOLPFeatureCollection>({ features: [] });
@@ -235,7 +239,7 @@ export default function GSAMapWithIOLP({
       if (!geometry) return;
 
       const isOwned = attributes.owned_or_leased_indicator === 'F';
-      const isLeased = attributes.owned_or_leased_indicator === 'L';
+      const _isLeased = attributes.owned_or_leased_indicator === 'L';
 
       // Create marker element
       const markerEl = document.createElement("div");

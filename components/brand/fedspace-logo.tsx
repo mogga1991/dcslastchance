@@ -14,7 +14,7 @@ const SIZES = {
   xl: "h-24 w-24",
 };
 
-const FULL_LOGO_SIZES = {
+const _FULL_LOGO_SIZES = {
   xs: { width: 120, height: 24 },
   sm: { width: 160, height: 32 },
   md: { width: 200, height: 40 },

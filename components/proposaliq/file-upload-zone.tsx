@@ -51,6 +51,7 @@ export function FileUploadZone({
     }
 
     setSelectedFile(file);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maxSize]);
 
   const handleDrop = useCallback(

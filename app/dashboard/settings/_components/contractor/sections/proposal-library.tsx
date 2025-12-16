@@ -8,7 +8,7 @@ interface ProposalLibraryProps {
   onUpdate?: () => void;
 }
 
-export default function ProposalLibrary({ onUpdate }: ProposalLibraryProps) {
+export default function ProposalLibrary({ onUpdate: _onUpdate }: ProposalLibraryProps) {
   return (
     <Card>
       <CardHeader>

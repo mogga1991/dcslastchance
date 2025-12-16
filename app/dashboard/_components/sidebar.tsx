@@ -12,6 +12,7 @@ import {
   LogOut,
   PlusCircle,
   Bookmark,
+  Home,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -46,6 +47,15 @@ export default function DashboardSideBar() {
       href: "/dashboard/broker-listing",
       icon: (
         <PlusCircle
+          className="h-5 w-5 flex-shrink-0"
+        />
+      ),
+    },
+    {
+      label: "My Properties",
+      href: "/dashboard/my-properties",
+      icon: (
+        <Home
           className="h-5 w-5 flex-shrink-0"
         />
       ),

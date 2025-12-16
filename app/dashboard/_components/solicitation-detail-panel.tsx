@@ -14,7 +14,7 @@ interface SolicitationDetailPanelProps {
   onClose: () => void;
   onCheckQualification?: () => void;
   onBidDecision?: () => void;
-  onSave?: () => void;
+  onSave?: () => void | Promise<void>;
 }
 
 export function SolicitationDetailPanel({
@@ -223,7 +223,10 @@ export function SolicitationDetailPanel({
         {/* Action Buttons */}
         <div className="sticky bottom-0 bg-white border-t p-6 space-y-3">
           <Button
-            onClick={() => setIsQualificationModalOpen(true)}
+            onClick={() => {
+              setIsQualificationModalOpen(true);
+              onCheckQualification?.();
+            }}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
             size="lg"
           >
@@ -257,7 +260,7 @@ export function SolicitationDetailPanel({
         opportunity={opportunity}
         isOpen={isQualificationModalOpen}
         onClose={() => setIsQualificationModalOpen(false)}
-        onSaveOpportunity={(qualified) => {
+        onSaveOpportunity={() => {
           if (onSave) {
             onSave();
           }

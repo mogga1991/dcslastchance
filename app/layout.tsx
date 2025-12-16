@@ -3,8 +3,13 @@ import type { Metadata } from "next";
 import { Providers } from "../components/provider";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import { validateEnv } from "@/lib/env"; // ✅ FIXED: Validate environment variables at startup
+
+// Validate environment variables on server startup
+validateEnv();
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://fedspace.ai'), // ✅ FIXED: Added metadataBase for proper OG images
   title: "FedSpace - AI-Powered Federal Contract Intelligence",
   description:
     "AI-powered government contracting platform that extracts requirements, evaluates opportunities, and delivers bid/no-bid recommendations in minutes.",
@@ -38,7 +43,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`font-[-apple-system,BlinkMacSystemFont]antialiased`}>
+      <body className="antialiased" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
         <Providers>
           {children}
           <Toaster />

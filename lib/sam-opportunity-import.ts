@@ -26,7 +26,7 @@ export interface ImportResult {
 export async function importSAMOpportunity(
   samOpportunity: SAMOpportunity,
   orgId: string,
-  userId?: string
+  _userId?: string
 ): Promise<ImportResult> {
   try {
     const supabase = await createClient();

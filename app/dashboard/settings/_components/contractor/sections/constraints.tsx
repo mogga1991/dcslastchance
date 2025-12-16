@@ -4,13 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { AlertTriangle } from "lucide-react";
 
 interface ConstraintsProps {
   onUpdate?: () => void;
 }
 
-export default function Constraints({ onUpdate }: ConstraintsProps) {
+export default function Constraints({ onUpdate: _onUpdate }: ConstraintsProps) {
   return (
     <Card>
       <CardHeader>

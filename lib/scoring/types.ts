@@ -46,7 +46,7 @@ export interface SpaceBreakdown {
 }
 
 export interface BuildingRequirement {
-  buildingClass: ('A' | 'B' | 'C')[];
+  buildingClass: ('A' | 'A+' | 'B' | 'C')[];  // Added A+ for premium buildings
   minFloors: number | null;
   maxFloors: number | null;
   preferredFloor: number | null;

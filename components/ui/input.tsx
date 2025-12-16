@@ -147,7 +147,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             ? { value: inputValue }
             : { defaultValue: props.defaultValue })}
           onChange={handleInputChange}
-          {...(({ defaultValue, ...rest }) => rest)(props)}
+          {...(({ defaultValue: _defaultValue, ...rest }) => rest)(props)}
         />
 
         {/* Right side icons container */}

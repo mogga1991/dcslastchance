@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Loader2, Bell } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
 import { SAMOpportunity } from "@/lib/sam-gov";
 import type { PublicBrokerListing } from "@/types/broker-listing";
-import type { IOLPFeatureCollection } from "@/lib/iolp";
 import { OpportunityCard } from "./opportunity-card";
 import { BrokerListingCard } from "./broker-listing-card";
 import { ListingDetailModal } from "./listing-detail-modal";
@@ -53,7 +52,6 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
   const [showExpressInterest, setShowExpressInterest] = useState(false);
   const [expressInterestOpportunity, setExpressInterestOpportunity] = useState<SAMOpportunity | null>(null);
   const [submittedInquiries, setSubmittedInquiries] = useState<Set<string>>(new Set());
-  const [showFilters, setShowFilters] = useState(false);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [currentViewport, setCurrentViewport] = useState<{ lat: number; lng: number } | null>(null);
   const [userAlerts, setUserAlerts] = useState<Set<string>>(new Set());
@@ -89,32 +87,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
 
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchOpportunities();
-    fetchBrokerListings();
-    fetchUserAlerts();
-    fetchSavedOpportunities();
-    fetchSubmittedInquiries();
-  }, []);
-
-  // Filter listings based on search term
-  useEffect(() => {
-    if (searchTerm) {
-      const filteredLstgs = brokerListings.filter(
-        (listing) =>
-          listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          listing.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          listing.street_address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          listing.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          listing.state.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredListings(filteredLstgs);
-    } else {
-      setFilteredListings(brokerListings);
-    }
-  }, [searchTerm, brokerListings]);
-
-  const fetchOpportunities = async () => {
+  const fetchOpportunities = useCallback(async () => {
     try {
       setLoading(true);
       setOpportunitiesError(null);
@@ -146,9 +119,9 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  const fetchBrokerListings = async () => {
+  const fetchBrokerListings = useCallback(async () => {
     try {
       setListingsError(null);
 
@@ -177,23 +150,23 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
         variant: "destructive"
       });
     }
-  };
+  }, [toast]);
 
-  const fetchUserAlerts = async () => {
+  const fetchUserAlerts = useCallback(async () => {
     try {
       const response = await fetch("/api/iolp/alerts");
       const data = await response.json();
 
       if (data.success) {
-        const alertCodes = new Set(data.alerts.map((a: any) => a.location_code));
+        const alertCodes = new Set<string>(data.alerts.map((a: { location_code: string }) => a.location_code));
         setUserAlerts(alertCodes);
       }
     } catch (error) {
       console.error("Error fetching alerts:", error);
     }
-  };
+  }, []);
 
-  const fetchSavedOpportunities = async () => {
+  const fetchSavedOpportunities = useCallback(async () => {
     try {
       const response = await fetch("/api/saved-opportunities");
 
@@ -204,14 +177,14 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
       }
 
       const data = await response.json();
-      const savedIds = new Set(data.map((s: any) => s.notice_id));
+      const savedIds = new Set<string>(data.map((s: { notice_id: string }) => s.notice_id));
       setSavedOpportunities(savedIds);
     } catch (error) {
       console.error("Error fetching saved opportunities:", error);
     }
-  };
+  }, []);
 
-  const fetchSubmittedInquiries = async () => {
+  const fetchSubmittedInquiries = useCallback(async () => {
     try {
       const response = await fetch("/api/opportunity-inquiries");
 
@@ -222,12 +195,37 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
       }
 
       const data = await response.json();
-      const inquiryIds = new Set(data.inquiries?.map((i: any) => i.opportunity_id) || []);
+      const inquiryIds = new Set<string>(data.inquiries?.map((i: { opportunity_id: string }) => i.opportunity_id) || []);
       setSubmittedInquiries(inquiryIds);
     } catch (error) {
       console.error("Error fetching submitted inquiries:", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchOpportunities();
+    fetchBrokerListings();
+    fetchUserAlerts();
+    fetchSavedOpportunities();
+    fetchSubmittedInquiries();
+  }, [fetchOpportunities, fetchBrokerListings, fetchUserAlerts, fetchSavedOpportunities, fetchSubmittedInquiries]);
+
+  // Filter listings based on search term
+  useEffect(() => {
+    if (searchTerm) {
+      const filteredLstgs = brokerListings.filter(
+        (listing) =>
+          listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          listing.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          listing.street_address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          listing.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          listing.state.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredListings(filteredLstgs);
+    } else {
+      setFilteredListings(brokerListings);
+    }
+  }, [searchTerm, brokerListings]);
 
   const handleSaveOpportunity = async (opportunity: SAMOpportunity) => {
     try {
@@ -290,19 +288,23 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
     });
   };
 
-  const handleSetAlert = async (lease: any) => {
+  const handleSetAlert = async (lease: { location_code?: string; building_name?: string; address?: string }) => {
+    if (!lease.location_code) return;
+
+    const locationCode = lease.location_code; // Capture for type safety
+
     try {
-      const isAlertSet = userAlerts.has(lease.location_code);
+      const isAlertSet = userAlerts.has(locationCode);
 
       if (isAlertSet) {
         // Remove alert
-        await fetch(`/api/iolp/alerts?location_code=${lease.location_code}`, {
+        await fetch(`/api/iolp/alerts?location_code=${locationCode}`, {
           method: 'DELETE'
         });
 
         setUserAlerts(prev => {
           const next = new Set(prev);
-          next.delete(lease.location_code);
+          next.delete(locationCode);
           return next;
         });
 
@@ -318,7 +320,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
           body: JSON.stringify(lease)
         });
 
-        setUserAlerts(prev => new Set([...prev, lease.location_code]));
+        setUserAlerts(prev => new Set([...prev, locationCode]));
 
         toast({
           title: "Alert created",
@@ -339,33 +341,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
     setMapCenter({ lat, lng });
   };
 
-  // Extract unique states and set-aside types from opportunities
-  const availableOpportunityStates = useMemo(() => {
-    if (!opportunities || opportunities.length === 0) return [];
-
-    const states = new Set<string>();
-    opportunities.forEach(opp => {
-      const stateCode = opp.placeOfPerformance?.state?.code;
-      if (stateCode) {
-        states.add(stateCode);
-      }
-    });
-
-    return Array.from(states).sort();
-  }, [opportunities]);
-
-  const availableSetAsides = useMemo(() => {
-    if (!opportunities || opportunities.length === 0) return [];
-
-    const setAsides = new Set<string>();
-    opportunities.forEach(opp => {
-      if (opp.typeOfSetAsideDescription && opp.typeOfSetAsideDescription !== 'None') {
-        setAsides.add(opp.typeOfSetAsideDescription);
-      }
-    });
-
-    return Array.from(setAsides).sort();
-  }, [opportunities]);
+  // Removed unused: availableOpportunityStates and availableSetAsides
 
   // Calculate match scores when broker listings are available
   const opportunityMatchScores = useMemo(() => {
@@ -485,33 +461,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
     return filtered;
   }, [opportunities, searchTerm, opportunityFilters, opportunityMatchScores]);
 
-  // Extract unique agencies from expiring leases
-  const availableAgencies = useMemo(() => {
-    if (!expiringLeasesData?.leases) return [];
-
-    const agencies = new Set<string>();
-    expiringLeasesData.leases.forEach((lease: any) => {
-      if (lease.agency_abbr) {
-        agencies.add(lease.agency_abbr);
-      }
-    });
-
-    return Array.from(agencies).sort();
-  }, [expiringLeasesData]);
-
-  // Extract unique states from expiring leases
-  const availableStates = useMemo(() => {
-    if (!expiringLeasesData?.leases) return [];
-
-    const states = new Set<string>();
-    expiringLeasesData.leases.forEach((lease: any) => {
-      if (lease.state) {
-        states.add(lease.state);
-      }
-    });
-
-    return Array.from(states).sort();
-  }, [expiringLeasesData]);
+  // Removed unused: availableAgencies and availableStates
 
   // Filter expiring leases based on filters
   const filteredExpiringLeases = useMemo(() => {
@@ -600,9 +550,9 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
   }, [filteredExpiringLeases]);
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden">
       {/* Left Panel */}
-      <div className="w-full md:w-[380px] bg-white border-r md:border-b-0 border-b flex flex-col max-h-[50vh] md:max-h-none">
+      <div className="w-full lg:w-[380px] bg-white border-r lg:border-b-0 border-b flex flex-col max-h-[60vh] lg:max-h-none overflow-y-auto">
         {/* Header */}
         <div className="p-4 border-b bg-gray-50">
           <div className="flex items-center justify-between mb-3">
@@ -678,14 +628,17 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
           className="flex flex-col flex-1 overflow-hidden"
         >
           <TabsList className="w-full grid grid-cols-3 rounded-none border-b">
-            <TabsTrigger value="opportunities" className="rounded-none text-xs">
-              Opportunities
+            <TabsTrigger value="opportunities" className="rounded-none text-xs sm:text-sm px-2 sm:px-4 py-3">
+              <span className="hidden sm:inline">Opportunities</span>
+              <span className="sm:hidden">Opps</span>
             </TabsTrigger>
-            <TabsTrigger value="listings" className="rounded-none text-xs">
-              Available Listings
+            <TabsTrigger value="listings" className="rounded-none text-xs sm:text-sm px-2 sm:px-4 py-3">
+              <span className="hidden sm:inline">Available Listings</span>
+              <span className="sm:hidden">Listings</span>
             </TabsTrigger>
-            <TabsTrigger value="expiring" className="rounded-none text-xs relative">
-              Expiring Soon
+            <TabsTrigger value="expiring" className="rounded-none text-xs sm:text-sm px-2 sm:px-4 py-3 relative">
+              <span className="hidden sm:inline">Expiring Soon</span>
+              <span className="sm:hidden">Expiring</span>
               {urgencyCounts.critical > 0 && (
                 <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
                   {urgencyCounts.critical}
@@ -831,7 +784,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
               <div className="p-4 text-center text-gray-500">
                 {searchTerm ? (
                   <div className="flex flex-col items-center gap-2">
-                    <p>No matches for "{searchTerm}"</p>
+                    <p>No matches for &quot;{searchTerm}&quot;</p>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -1000,13 +953,13 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
 
                 {/* Lease Cards */}
                 <div className="space-y-4">
-                  {filteredExpiringLeases.map((lease: any) => (
+                  {filteredExpiringLeases.map((lease: { location_code?: string; OBJECTID?: string }) => (
                     <ExpiringLeaseCard
                       key={lease.location_code || lease.OBJECTID}
                       lease={lease}
                       onViewOnMap={handleViewOnMap}
                       onSetAlert={handleSetAlert}
-                      hasAlert={userAlerts.has(lease.location_code)}
+                      hasAlert={lease.location_code ? userAlerts.has(lease.location_code) : false}
                     />
                   ))}
                 </div>
@@ -1017,7 +970,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
       </div>
 
       {/* Right Panel - Map */}
-      <div className="flex-1 relative min-h-[50vh] md:min-h-0">
+      <div className="flex-1 relative min-h-[40vh] lg:min-h-0">
         <GSAMapWithIOLP
           opportunities={activeTab === "opportunities" ? filteredOpportunities : []}
           listings={activeTab === "listings" ? filteredListings : []}

@@ -6,27 +6,29 @@ import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Building2, AlertTriangle, Bell, BellOff } from "lucide-react";
 import { useState } from "react";
 
+interface LeaseData {
+  building_name?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipcode?: string;
+  location_code?: string;
+  building_rsf?: number;
+  vacant_rsf?: number;
+  lease_expiration_date?: string;
+  lessor_name?: string;
+  agency_abbr?: string;
+  latitude?: number;
+  longitude?: number;
+  daysUntilExpiration?: number;
+  monthsUntilExpiration?: number;
+  urgency?: 'critical' | 'warning' | 'normal';
+}
+
 interface ExpiringLeaseCardProps {
-  lease: {
-    building_name?: string;
-    address?: string;
-    city?: string;
-    state?: string;
-    zipcode?: string;
-    location_code?: string;
-    building_rsf?: number;
-    vacant_rsf?: number;
-    lease_expiration_date?: string;
-    lessor_name?: string;
-    agency_abbr?: string;
-    latitude?: number;
-    longitude?: number;
-    daysUntilExpiration?: number;
-    monthsUntilExpiration?: number;
-    urgency?: 'critical' | 'warning' | 'normal';
-  };
+  lease: LeaseData;
   onViewOnMap?: (lat: number, lng: number) => void;
-  onSetAlert?: (lease: any) => void;
+  onSetAlert?: (lease: LeaseData) => void;
   hasAlert?: boolean;
 }
 
@@ -106,7 +108,7 @@ export function ExpiringLeaseCard({
         </div>
 
         {/* Details Grid */}
-        <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-2 mb-3 text-xs">
           {/* Expiration Date */}
           <div className="flex items-center gap-1.5">
             <Calendar className="h-3.5 w-3.5 text-orange-500" />
@@ -172,7 +174,7 @@ export function ExpiringLeaseCard({
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 text-xs h-8"
+              className="flex-1 text-xs h-10 sm:h-9"
               onClick={() => onViewOnMap(lease.latitude!, lease.longitude!)}
             >
               <MapPin className="h-3 w-3 mr-1" />
@@ -183,7 +185,7 @@ export function ExpiringLeaseCard({
             <Button
               variant={alertSet ? "default" : "outline"}
               size="sm"
-              className="flex-1 text-xs h-8"
+              className="flex-1 text-xs h-10 sm:h-9"
               onClick={handleSetAlert}
             >
               {alertSet ? (

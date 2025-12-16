@@ -26,7 +26,7 @@ export default async function SavedOpportunitiesPage() {
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
               <h3 className="text-lg font-semibold mb-2">No Saved Opportunities</h3>
               <p className="text-muted-foreground">
-                You haven't saved any opportunities yet. Start browsing and save the ones you're interested in.
+                You haven&apos;t saved any opportunities yet. Start browsing and save the ones you&apos;re interested in.
               </p>
             </div>
           </div>

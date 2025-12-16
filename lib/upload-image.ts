@@ -1,7 +1,7 @@
 import { supabaseAdmin } from "./supabase";
 
 export const uploadImageAssets = async (buffer: Buffer, key: string) => {
-  const { data, error } = await supabaseAdmin.storage
+  const { error } = await supabaseAdmin.storage
     .from("uploads")
     .upload(key, buffer, {
       contentType: "image/*",

@@ -146,8 +146,8 @@ export default function AnalysisPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <CardTitle className="text-lg">{analysis.title}</CardTitle>
-                      {getStatusBadge(analysis.status)}
+                      <CardTitle className="text-lg">{analysis.title || 'Untitled Analysis'}</CardTitle>
+                      {analysis.status && getStatusBadge(analysis.status)}
                     </div>
                     {analysis.agency && (
                       <CardDescription className="mb-2">{analysis.agency}</CardDescription>
@@ -160,7 +160,7 @@ export default function AnalysisPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-muted-foreground">
-                      {new Date(analysis.created_at).toLocaleDateString()}
+                      {analysis.created_at ? new Date(analysis.created_at).toLocaleDateString() : 'N/A'}
                     </p>
                     {analysis.status === "completed" && analysis.bid_recommendation && (
                       <div className="mt-2">

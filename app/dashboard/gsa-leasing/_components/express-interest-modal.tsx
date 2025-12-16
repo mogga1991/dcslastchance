@@ -58,18 +58,6 @@ export function ExpressInterestModal({
   const [customAddress, setCustomAddress] = useState("");
   const [message, setMessage] = useState("");
 
-  // Fetch broker listings when modal opens
-  useEffect(() => {
-    if (open && brokerListings.length === 0) {
-      fetchBrokerListings();
-    }
-  }, [open]);
-
-  // Update email when userEmail prop changes
-  useEffect(() => {
-    setEmail(userEmail);
-  }, [userEmail]);
-
   const fetchBrokerListings = async () => {
     setLoadingListings(true);
     try {
@@ -84,6 +72,19 @@ export function ExpressInterestModal({
       setLoadingListings(false);
     }
   };
+
+  // Fetch broker listings when modal opens
+  useEffect(() => {
+    if (open && brokerListings.length === 0) {
+      fetchBrokerListings();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  // Update email when userEmail prop changes
+  useEffect(() => {
+    setEmail(userEmail);
+  }, [userEmail]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,7 +179,7 @@ export function ExpressInterestModal({
         <DialogHeader>
           <DialogTitle>Express Interest</DialogTitle>
           <DialogDescription>
-            Let us know you're interested in this opportunity and we'll help connect you.
+            Let us know you&apos;re interested in this opportunity and we&apos;ll help connect you.
           </DialogDescription>
         </DialogHeader>
 
@@ -193,7 +194,7 @@ export function ExpressInterestModal({
               Interest Submitted!
             </h3>
             <p className="text-gray-600">
-              Thanks! We'll review your submission and be in touch within 24 hours.
+              Thanks! We&apos;ll review your submission and be in touch within 24 hours.
             </p>
           </div>
         ) : (
@@ -261,7 +262,7 @@ export function ExpressInterestModal({
               ) : brokerListings.length === 0 ? (
                 <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-sm text-yellow-800 mb-2">
-                    You haven't listed any properties yet.
+                    You haven&apos;t listed any properties yet.
                   </p>
                   <Button
                     type="button"
@@ -330,7 +331,7 @@ export function ExpressInterestModal({
                 id="message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Tell us about your property and why it's a good fit for this opportunity..."
+                placeholder="Tell us about your property and why it&apos;s a good fit for this opportunity..."
                 rows={4}
                 disabled={loading}
               />

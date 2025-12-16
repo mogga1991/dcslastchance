@@ -107,7 +107,7 @@ export default async function EarningsNewsPage() {
                 <Calendar className="h-16 w-16 text-muted-foreground mb-4 opacity-50" />
                 <h3 className="text-lg font-semibold mb-2">No News Yet</h3>
                 <p className="text-muted-foreground max-w-md">
-                  You don't have any earnings news at the moment. Check back here for commission updates,
+                  You don&apos;t have any earnings news at the moment. Check back here for commission updates,
                   payment schedules, and important financial announcements.
                 </p>
               </div>

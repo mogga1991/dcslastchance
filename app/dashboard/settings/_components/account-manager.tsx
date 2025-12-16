@@ -55,14 +55,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  UserPlus,
   Activity,
   Building2,
   DollarSign,
-  MessageSquare,
   MoreVertical,
-  Plus,
   TrendingUp,
-  UserPlus,
   Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -196,7 +194,7 @@ export default function AccountManager() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [useDemoData, setUseDemoData] = useState(true); // Toggle for demo mode
+  const [useDemoData, ] = useState(true); // Toggle for demo mode
 
   // Form states
   const [formData, setFormData] = useState({

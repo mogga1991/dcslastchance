@@ -94,7 +94,7 @@ export default function GovernmentBuysEverythingSection() {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600"> Catering Services</span>
           </h2>
           <p className="text-xl text-gray-600 leading-relaxed mb-8">
-            The federal government is the world's largest buyer—spending over <span className="font-bold text-gray-900">$700 billion annually</span> on everything imaginable. If you provide a product or service, there's a government contract for it.
+            The federal government is the world's largest buyer—spending over <span className="font-bold text-gray-900">$700 billion annually</span> on everything imaginable. If you provide a product or service, there&apos;s a government contract for it.
           </p>
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
             <p className="text-lg font-semibold text-gray-800">
@@ -147,7 +147,7 @@ export default function GovernmentBuysEverythingSection() {
                 Your Business + Our AI = Contracts Won
               </h3>
               <p className="text-lg text-gray-300 mb-6 leading-relaxed">
-                Whether you're a one-person photography studio or a 500-person facilities management company, government contracts are accessible. Our AI analyzes opportunities, extracts requirements, and tells you exactly what you need to compete.
+                Whether you&apos;re a one-person photography studio or a 500-person facilities management company, government contracts are accessible. Our AI analyzes opportunities, extracts requirements, and tells you exactly what you need to compete.
               </p>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-start gap-3">

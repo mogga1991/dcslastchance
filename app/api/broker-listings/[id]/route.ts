@@ -81,17 +81,18 @@ export async function GET(
       );
     }
 
+    // Type assertion for Supabase data
+    const listing = data as unknown as PublicBrokerListing;
+
     // Increment views count (fire and forget - don't wait for result)
-    supabase
+    void supabase
       .from('broker_listings')
-      .update({ views_count: (data.views_count || 0) + 1 })
-      .eq('id', id)
-      .then(() => {})
-      .catch((err: Error) => console.error('Error incrementing views:', err));
+      .update({ views_count: (listing.views_count || 0) + 1 })
+      .eq('id', id);
 
     return NextResponse.json({
       success: true,
-      data: data as PublicBrokerListing
+      data: listing
     });
   } catch (error) {
     console.error('Error in GET /api/broker-listings/[id]:', error);
@@ -168,7 +169,7 @@ export async function PATCH(
       (input.longitude && input.longitude !== existing.longitude);
 
     let federalScore: number | undefined;
-    let federalScoreData: any;
+    let federalScoreData: Record<string, unknown> | undefined;
 
     if (coordsChanged && input.latitude && input.longitude) {
       // Recalculate federal score
@@ -182,7 +183,7 @@ export async function PATCH(
     }
 
     // Prepare update data (only include provided fields)
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
     if (input.broker_name !== undefined) updateData.broker_name = input.broker_name;
     if (input.broker_company !== undefined) updateData.broker_company = input.broker_company;

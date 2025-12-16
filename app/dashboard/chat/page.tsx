@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useChat } from "@ai-sdk/react";
+import { useState, FormEvent } from "react";
 import Markdown from "react-markdown";
 
 export default function Chat() {
-  const { messages, input, handleInputChange, handleSubmit } = useChat({
-    maxSteps: 10,
-  });
+  const [input, setInput] = useState("");
+  const { messages, sendMessage } = useChat();
 
   return (
     <div className="flex flex-col w-full py-24 justify-center items-center">
@@ -52,14 +52,20 @@ export default function Chat() {
 
       <form
         className="flex gap-2 justify-center w-full items-center fixed bottom-0"
-        onSubmit={handleSubmit}
+        onSubmit={(e: FormEvent) => {
+          e.preventDefault();
+          if (input.trim()) {
+            void sendMessage({ text: input });
+            setInput("");
+          }
+        }}
       >
         <div className="flex flex-col gap-2 justify-center items-start mb-8 max-w-xl w-full border p-2 rounded-lg bg-white ">
           <Input
             className="w-full border-0 shadow-none !ring-transparent "
             value={input}
             placeholder="Say something..."
-            onChange={handleInputChange}
+            onChange={(e) => setInput(e.target.value)}
           />
           <div className="flex justify-end gap-3 items-center w-full">
             <Button size="sm" className="text-xs">

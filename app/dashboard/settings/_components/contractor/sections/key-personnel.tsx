@@ -8,7 +8,7 @@ interface KeyPersonnelProps {
   onUpdate?: () => void;
 }
 
-export default function KeyPersonnel({ onUpdate }: KeyPersonnelProps) {
+export default function KeyPersonnel({ onUpdate: _onUpdate }: KeyPersonnelProps) {
   return (
     <Card>
       <CardHeader>

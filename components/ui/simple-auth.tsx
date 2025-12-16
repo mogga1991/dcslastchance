@@ -97,11 +97,10 @@ export default function SimpleAuth({ mode }: SimpleAuthProps) {
         router.push("/dashboard");
         router.refresh();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Auth error:", error);
       setError(
-        error.message ||
-          (isSignIn ? "Failed to sign in" : "Failed to create account")
+        error instanceof Error ? error.message : (isSignIn ? "Failed to sign in" : "Failed to create account")
       );
       setLoading(false);
     }

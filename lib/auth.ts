@@ -14,6 +14,7 @@
 // import { nextCookies } from "better-auth/next-js";
 
 // Utility function to safely parse dates
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function safeParseDate(value: string | Date | null | undefined): Date | null {
   if (!value) return null;
   if (value instanceof Date) return value;
@@ -27,6 +28,7 @@ function safeParseDate(value: string | Date | null | undefined): Date | null {
 // });
 
 // Dummy export to prevent import errors during transition
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const auth = null as any;
 
 /* DISABLED: Using Supabase Auth instead

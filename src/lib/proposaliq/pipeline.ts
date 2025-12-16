@@ -25,7 +25,7 @@ function safeJsonParse<T>(raw: string, schema: z.ZodType<T>): T {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
-  } catch (e) {
+  } catch {
     // Attempt minimal cleanup if model returned stray text
     const start = raw.indexOf("{");
     const end = raw.lastIndexOf("}");
@@ -61,7 +61,7 @@ export async function runProposalIqPipeline(params: {
   });
 
   const extractionRaw = await llm({ model, prompt: extractionPrompt, temperature: 0.1 });
-  const opportunityAnalysis: OpportunityAnalysis = safeJsonParse(extractionRaw, OpportunityAnalysisSchema);
+  const opportunityAnalysis = safeJsonParse(extractionRaw, OpportunityAnalysisSchema) as OpportunityAnalysis;
 
   // 2) Score
   const scoringPrompt = buildScoringPrompt({
@@ -70,12 +70,12 @@ export async function runProposalIqPipeline(params: {
   });
 
   const scoringRaw = await llm({ model, prompt: scoringPrompt, temperature: 0.1 });
-  const scorecard: Scorecard = safeJsonParse(scoringRaw, ScorecardSchema);
+  const scorecard = safeJsonParse(scoringRaw, ScorecardSchema) as Scorecard;
 
   // 3) Compliance matrix
   const matrixPrompt = buildComplianceMatrixPrompt({ solicitationId, solicitationText });
   const matrixRaw = await llm({ model, prompt: matrixPrompt, temperature: 0.1 });
-  const complianceMatrix: ComplianceMatrix = safeJsonParse(matrixRaw, ComplianceMatrixSchema);
+  const complianceMatrix = safeJsonParse(matrixRaw, ComplianceMatrixSchema) as ComplianceMatrix;
 
   // 4) Render-friendly "cards" (UI-ready)
   const cards = buildUiCards(opportunityAnalysis, scorecard, complianceMatrix);

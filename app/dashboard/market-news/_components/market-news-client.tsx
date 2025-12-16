@@ -88,6 +88,7 @@ export default function MarketNewsClient() {
 
   useEffect(() => {
     fetchNews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -96,6 +97,7 @@ export default function MarketNewsClient() {
     }, 500);
 
     return () => clearTimeout(debounceTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, categoryFilter]);
 
   const formatDate = (dateString: string) => {

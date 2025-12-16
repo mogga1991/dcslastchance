@@ -130,7 +130,7 @@ export const OpportunityService = {
     keyword?: string;
   }): Promise<Opportunity[]> {
     let whereClause = 'WHERE "active" = true';
-    const params: any[] = [];
+    const params: unknown[] = [];
     let paramIndex = 1;
 
     if (filters.naics) {
@@ -210,7 +210,7 @@ export const AnalysisService = {
     return update<Analysis>('analysis', id, data);
   },
 
-  async delete(id: string): Promise<any> {
+  async delete(id: string): Promise<void> {
     return remove('analysis', id);
   },
 
@@ -232,7 +232,7 @@ export const AnalysisService = {
 // ============================================================================
 
 export const OpportunityMatchService = {
-  async getByUserId(userId: string, minScore = 0): Promise<any[]> {
+  async getByUserId(userId: string, minScore = 0): Promise<unknown[]> {
     return query(
       `SELECT om.*,
               o.title,

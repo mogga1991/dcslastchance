@@ -8,7 +8,7 @@ interface PastPerformanceProps {
   onUpdate?: () => void;
 }
 
-export default function PastPerformance({ onUpdate }: PastPerformanceProps) {
+export default function PastPerformance({ onUpdate: _onUpdate }: PastPerformanceProps) {
   return (
     <Card>
       <CardHeader>

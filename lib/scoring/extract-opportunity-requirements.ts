@@ -78,9 +78,12 @@ function extractSpaceRequirements(text: string): SpaceRequirement {
   }
 
   return {
-    minimumSF: minRSF,
-    maximumSF: maxRSF,
-    preferredSF: Math.round((minRSF + maxRSF) / 2),
+    minSqFt: minRSF,
+    maxSqFt: maxRSF,
+    targetSqFt: Math.round((minRSF + maxRSF) / 2),
+    usableOrRentable: 'rentable',
+    contiguous: true,
+    divisible: false,
   };
 }
 
@@ -98,36 +101,41 @@ function extractLocationRequirements(
   return {
     state,
     city,
-    delineatedArea: {
-      type: 'circle',
-      center: { lat: 0, lng: 0 }, // Would need geocoding
-      radiusMiles: 10, // Default 10-mile radius
-    },
+    zip: null,
+    delineatedArea: null,
+    radiusMiles: 10, // Default 10-mile radius
+    centralPoint: { lat: 0, lng: 0 }, // Would need geocoding
   };
 }
 
 function extractBuildingRequirements(text: string): BuildingRequirement {
   // Check for common GSA requirements
   const features = {
-    parking: /parking/i.test(text),
-    ada: /\bada\b|accessibility|accessible/i.test(text),
-    security: /security|controlled\s+access|card\s+access/i.test(text),
-    hvac: /hvac|heating|cooling|air\s+conditioning/i.test(text),
-    elevator: /elevator|lift/i.test(text),
-    loading: /loading\s+dock|loading\s+area/i.test(text),
-    generator: /generator|backup\s+power|emergency\s+power/i.test(text),
+    fiber: /fiber|high.speed.internet/i.test(text),
+    backupPower: /generator|backup\s+power|emergency\s+power/i.test(text),
+    loadingDock: /loading\s+dock|loading\s+area/i.test(text),
+    security24x7: /24.7.security|24.hour.security/i.test(text),
+    secureAccess: /security|controlled\s+access|card\s+access/i.test(text),
     scifCapable: /scif|sensitive\s+compartmented/i.test(text),
+    dataCenter: /data.center|server.room/i.test(text),
+    cafeteria: /cafeteria|food.service/i.test(text),
+    fitnessCenter: /fitness|gym/i.test(text),
+    conferenceCenter: /conference|meeting.rooms/i.test(text),
   };
 
-  const certifications = {
-    leed: /leed/i.test(text),
-    energyStar: /energy\s+star/i.test(text),
-  };
+  const certifications: string[] = [];
+  if (/leed/i.test(text)) certifications.push('LEED');
+  if (/energy\s+star/i.test(text)) certifications.push('Energy Star');
 
   return {
-    class: 'A', // Default to Class A for GSA
-    yearBuilt: {
-      minimum: 1980, // Default minimum year
+    buildingClass: ['A'], // Default to Class A for GSA
+    minFloors: null,
+    maxFloors: null,
+    preferredFloor: null,
+    accessibility: {
+      adaCompliant: /\bada\b|accessibility|accessible/i.test(text),
+      publicTransit: /transit|metro|subway/i.test(text),
+      parkingRequired: /parking/i.test(text),
     },
     features,
     certifications,
@@ -164,9 +172,8 @@ function extractTimelineRequirements(
 
   return {
     occupancyDate: occupancyDate || new Date(),
-    leaseTerm: {
-      years: 10, // Default GSA lease term
-      monthsOption: 60, // 5-year option period
-    },
+    firmTermMonths: 120, // Default GSA lease term: 10 years
+    totalTermMonths: 180, // 15 years total with options
+    responseDeadline: opportunity.responseDeadLine ? new Date(opportunity.responseDeadLine) : new Date(),
   };
 }

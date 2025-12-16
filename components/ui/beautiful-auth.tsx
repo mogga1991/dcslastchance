@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, FileText, Zap, ArrowRight } from "lucide-react";
+import { Zap, FileText, Building2 } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 export default function BeautifulAuth() {
@@ -67,7 +67,7 @@ export default function BeautifulAuth() {
         }
 
         // Automatically sign in after signup
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        const { data: _signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });

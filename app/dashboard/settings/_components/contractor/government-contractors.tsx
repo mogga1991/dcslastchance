@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -20,7 +19,7 @@ export default function GovernmentContractors() {
   const [activeSection, setActiveSection] = useState("company");
   const [completeness, setCompleteness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const _supabase = createClient();
 
   useEffect(() => {
     fetchCompleteness();

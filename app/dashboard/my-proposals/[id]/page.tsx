@@ -6,22 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Search,
   Plus,
-  FileText,
   Building2,
   Calendar,
-  ArrowRight,
   Sparkles,
   CheckCircle2,
   Circle,
   Save,
   Send,
-  Upload,
-  Download,
   Eye,
   MoreVertical,
   Bold,
@@ -170,7 +164,7 @@ export default function ProposalEditPage() {
       <div className="w-full h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-semibold mb-2">Proposal not found</h2>
-          <p className="text-muted-foreground mb-6">The proposal you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground mb-6">The proposal you&apos;re looking for doesn&apos;t exist.</p>
           <Button onClick={() => router.push("/dashboard/my-proposals")}>Back to Proposals</Button>
         </div>
       </div>
@@ -187,12 +181,6 @@ export default function ProposalEditPage() {
     alert("Proposal submitted!");
   };
 
-  const formatCurrency = (value: number) => {
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`;
-    }
-    return `$${(value / 1000).toFixed(2)}K`;
-  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

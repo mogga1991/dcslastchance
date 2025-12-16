@@ -5,7 +5,7 @@ import React from "react";
 const resilienceFactors = [
   {
     title: "Efficiency Drives Opportunity",
-    description: "Government efficiency initiatives don't eliminate procurement—they increase competition for remaining contracts. Smart analysis becomes more critical, not less.",
+    description: "Government efficiency initiatives don&apos;t eliminate procurement—they increase competition for remaining contracts. Smart analysis becomes more critical, not less.",
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -91,7 +91,7 @@ export default function MarketResilienceSection() {
             Built for the Long Game
           </h2>
           <p className="text-xl text-gray-300 leading-relaxed">
-            Political cycles change. Budget priorities shift. But one constant remains: the federal government is the world's largest buyer—and it's not slowing down. Here's why we're positioned for sustained growth, regardless of who's in office.
+            Political cycles change. Budget priorities shift. But one constant remains: the federal government is the world's largest buyer—and it&apos;s not slowing down. Here's why we're positioned for sustained growth, regardless of who&apos;s in office.
           </p>
         </div>
 
@@ -123,7 +123,7 @@ export default function MarketResilienceSection() {
         <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 md:p-12 border border-white/10">
           <div className="text-center mb-12">
             <h3 className="text-3xl md:text-4xl font-bold mb-4">
-              The Numbers Don't Lie
+              The Numbers Don&apos;t Lie
             </h3>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Regardless of efficiency initiatives, the scale of government procurement ensures sustained opportunity. Our platform helps you capture it.
@@ -151,7 +151,7 @@ export default function MarketResilienceSection() {
         <div className="text-center mt-16">
           <div className="inline-flex flex-col items-center">
             <p className="text-2xl font-bold mb-2">
-              The question isn't <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">if</span> government buys—it's <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">who wins the contracts</span>.
+              The question isn&apos;t <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">if</span> government buys—it&apos;s <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">who wins the contracts</span>.
             </p>
             <p className="text-gray-400 mb-8">
               Position your organization to win, no matter what changes.

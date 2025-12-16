@@ -145,14 +145,14 @@ const Stats = () => {
           </div>
 
           <p className="text-lg text-gray-600 mt-12 italic">
-            That's why the performance difference isn't incremental — it's <strong>structural</strong>.
+            That&apos;s why the performance difference isn&apos;t incremental — it&apos;s <strong>structural</strong>.
           </p>
         </div>
 
         {/* Authority Statement */}
         <div className="mx-auto max-w-3xl mt-16 text-center">
           <blockquote className="text-2xl md:text-3xl font-medium text-gray-800 italic border-l-4 border-blue-600 pl-6 py-4">
-            "This isn't AI layered onto government contracting — it's government contracting rebuilt around intelligence."
+            "This isn&apos;t AI layered onto government contracting — it&apos;s government contracting rebuilt around intelligence."
           </blockquote>
         </div>
 

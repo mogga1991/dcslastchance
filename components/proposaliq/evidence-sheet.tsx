@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import {
   Sheet,
@@ -103,14 +102,14 @@ export function EvidenceSheet({
                   <div className="text-sm font-medium">Extraction Confidence</div>
                   <Badge
                     variant={
-                      evidence.confidence >= 0.8
+                      (evidence.confidence ?? 0) >= 0.8
                         ? "default"
-                        : evidence.confidence >= 0.5
+                        : (evidence.confidence ?? 0) >= 0.5
                         ? "secondary"
                         : "outline"
                     }
                   >
-                    {Math.round((evidence.confidence || 0) * 100)}%
+                    {Math.round((evidence.confidence ?? 0) * 100)}%
                   </Badge>
                 </div>
               </div>

@@ -12,7 +12,6 @@ import {
   Award,
   FileText,
   AlertCircle,
-  Building2,
   Clock,
   Download,
   Sparkles,
