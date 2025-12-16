@@ -36,7 +36,7 @@ export default function AllOpportunitiesClient() {
   const fetchOpportunities = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/opportunities?source=all&limit=100");
+      const response = await fetch("/api/sam-opportunities?mode=all&limit=100");
       const data = await response.json();
 
       if (data.success) {
