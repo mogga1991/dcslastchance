@@ -260,19 +260,22 @@ CREATE POLICY "Service role can manage match scores"
 CREATE OR REPLACE FUNCTION cleanup_expired_cache()
 RETURNS INTEGER AS $$
 DECLARE
-  deleted_count INTEGER;
+  deleted_count INTEGER := 0;
+  temp_count INTEGER;
 BEGIN
   -- Delete expired neighborhood scores
   DELETE FROM federal_neighborhood_scores
   WHERE expires_at < NOW();
 
-  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+  GET DIAGNOSTICS temp_count = ROW_COUNT;
+  deleted_count := deleted_count + temp_count;
 
   -- Delete expired match scores
   DELETE FROM property_match_scores
   WHERE expires_at < NOW();
 
-  GET DIAGNOSTICS deleted_count = deleted_count + ROW_COUNT;
+  GET DIAGNOSTICS temp_count = ROW_COUNT;
+  deleted_count := deleted_count + temp_count;
 
   RETURN deleted_count;
 END;

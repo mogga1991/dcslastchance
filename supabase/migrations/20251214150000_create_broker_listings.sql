@@ -104,16 +104,16 @@ CREATE TABLE IF NOT EXISTS broker_listings (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_broker_listings_user_id ON broker_listings(user_id);
-CREATE INDEX idx_broker_listings_status ON broker_listings(status);
-CREATE INDEX idx_broker_listings_state ON broker_listings(state);
-CREATE INDEX idx_broker_listings_city ON broker_listings(city);
-CREATE INDEX idx_broker_listings_property_type ON broker_listings(property_type);
-CREATE INDEX idx_broker_listings_available_sf ON broker_listings(available_sf);
-CREATE INDEX idx_broker_listings_federal_score ON broker_listings(federal_score) WHERE federal_score IS NOT NULL;
-CREATE INDEX idx_broker_listings_location ON broker_listings(latitude, longitude);
-CREATE INDEX idx_broker_listings_created_at ON broker_listings(created_at DESC);
-CREATE INDEX idx_broker_listings_published_at ON broker_listings(published_at DESC) WHERE published_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_broker_listings_user_id ON broker_listings(user_id);
+CREATE INDEX IF NOT EXISTS idx_broker_listings_status ON broker_listings(status);
+CREATE INDEX IF NOT EXISTS idx_broker_listings_state ON broker_listings(state);
+CREATE INDEX IF NOT EXISTS idx_broker_listings_city ON broker_listings(city);
+CREATE INDEX IF NOT EXISTS idx_broker_listings_property_type ON broker_listings(property_type);
+CREATE INDEX IF NOT EXISTS idx_broker_listings_available_sf ON broker_listings(available_sf);
+CREATE INDEX IF NOT EXISTS idx_broker_listings_federal_score ON broker_listings(federal_score) WHERE federal_score IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_broker_listings_location ON broker_listings(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_broker_listings_created_at ON broker_listings(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_broker_listings_published_at ON broker_listings(published_at DESC) WHERE published_at IS NOT NULL;
 
 -- Create GiST index for location-based queries (optional, for future spatial queries)
 -- CREATE INDEX idx_broker_listings_location_gist ON broker_listings USING GIST (ll_to_earth(latitude, longitude));
@@ -122,24 +122,28 @@ CREATE INDEX idx_broker_listings_published_at ON broker_listings(published_at DE
 ALTER TABLE broker_listings ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Anyone can view active listings
+DROP POLICY IF EXISTS "Anyone can view active listings" ON broker_listings;
 CREATE POLICY "Anyone can view active listings"
   ON broker_listings
   FOR SELECT
   USING (status = 'active');
 
 -- Policy: Users can view their own listings regardless of status
+DROP POLICY IF EXISTS "Users can view their own listings" ON broker_listings;
 CREATE POLICY "Users can view their own listings"
   ON broker_listings
   FOR SELECT
   USING (auth.uid() = user_id);
 
 -- Policy: Users can insert their own listings
+DROP POLICY IF EXISTS "Users can create listings" ON broker_listings;
 CREATE POLICY "Users can create listings"
   ON broker_listings
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
 -- Policy: Users can update their own listings
+DROP POLICY IF EXISTS "Users can update their own listings" ON broker_listings;
 CREATE POLICY "Users can update their own listings"
   ON broker_listings
   FOR UPDATE
@@ -147,6 +151,7 @@ CREATE POLICY "Users can update their own listings"
   WITH CHECK (auth.uid() = user_id);
 
 -- Policy: Users can delete their own listings
+DROP POLICY IF EXISTS "Users can delete their own listings" ON broker_listings;
 CREATE POLICY "Users can delete their own listings"
   ON broker_listings
   FOR DELETE
@@ -162,6 +167,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger to automatically update updated_at
+DROP TRIGGER IF EXISTS broker_listings_updated_at ON broker_listings;
 CREATE TRIGGER broker_listings_updated_at
   BEFORE UPDATE ON broker_listings
   FOR EACH ROW
@@ -180,6 +186,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger to automatically set published_at
+DROP TRIGGER IF EXISTS broker_listings_published_at ON broker_listings;
 CREATE TRIGGER broker_listings_published_at
   BEFORE UPDATE ON broker_listings
   FOR EACH ROW
