@@ -131,34 +131,98 @@ export async function syncIOLPDataToDatabase(): Promise<{
 
 /**
  * Fetch all IOLP buildings (handles pagination)
+ * Fetches in batches to get maximum data
  */
 async function fetchAllIOLPBuildings(): Promise<IOLPFeatureCollection> {
-  // For now, fetch a large batch
-  // In production, implement proper pagination
-  const queryString = [
-    'where=1=1',
-    'outFields=*',
-    'returnGeometry=true',
-    'resultRecordCount=5000',
-    'f=json'
-  ].join('&');
+  const allFeatures: any[] = [];
+  const batchSize = 2000; // IOLP max is typically 2000
+  let offset = 0;
+  let hasMore = true;
 
-  return iolpAdapter.queryBuildings(queryString);
+  console.log('[IOLP] Fetching buildings...');
+
+  while (hasMore) {
+    const queryString = [
+      'where=1=1',
+      'outFields=*',
+      'returnGeometry=true',
+      `resultRecordCount=${batchSize}`,
+      `resultOffset=${offset}`,
+      'f=json'
+    ].join('&');
+
+    const result = await iolpAdapter.queryBuildings(queryString);
+
+    if (result.features && result.features.length > 0) {
+      allFeatures.push(...result.features);
+      console.log(`[IOLP] Buildings: ${allFeatures.length} total`);
+      offset += batchSize;
+
+      // If we got less than batchSize, we've reached the end
+      if (result.features.length < batchSize) {
+        hasMore = false;
+      }
+    } else {
+      hasMore = false;
+    }
+
+    // Prevent infinite loop - max 50k records
+    if (offset >= 50000) {
+      console.log('[IOLP] Reached maximum fetch limit (50k buildings)');
+      hasMore = false;
+    }
+  }
+
+  console.log(`[IOLP] ✓ Fetched ${allFeatures.length} buildings total`);
+  return { features: allFeatures };
 }
 
 /**
  * Fetch all IOLP leases (handles pagination)
+ * Fetches in batches to get maximum data
  */
 async function fetchAllIOLPLeases(): Promise<IOLPFeatureCollection> {
-  const queryString = [
-    'where=1=1',
-    'outFields=*',
-    'returnGeometry=true',
-    'resultRecordCount=5000',
-    'f=json'
-  ].join('&');
+  const allFeatures: any[] = [];
+  const batchSize = 2000; // IOLP max is typically 2000
+  let offset = 0;
+  let hasMore = true;
 
-  return iolpAdapter.queryLeases(queryString);
+  console.log('[IOLP] Fetching leases...');
+
+  while (hasMore) {
+    const queryString = [
+      'where=1=1',
+      'outFields=*',
+      'returnGeometry=true',
+      `resultRecordCount=${batchSize}`,
+      `resultOffset=${offset}`,
+      'f=json'
+    ].join('&');
+
+    const result = await iolpAdapter.queryLeases(queryString);
+
+    if (result.features && result.features.length > 0) {
+      allFeatures.push(...result.features);
+      console.log(`[IOLP] Leases: ${allFeatures.length} total`);
+      offset += batchSize;
+
+      // If we got less than batchSize, we've reached the end
+      if (result.features.length < batchSize) {
+        hasMore = false;
+      }
+    } else {
+      hasMore = false;
+    }
+
+    // Prevent infinite loop - max 50k records
+    if (offset >= 50000) {
+      console.log('[IOLP] Reached maximum fetch limit (50k leases)');
+      hasMore = false;
+    }
+  }
+
+  console.log(`[IOLP] ✓ Fetched ${allFeatures.length} leases total`);
+  return { features: allFeatures };
 }
 
 /**

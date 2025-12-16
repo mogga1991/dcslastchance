@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "deploy": "vercel",
-    "deploy:prod": "vercel --prod"
+    "deploy:prod": "vercel --prod",
+    "sync-federal-data": "node scripts/sync-federal-data.js"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.22",
