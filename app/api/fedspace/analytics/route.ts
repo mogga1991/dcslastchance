@@ -110,10 +110,10 @@ async function getFederalScoreAnalytics(supabase: any) {
 
   const summary = {
     totalCached: scores?.length || 0,
-    averageScore: scores?.reduce((sum, s) => sum + parseFloat(s.overall_score), 0) / (scores?.length || 1),
-    averageProperties: scores?.reduce((sum, s) => sum + (s.total_properties || 0), 0) / (scores?.length || 1),
-    totalRSF: scores?.reduce((sum, s) => sum + (s.total_rsf || 0), 0),
-    totalExpiringLeases: scores?.reduce((sum, s) => sum + (s.expiring_leases_count || 0), 0),
+    averageScore: scores?.reduce((sum: number, s: any) => sum + parseFloat(s.overall_score), 0) / (scores?.length || 1),
+    averageProperties: scores?.reduce((sum: number, s: any) => sum + (s.total_properties || 0), 0) / (scores?.length || 1),
+    totalRSF: scores?.reduce((sum: number, s: any) => sum + (s.total_rsf || 0), 0),
+    totalExpiringLeases: scores?.reduce((sum: number, s: any) => sum + (s.expiring_leases_count || 0), 0),
   };
 
   return {
@@ -136,20 +136,20 @@ async function getMatchScoreAnalytics(supabase: any) {
 
   const summary = {
     totalCached: scores?.length || 0,
-    averageScore: scores?.reduce((sum, s) => sum + parseFloat(s.overall_score), 0) / (scores?.length || 1),
-    qualifiedPercentage: (scores?.filter(s => s.qualified).length || 0) / (scores?.length || 1) * 100,
-    competitivePercentage: (scores?.filter(s => s.competitive).length || 0) / (scores?.length || 1) * 100,
-    earlyTerminationRate: (scores?.filter(s => s.early_terminated).length || 0) / (scores?.length || 1) * 100,
-    averageComputationMs: scores?.reduce((sum, s) => sum + (s.computation_time_ms || 0), 0) / (scores?.length || 1),
+    averageScore: scores?.reduce((sum: number, s: any) => sum + parseFloat(s.overall_score), 0) / (scores?.length || 1),
+    qualifiedPercentage: (scores?.filter((s: any) => s.qualified).length || 0) / (scores?.length || 1) * 100,
+    competitivePercentage: (scores?.filter((s: any) => s.competitive).length || 0) / (scores?.length || 1) * 100,
+    earlyTerminationRate: (scores?.filter((s: any) => s.early_terminated).length || 0) / (scores?.length || 1) * 100,
+    averageComputationMs: scores?.reduce((sum: number, s: any) => sum + (s.computation_time_ms || 0), 0) / (scores?.length || 1),
   };
 
   // Grade breakdown
   const gradeBreakdown = {
-    A: scores?.filter(s => s.grade === 'A').length || 0,
-    B: scores?.filter(s => s.grade === 'B').length || 0,
-    C: scores?.filter(s => s.grade === 'C').length || 0,
-    D: scores?.filter(s => s.grade === 'D').length || 0,
-    F: scores?.filter(s => s.grade === 'F').length || 0,
+    A: scores?.filter((s: any) => s.grade === 'A').length || 0,
+    B: scores?.filter((s: any) => s.grade === 'B').length || 0,
+    C: scores?.filter((s: any) => s.grade === 'C').length || 0,
+    D: scores?.filter((s: any) => s.grade === 'D').length || 0,
+    F: scores?.filter((s: any) => s.grade === 'F').length || 0,
   };
 
   return {
@@ -174,8 +174,8 @@ async function getEarlyTerminationAnalytics(supabase: any) {
 
   const summary = {
     totalTerminated: terminated?.length || 0,
-    averageComputationSaved: terminated?.reduce((sum, t) => sum + (t.computation_saved_pct || 0), 0) / (terminated?.length || 1),
-    averageTerminationTimeMs: terminated?.reduce((sum, t) => sum + (t.computation_time_ms || 0), 0) / (terminated?.length || 1),
+    averageComputationSaved: terminated?.reduce((sum: number, t: any) => sum + (t.computation_saved_pct || 0), 0) / (terminated?.length || 1),
+    averageTerminationTimeMs: terminated?.reduce((sum: number, t: any) => sum + (t.computation_time_ms || 0), 0) / (terminated?.length || 1),
   };
 
   // Calculate actual disqualification rates from data
@@ -187,7 +187,7 @@ async function getEarlyTerminationAnalytics(supabase: any) {
     CLEARANCE: 0,
   };
 
-  terminated?.forEach(t => {
+  terminated?.forEach((t: any) => {
     if (t.failed_constraint && constraintCounts.hasOwnProperty(t.failed_constraint)) {
       constraintCounts[t.failed_constraint as keyof typeof constraintCounts]++;
     }
@@ -254,23 +254,23 @@ async function getMyPropertiesAnalytics(supabase: any, userId: string) {
     .gt('expires_at', new Date().toISOString());
 
   // Calculate analytics per property
-  const propertiesWithAnalytics = properties.map(property => {
-    const propertyMatches = matchScores?.filter(m => m.property_id === property.id) || [];
+  const propertiesWithAnalytics = properties.map((property: any) => {
+    const propertyMatches = matchScores?.filter((m: any) => m.property_id === property.id) || [];
 
     return {
       ...property,
       matchCount: propertyMatches.length,
-      averageMatchScore: propertyMatches.reduce((sum, m) => sum + parseFloat(m.overall_score), 0) / (propertyMatches.length || 1),
-      competitiveMatches: propertyMatches.filter(m => m.competitive).length,
-      qualifiedMatches: propertyMatches.filter(m => m.qualified).length,
+      averageMatchScore: propertyMatches.reduce((sum: number, m: any) => sum + parseFloat(m.overall_score), 0) / (propertyMatches.length || 1),
+      competitiveMatches: propertyMatches.filter((m: any) => m.competitive).length,
+      qualifiedMatches: propertyMatches.filter((m: any) => m.qualified).length,
     };
   });
 
   const summary = {
     totalProperties: properties.length,
-    averageFederalScore: properties.reduce((sum, p) => sum + (p.federal_score || 0), 0) / properties.length,
-    averageMatchScore: matchScores?.reduce((sum, m) => sum + parseFloat(m.overall_score), 0) / (matchScores?.length || 1),
-    competitiveMatches: matchScores?.filter(m => m.competitive).length || 0,
+    averageFederalScore: properties.reduce((sum: number, p: any) => sum + (p.federal_score || 0), 0) / properties.length,
+    averageMatchScore: matchScores?.reduce((sum: number, m: any) => sum + parseFloat(m.overall_score), 0) / (matchScores?.length || 1),
+    competitiveMatches: matchScores?.filter((m: any) => m.competitive).length || 0,
     totalMatches: matchScores?.length || 0,
   };
 
