@@ -148,7 +148,8 @@ export function calculatePropertyOpportunityMatch(
   const recommendations = generateRecommendations(
     factors,
     property,
-    opportunity
+    opportunity,
+    experience
   );
 
   const computationTimeMs = performance.now() - startTime;
@@ -761,7 +762,8 @@ function generateWeaknesses(
 function generateRecommendations(
   factors: any,
   property: PropertyData,
-  _opportunity: OpportunityRequirements
+  _opportunity: OpportunityRequirements,
+  experience: BrokerExperience
 ): string[] {
   const recommendations: string[] = [];
 

@@ -99,11 +99,17 @@ async function buildSpatialIndex(): Promise<FederalPropertyRTree> {
   const { iolpAdapter } = await import('@/lib/iolp');
 
   // Fetch all federal properties (buildings + leases)
-  // Use a large radius to get comprehensive data
-  const [buildings, leases] = await Promise.all([
-    iolpAdapter.getBuildings({ limit: 10000 }),
-    iolpAdapter.getLeases({ limit: 10000 }),
+  // Use query strings to get comprehensive data
+  const buildingsQueryString = 'where=1=1&outFields=*&returnGeometry=true&resultRecordCount=10000&f=json';
+  const leasesQueryString = 'where=1=1&outFields=*&returnGeometry=true&resultRecordCount=10000&f=json';
+
+  const [buildingsResult, leasesResult] = await Promise.all([
+    iolpAdapter.queryBuildings(buildingsQueryString),
+    iolpAdapter.queryLeases(leasesQueryString),
   ]);
+
+  const buildings = buildingsResult.features.map((f: any) => f.attributes);
+  const leases = leasesResult.features.map((f: any) => f.attributes);
 
   // Convert to FederalProperty format
   const properties: FederalProperty[] = [];

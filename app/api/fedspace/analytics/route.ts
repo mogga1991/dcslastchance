@@ -244,7 +244,7 @@ async function getMyPropertiesAnalytics(supabase: any, userId: string) {
     };
   }
 
-  const propertyIds = properties.map(p => p.id);
+  const propertyIds = properties.map((p: any) => p.id);
 
   // Get match scores for user's properties
   const { data: matchScores } = await supabase
