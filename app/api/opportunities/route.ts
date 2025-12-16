@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
       await sql.end();
 
       // Transform database records to match SAMOpportunity interface
-      const transformedData = opportunities.map((opp: any) => ({
+      const transformedData = opportunities?.map((opp: any) => ({
         noticeId: opp.notice_id,
         title: opp.title,
         solicitationNumber: opp.solicitation_number,
@@ -187,8 +187,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           success: true,
-          data: transformedData,
-          totalRecords: parseInt(count),
+          data: transformedData || [],
+          totalRecords: parseInt(count || "0"),
           limit,
           offset,
         },
