@@ -627,20 +627,29 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
           onValueChange={(value) => setActiveTab(value as TabType)}
           className="flex flex-col flex-1 overflow-hidden"
         >
-          <TabsList className="w-full grid grid-cols-3 rounded-none border-b">
-            <TabsTrigger value="opportunities" className="rounded-none text-xs sm:text-sm px-2 sm:px-4 py-3">
+          <TabsList className="w-full grid grid-cols-3 rounded-none border-b-2 border-slate-200 bg-slate-50 h-auto p-0">
+            <TabsTrigger
+              value="opportunities"
+              className="rounded-none text-sm sm:text-base font-bold px-3 sm:px-6 py-4 hover:bg-slate-100 cursor-pointer transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-b-4 data-[state=active]:border-blue-700 data-[state=inactive]:text-slate-600"
+            >
               <span className="hidden sm:inline">Opportunities</span>
               <span className="sm:hidden">Opps</span>
             </TabsTrigger>
-            <TabsTrigger value="listings" className="rounded-none text-xs sm:text-sm px-2 sm:px-4 py-3">
+            <TabsTrigger
+              value="listings"
+              className="rounded-none text-sm sm:text-base font-bold px-3 sm:px-6 py-4 hover:bg-slate-100 cursor-pointer transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-b-4 data-[state=active]:border-blue-700 data-[state=inactive]:text-slate-600"
+            >
               <span className="hidden sm:inline">Available Listings</span>
               <span className="sm:hidden">Listings</span>
             </TabsTrigger>
-            <TabsTrigger value="expiring" className="rounded-none text-xs sm:text-sm px-2 sm:px-4 py-3 relative">
+            <TabsTrigger
+              value="expiring"
+              className="rounded-none text-sm sm:text-base font-bold px-3 sm:px-6 py-4 hover:bg-slate-100 cursor-pointer transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-b-4 data-[state=active]:border-blue-700 data-[state=inactive]:text-slate-600 relative"
+            >
               <span className="hidden sm:inline">Expiring Soon</span>
               <span className="sm:hidden">Expiring</span>
               {urgencyCounts.critical > 0 && (
-                <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
+                <Badge variant="destructive" className="ml-1.5 h-5 px-1.5 text-xs font-bold">
                   {urgencyCounts.critical}
                 </Badge>
               )}
