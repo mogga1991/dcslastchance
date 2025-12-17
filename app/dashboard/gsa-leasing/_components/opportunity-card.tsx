@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, AlertCircle, MessageSquare, Building2, Calendar, FileText, Hash } from "lucide-react";
+import { MapPin, AlertCircle, Building2, Calendar, FileText, Hash, Maximize2, ChevronRight } from "lucide-react";
 import type { SAMOpportunity } from "@/lib/sam-gov";
 
 interface OpportunityCardProps {
@@ -66,178 +66,183 @@ export function OpportunityCard({
     return types[type.toLowerCase()] || type;
   };
 
-  // Determine border color based on urgency
-  const getBorderColor = () => {
-    if (isCritical) return "border-l-red-500";
-    if (isUrgent) return "border-l-orange-500";
-    return "border-l-blue-500";
+  // Extract square footage from description
+  const extractSquareFootage = (description: string): string | null => {
+    if (!description) return null;
+
+    // Match patterns like "10,000 SF", "10000 square feet", "10,000 sq ft", etc.
+    const patterns = [
+      /(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*(?:SF|sq\.?\s*ft\.?|square\s*feet)/gi,
+      /(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*(?:RSF|ABOA|USF)/gi, // Rentable, ABOA, Usable SF
+    ];
+
+    for (const pattern of patterns) {
+      const match = description.match(pattern);
+      if (match) {
+        const sfValue = match[0].match(/\d{1,3}(?:,\d{3})*(?:\.\d+)?/)?.[0];
+        if (sfValue) {
+          return sfValue + " SF";
+        }
+      }
+    }
+
+    return null;
   };
+
+  const squareFootage = extractSquareFootage(opportunity.description || '');
+
+  // Get urgency styling
+  const getUrgencyStyle = () => {
+    if (isCritical) return {
+      border: "border-l-red-600",
+      bg: "bg-red-50",
+      badge: "bg-red-600"
+    };
+    if (isUrgent) return {
+      border: "border-l-amber-500",
+      bg: "bg-amber-50",
+      badge: "bg-amber-500"
+    };
+    return {
+      border: "border-l-slate-600",
+      bg: "bg-slate-50",
+      badge: "bg-slate-600"
+    };
+  };
+
+  const urgencyStyle = getUrgencyStyle();
 
   return (
     <Card
-      className={`overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg bg-white shadow-sm border-l-4 ${getBorderColor()} ${
-        isSelected ? "ring-2 ring-blue-500 shadow-lg" : ""
+      className={`group overflow-hidden cursor-pointer transition-all duration-200 bg-white border border-slate-200 border-l-4 ${urgencyStyle.border} hover:shadow-xl hover:border-slate-300 ${
+        isSelected ? "ring-2 ring-blue-600 shadow-xl border-slate-300" : "shadow-sm"
       }`}
       onClick={onClick}
     >
-      <div className="p-6 space-y-5">
-        {/* Header: Agency & Notice Type */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <Building2 className="h-4 w-4 text-gray-500 flex-shrink-0" />
-              <p className="text-sm font-semibold text-gray-900 truncate">
-                {opportunity.department || 'Federal Agency'}
-              </p>
+      {/* Status Bar */}
+      <div className={`px-6 py-3 ${urgencyStyle.bg} border-b border-slate-200`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-slate-600" />
+              <span className="text-sm font-semibold text-slate-900 uppercase tracking-wide">
+                {opportunity.department?.substring(0, 30) || 'Federal Agency'}
+              </span>
             </div>
-            {opportunity.subTier && (
-              <p className="text-xs text-gray-600 ml-6 truncate">
-                {opportunity.subTier}
-              </p>
-            )}
+            <Badge variant="outline" className="bg-white border-slate-300 text-slate-700 text-xs font-semibold uppercase">
+              {getNoticeTypeLabel(opportunity.type)}
+            </Badge>
           </div>
-          <Badge variant="outline" className="flex-shrink-0 bg-purple-50 text-purple-700 border-purple-200 text-xs">
-            {getNoticeTypeLabel(opportunity.type)}
-          </Badge>
+          {daysLeft !== null && daysLeft > 0 && (
+            <Badge className={`${urgencyStyle.badge} text-white font-bold uppercase tracking-wide text-xs`}>
+              {isCritical && <AlertCircle className="h-3 w-3 mr-1" />}
+              {daysLeft} DAY{daysLeft !== 1 ? 'S' : ''}
+            </Badge>
+          )}
         </div>
+      </div>
+
+      <div className="p-6 space-y-4">
+        {/* Solicitation Number - Prominent */}
+        {opportunity.solicitationNumber && (
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+            <FileText className="h-4 w-4 text-slate-500" />
+            <span className="text-xs font-medium text-slate-600 uppercase tracking-wider">Solicitation</span>
+            <span className="text-sm font-bold text-slate-900 font-mono">
+              {opportunity.solicitationNumber}
+            </span>
+          </div>
+        )}
 
         {/* Title */}
-        <h3 className="font-bold text-lg leading-tight line-clamp-2 text-gray-900">
+        <h3 className="font-bold text-lg leading-snug line-clamp-3 text-slate-900 min-h-[4rem]">
           {opportunity.title}
         </h3>
 
-        {/* Key Details Grid */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Key Information Grid */}
+        <div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-100">
           {/* Location */}
           {opportunity.placeOfPerformance && (
-            <div className="flex items-start gap-2">
-              <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium">Location</p>
-                <p className="text-sm text-gray-900 truncate">
-                  {opportunity.placeOfPerformance.city?.name}, {opportunity.placeOfPerformance.state?.code}
-                </p>
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <MapPin className="h-3.5 w-3.5 text-slate-500" />
+                <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Location</span>
               </div>
+              <p className="text-sm font-medium text-slate-900 truncate">
+                {opportunity.placeOfPerformance.city?.name}, {opportunity.placeOfPerformance.state?.code}
+              </p>
+            </div>
+          )}
+
+          {/* Square Footage */}
+          {squareFootage && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <Maximize2 className="h-3.5 w-3.5 text-slate-500" />
+                <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Size</span>
+              </div>
+              <p className="text-sm font-bold text-blue-700">
+                {squareFootage}
+              </p>
             </div>
           )}
 
           {/* NAICS Code */}
           {opportunity.naicsCode && (
-            <div className="flex items-start gap-2">
-              <Hash className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium">NAICS</p>
-                <p className="text-sm text-gray-900 font-mono">
-                  {opportunity.naicsCode}
-                </p>
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <Hash className="h-3.5 w-3.5 text-slate-500" />
+                <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">NAICS</span>
               </div>
+              <p className="text-sm font-mono text-slate-900">
+                {opportunity.naicsCode}
+              </p>
             </div>
           )}
 
           {/* Posted Date */}
-          <div className="flex items-start gap-2">
-            <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
-            <div className="min-w-0">
-              <p className="text-xs text-gray-500 font-medium">Posted</p>
-              <p className="text-sm text-gray-900">
-                {formatDate(opportunity.postedDate)}
-              </p>
+          <div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <Calendar className="h-3.5 w-3.5 text-slate-500" />
+              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Posted</span>
             </div>
+            <p className="text-sm text-slate-900">
+              {formatDate(opportunity.postedDate)}
+            </p>
           </div>
-
-          {/* Solicitation Number */}
-          {opportunity.solicitationNumber && (
-            <div className="flex items-start gap-2">
-              <FileText className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500 font-medium">Solicitation</p>
-                <p className="text-xs text-gray-900 font-mono truncate">
-                  {opportunity.solicitationNumber}
-                </p>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Deadline - Prominent */}
-        <div className={`p-3 rounded-lg ${
-          isCritical ? 'bg-red-50 border border-red-200' :
-          isUrgent ? 'bg-orange-50 border border-orange-200' :
-          'bg-gray-50 border border-gray-200'
-        }`}>
+        {/* Deadline Section */}
+        <div className="p-4 bg-slate-50 border-2 border-slate-200 rounded-md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-600 mb-0.5">Response Deadline</p>
-              <p className={`text-base font-bold ${
-                isCritical ? 'text-red-700' :
-                isUrgent ? 'text-orange-700' :
-                'text-gray-900'
-              }`}>
+              <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Response Deadline</p>
+              <p className="text-lg font-bold text-slate-900">
                 {formatDate(opportunity.responseDeadLine)}
               </p>
             </div>
-            {daysLeft !== null && daysLeft > 0 && (
-              <Badge
-                className={`font-bold text-sm px-3 py-1 ${
-                  isCritical
-                    ? "bg-red-600 text-white"
-                    : isUrgent
-                    ? "bg-orange-500 text-white"
-                    : "bg-blue-600 text-white"
-                }`}
-              >
-                {isCritical && <AlertCircle className="h-3.5 w-3.5 mr-1.5" />}
-                {daysLeft} day{daysLeft !== 1 ? 's' : ''}
-              </Badge>
-            )}
+            <Calendar className="h-8 w-8 text-slate-400" />
           </div>
         </div>
 
-        {/* Set-Aside & Additional Info */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {opportunity.typeOfSetAsideDescription && opportunity.typeOfSetAsideDescription !== 'None' && (
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-medium">
+        {/* Badges */}
+        {(opportunity.typeOfSetAsideDescription && opportunity.typeOfSetAsideDescription !== 'None') && (
+          <div className="flex items-center gap-2">
+            <Badge className="bg-blue-100 text-blue-800 border border-blue-300 font-semibold uppercase text-xs">
               {opportunity.typeOfSetAsideDescription}
             </Badge>
-          )}
-          {opportunity.office && (
-            <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 text-xs">
-              {opportunity.office}
-            </Badge>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Action Button */}
-        <div className="pt-2">
-          {onExpressInterest && hasInquiry ? (
-            <Button
-              size="lg"
-              variant="outline"
-              disabled
-              className="w-full border-green-600 text-green-700 bg-green-50 cursor-not-allowed opacity-75 font-semibold"
-            >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Inquiry Sent ✓
-            </Button>
-          ) : onExpressInterest ? (
-            <Button
-              size="lg"
-              variant="default"
-              onClick={onExpressInterest}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow"
-            >
-              Express Interest
-            </Button>
-          ) : (
-            <Button
-              size="lg"
-              onClick={onViewDetails}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow"
-            >
-              View Full Details
-            </Button>
-          )}
-        </div>
+        {/* View More Button */}
+        <Button
+          size="lg"
+          onClick={onViewDetails}
+          className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-wide text-sm group-hover:bg-blue-700 transition-colors"
+        >
+          View More
+          <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+        </Button>
       </div>
     </Card>
   );
