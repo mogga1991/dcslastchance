@@ -552,7 +552,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden">
       {/* Left Panel */}
-      <div className="w-full lg:w-[380px] bg-white border-r lg:border-b-0 border-b flex flex-col max-h-[60vh] lg:max-h-none overflow-y-auto">
+      <div className="w-full lg:w-[550px] bg-white border-r lg:border-b-0 border-b flex flex-col max-h-[60vh] lg:max-h-none overflow-y-auto">
         {/* Header */}
         <div className="p-4 border-b bg-gray-50">
           <div className="flex items-center justify-between mb-3">
