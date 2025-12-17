@@ -62,6 +62,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
   const [listingsError, setListingsError] = useState<string | null>(null);
   const [iolpError, setIolpError] = useState<string | null>(null);
   const [iolpCount, setIolpCount] = useState<number>(0);
+  const [pinFilteredOpportunities, setPinFilteredOpportunities] = useState<SAMOpportunity[] | null>(null);
 
   // IOLP Filters
   const [iolpFilters, setIolpFilters] = useState<IOLPFilters>({
@@ -291,6 +292,14 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
     });
   };
 
+  const handlePinClick = (filteredOpps: SAMOpportunity[]) => {
+    setPinFilteredOpportunities(filteredOpps);
+  };
+
+  const clearPinFilter = () => {
+    setPinFilteredOpportunities(null);
+  };
+
   const handleSetAlert = async (lease: { location_code?: string; building_name?: string; address?: string }) => {
     if (!lease.location_code) return;
 
@@ -356,11 +365,14 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
 
   // Filter and sort opportunities
   const filteredAndSortedOpportunities = useMemo(() => {
-    if (!opportunities || opportunities.length === 0) {
+    // Use pinFilteredOpportunities if available (when user clicks a pin), otherwise use all opportunities
+    const baseOpportunities = pinFilteredOpportunities || opportunities;
+
+    if (!baseOpportunities || baseOpportunities.length === 0) {
       return [];
     }
 
-    let filtered = [...opportunities];
+    let filtered = [...baseOpportunities];
 
     // Filter by search term
     if (searchTerm) {
@@ -462,7 +474,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
     }
 
     return filtered;
-  }, [opportunities, searchTerm, opportunityFilters, opportunityMatchScores]);
+  }, [opportunities, searchTerm, opportunityFilters, opportunityMatchScores, pinFilteredOpportunities]);
 
   // Removed unused: availableAgencies and availableStates
 
@@ -726,8 +738,34 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
                 )}
               </div>
             ) : (
-              <div className="space-y-4">
-                {filteredAndSortedOpportunities.map((opp) => (
+              <>
+                {/* Pin Filter Notification */}
+                {pinFilteredOpportunities && (
+                  <div className="mb-4 p-3 bg-indigo-50 border-2 border-indigo-300 rounded-lg flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        {pinFilteredOpportunities.length}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-indigo-900">
+                          Viewing {pinFilteredOpportunities.length} opportunit{pinFilteredOpportunities.length !== 1 ? 'ies' : 'y'} from {pinFilteredOpportunities[0]?.placeOfPerformance?.state?.code || 'selected location'}
+                        </p>
+                        <p className="text-xs text-indigo-700">Click on map pins to filter opportunities by location</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearPinFilter}
+                      className="border-indigo-300 text-indigo-700 hover:bg-indigo-100"
+                    >
+                      Show All
+                    </Button>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {filteredAndSortedOpportunities.map((opp) => (
                   <OpportunityCard
                     key={opp.noticeId}
                     opportunity={opp}
@@ -748,7 +786,8 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
                     matchScore={opportunityMatchScores.get(opp.noticeId)}
                   />
                 ))}
-              </div>
+                </div>
+              </>
             )}
           </TabsContent>
 
@@ -999,6 +1038,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
           onIOLPCountChange={setIolpCount}
           onIOLPError={setIolpError}
           onViewportChange={setCurrentViewport}
+          onPinClick={activeTab === "opportunities" ? handlePinClick : undefined}
         />
 
         {/* Detail Panels - Overlay the map */}

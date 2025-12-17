@@ -16,6 +16,7 @@ interface GSAMapWithIOLPProps {
   onIOLPCountChange?: (count: number) => void;
   onIOLPError?: (error: string | null) => void;
   onViewportChange?: (center: { lat: number; lng: number }) => void;
+  onPinClick?: (filteredOpportunities: SAMOpportunity[]) => void;
 }
 
 // State center coordinates for geocoding
@@ -67,6 +68,7 @@ export default function GSAMapWithIOLP({
   onIOLPCountChange,
   onIOLPError,
   onViewportChange,
+  onPinClick,
 }: GSAMapWithIOLPProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
@@ -348,11 +350,15 @@ export default function GSAMapWithIOLP({
 
       markerEl.addEventListener("click", () => {
         infoWindow.open(map.current, marker);
+        // Filter opportunities list to show only those from this state
+        if (onPinClick) {
+          onPinClick(opps);
+        }
       });
 
       markers.current.push(marker);
     });
-  }, [opportunities, listings, isLoaded]);
+  }, [opportunities, listings, isLoaded, onPinClick]);
 
   // Update listing markers
   useEffect(() => {

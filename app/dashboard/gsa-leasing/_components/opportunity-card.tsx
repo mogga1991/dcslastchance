@@ -238,7 +238,7 @@ export function OpportunityCard({
         <Button
           size="lg"
           onClick={onViewDetails}
-          className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-wide text-sm group-hover:bg-blue-700 transition-colors"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-wide text-sm group-hover:bg-indigo-800 transition-colors"
         >
           View More
           <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
