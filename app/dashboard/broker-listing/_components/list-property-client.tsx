@@ -158,33 +158,6 @@ export default function ListPropertyClient() {
   };
 
   const handleSubmit = async () => {
-    // Validate required fields before submitting
-    const missingFields: string[] = [];
-
-    if (!formData.street_address) missingFields.push("Street Address");
-    if (!formData.city) missingFields.push("City");
-    if (!formData.state) missingFields.push("State");
-    if (!formData.zipcode) missingFields.push("Zipcode");
-    if (!formData.total_sf) missingFields.push("Total Square Feet");
-    if (!formData.availableDate) missingFields.push("Available Date");
-    if (!formData.building_class) missingFields.push("Building Class");
-    if (!formData.contact_email) missingFields.push("Contact Email");
-    if (!formData.lister_role) missingFields.push("Your Role");
-
-    if (missingFields.length > 0) {
-      toast.error("Missing Required Fields", {
-        description: `Please fill in: ${missingFields.join(', ')}`
-      });
-      return;
-    }
-
-    if (!formData.terms_agreed) {
-      toast.error("Terms Agreement Required", {
-        description: "Please agree to the Terms of Service and Privacy Policy to continue."
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -349,7 +322,7 @@ export default function ListPropertyClient() {
               <div className="space-y-4 mt-6">
                 <div className="space-y-2">
                   <Label htmlFor="street_address">
-                    Street Address <span className="text-red-500">*</span>
+                    Street Address
                   </Label>
                   <Input
                     id="street_address"
@@ -362,7 +335,7 @@ export default function ListPropertyClient() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="city">
-                      City <span className="text-red-500">*</span>
+                      City
                     </Label>
                     <Input
                       id="city"
@@ -374,7 +347,7 @@ export default function ListPropertyClient() {
 
                   <div className="space-y-2">
                     <Label htmlFor="state">
-                      State <span className="text-red-500">*</span>
+                      State
                     </Label>
                     <Select
                       value={formData.state}
@@ -396,7 +369,7 @@ export default function ListPropertyClient() {
 
                 <div className="space-y-2">
                   <Label htmlFor="zipcode">
-                    ZIP Code <span className="text-red-500">*</span>
+                    ZIP Code
                   </Label>
                   <Input
                     id="zipcode"
@@ -433,7 +406,7 @@ export default function ListPropertyClient() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="total_sf">
-                      Total Square Footage <span className="text-red-500">*</span>
+                      Total Square Footage
                     </Label>
                     <div className="relative">
                       <Input
@@ -452,7 +425,7 @@ export default function ListPropertyClient() {
 
                   <div className="space-y-2">
                     <Label htmlFor="available_sf">
-                      Available Square Footage <span className="text-red-500">*</span>
+                      Available Square Footage
                     </Label>
                     <div className="relative">
                       <Input
@@ -473,7 +446,7 @@ export default function ListPropertyClient() {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="num_floors">
-                      Number of Floors <span className="text-red-500">*</span>
+                      Number of Floors
                     </Label>
                     <Input
                       id="num_floors"
@@ -497,7 +470,7 @@ export default function ListPropertyClient() {
 
                   <div className="space-y-2">
                     <Label htmlFor="availableDate">
-                      Available Date <span className="text-red-500">*</span>
+                      Available Date
                     </Label>
                     <Input
                       id="availableDate"
@@ -511,7 +484,7 @@ export default function ListPropertyClient() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="ceiling_height">
-                      Ceiling Height <span className="text-red-500">*</span>
+                      Ceiling Height
                     </Label>
                     <div className="relative">
                       <Input
@@ -564,7 +537,7 @@ export default function ListPropertyClient() {
               <div className="space-y-6 mt-6">
                 <div className="space-y-3">
                   <Label>
-                    Property Type <span className="text-red-500">*</span>
+                    Property Type
                   </Label>
                   <div className="grid grid-cols-2 gap-3">
                     {PROPERTY_TYPES.map((type) => (
@@ -592,7 +565,7 @@ export default function ListPropertyClient() {
 
                 <div className="space-y-3">
                   <Label>
-                    Building Class <span className="text-red-500">*</span>
+                    Building Class
                   </Label>
                   <div className="grid grid-cols-3 gap-3">
                     {["Class A", "Class B", "Class C"].map((cls) => (
@@ -621,7 +594,7 @@ export default function ListPropertyClient() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="year_built">
-                      Year Built <span className="text-red-500">*</span>
+                      Year Built
                     </Label>
                     <Input
                       id="year_built"
@@ -666,7 +639,7 @@ export default function ListPropertyClient() {
               <div className="space-y-4 mt-6">
                 <div className="space-y-2">
                   <Label htmlFor="lease_rate">
-                    Annual Lease Rate ($/SF) <span className="text-red-500">*</span>
+                    Annual Lease Rate ($/SF)
                   </Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
@@ -687,7 +660,7 @@ export default function ListPropertyClient() {
 
                 <div className="space-y-2">
                   <Label htmlFor="lease_term">
-                    Preferred Lease Term <span className="text-red-500">*</span>
+                    Preferred Lease Term
                   </Label>
                   <Select
                     value={formData.lease_term}
@@ -832,7 +805,7 @@ export default function ListPropertyClient() {
               <div className="space-y-4 mt-6">
                 <div className="space-y-2">
                   <Label htmlFor="lister_role">
-                    Your Role <span className="text-red-500">*</span>
+                    Your Role
                   </Label>
                   <Select
                     value={formData.lister_role}
@@ -852,7 +825,7 @@ export default function ListPropertyClient() {
 
                 <div className="space-y-2">
                   <Label htmlFor="broker_name">
-                    Full Name <span className="text-red-500">*</span>
+                    Full Name
                   </Label>
                   <Input
                     id="broker_name"
@@ -866,7 +839,7 @@ export default function ListPropertyClient() {
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="brokerage_company">
-                        Brokerage Company <span className="text-red-500">*</span>
+                        Brokerage Company
                       </Label>
                       <Input
                         id="brokerage_company"
@@ -879,9 +852,6 @@ export default function ListPropertyClient() {
                     <div className="space-y-2">
                       <Label htmlFor="license_number">
                         Real Estate License Number
-                        {(formData.lister_role === 'broker' || formData.lister_role === 'agent') && (
-                          <span className="text-red-500 ml-1">*</span>
-                        )}
                       </Label>
                       <Input
                         id="license_number"
@@ -890,9 +860,7 @@ export default function ListPropertyClient() {
                         onChange={(e) => updateFormData("license_number", e.target.value)}
                       />
                       <p className="text-xs text-gray-500">
-                        {formData.lister_role === 'salesperson'
-                          ? 'Optional for salespersons'
-                          : 'Required for brokers and agents'}
+                        Optional
                       </p>
                     </div>
                   </>
@@ -901,7 +869,7 @@ export default function ListPropertyClient() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="contact_email">
-                      Email <span className="text-red-500">*</span>
+                      Email
                     </Label>
                     <Input
                       id="contact_email"
@@ -914,7 +882,7 @@ export default function ListPropertyClient() {
 
                   <div className="space-y-2">
                     <Label htmlFor="contact_phone">
-                      Phone <span className="text-red-500">*</span>
+                      Phone
                     </Label>
                     <Input
                       id="contact_phone"
@@ -938,11 +906,7 @@ export default function ListPropertyClient() {
                 </div>
 
                 {/* Terms Agreement */}
-                <div className={`flex items-start space-x-3 pt-4 p-4 rounded-lg border-2 ${
-                  formData.terms_agreed
-                    ? 'border-green-200 bg-green-50'
-                    : 'border-orange-300 bg-orange-50'
-                }`}>
+                <div className="flex items-start space-x-3 pt-4 p-4 rounded-lg border-2 border-gray-200 bg-gray-50">
                   <Checkbox
                     id="terms_agreed"
                     checked={formData.terms_agreed}
@@ -952,7 +916,7 @@ export default function ListPropertyClient() {
                   />
                   <div className="flex-1">
                     <Label htmlFor="terms_agreed" className="cursor-pointer text-sm leading-relaxed font-medium">
-                      <span className="text-red-500">*</span> I certify that I am authorized to list this property and that all information
+                      I certify that I am authorized to list this property and that all information
                       provided is accurate. I agree to the{" "}
                       <a href="#" className="text-indigo-600 hover:underline">
                         Terms of Service
@@ -963,11 +927,6 @@ export default function ListPropertyClient() {
                       </a>
                       .
                     </Label>
-                    {!formData.terms_agreed && (
-                      <p className="text-xs text-orange-600 mt-1">
-                        ⚠️ You must agree to the terms to submit your listing
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -996,20 +955,13 @@ export default function ListPropertyClient() {
             <div className="flex gap-2">
               <Button variant="outline">Save as Draft</Button>
               {currentStep === 7 ? (
-                <div className="relative group">
-                  <Button
-                    onClick={handleSubmit}
-                    className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={!formData.terms_agreed || isSubmitting}
-                  >
-                    {isSubmitting ? "Submitting..." : "Submit Listing"}
-                  </Button>
-                  {!formData.terms_agreed && !isSubmitting && (
-                    <div className="absolute bottom-full mb-2 right-0 bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                      Please agree to terms first
-                    </div>
-                  )}
-                </div>
+                <Button
+                  onClick={handleSubmit}
+                  className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Listing"}
+                </Button>
               ) : (
                 <Button onClick={handleNext} className="bg-indigo-600 hover:bg-indigo-700">
                   Next →
