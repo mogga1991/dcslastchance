@@ -16,6 +16,7 @@ import { ListingDetailModal } from "./listing-detail-modal";
 import { OpportunityDetailModal } from "./opportunity-detail-modal";
 import { ExpressInterestModal } from "./express-interest-modal";
 import { ExpiringLeaseCard } from "./expiring-lease-card";
+import { ExpiringLeaseDetailPanel } from "./expiring-lease-detail-panel";
 import type { IOLPFilters } from "./iolp-filters";
 import type { OpportunityFilters } from "./opportunity-filters";
 import { FederalScoreCard } from "./federal-score-card";
@@ -53,6 +54,8 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
   const [expressInterestOpportunity, setExpressInterestOpportunity] = useState<SAMOpportunity | null>(null);
   const [submittedInquiries, setSubmittedInquiries] = useState<Set<string>>(new Set());
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [showExpiringLeaseDetail, setShowExpiringLeaseDetail] = useState(false);
+  const [detailExpiringLease, setDetailExpiringLease] = useState<any | null>(null);
   const [currentViewport, setCurrentViewport] = useState<{ lat: number; lng: number } | null>(null);
   const [userAlerts, setUserAlerts] = useState<Set<string>>(new Set());
   const [opportunitiesError, setOpportunitiesError] = useState<string | null>(null);
@@ -969,6 +972,11 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
                       onViewOnMap={handleViewOnMap}
                       onSetAlert={handleSetAlert}
                       hasAlert={lease.location_code ? userAlerts.has(lease.location_code) : false}
+                      onViewDetails={(e) => {
+                        e.stopPropagation();
+                        setDetailExpiringLease(lease);
+                        setShowExpiringLeaseDetail(true);
+                      }}
                     />
                   ))}
                 </div>
@@ -992,26 +1000,36 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
           onIOLPError={setIolpError}
           onViewportChange={setCurrentViewport}
         />
+
+        {/* Detail Panels - Overlay the map */}
+        <ListingDetailModal
+          listing={detailListing}
+          open={showListingDetail}
+          onOpenChange={setShowListingDetail}
+        />
+
+        <OpportunityDetailModal
+          opportunity={detailOpportunity}
+          open={showOpportunityDetail}
+          onOpenChange={setShowOpportunityDetail}
+          onExpressInterest={() => {
+            if (detailOpportunity) {
+              handleExpressInterest(detailOpportunity);
+            }
+          }}
+        />
+
+        <ExpiringLeaseDetailPanel
+          lease={detailExpiringLease}
+          open={showExpiringLeaseDetail}
+          onOpenChange={setShowExpiringLeaseDetail}
+          onSetAlert={handleSetAlert}
+          hasAlert={detailExpiringLease?.location_code ? userAlerts.has(detailExpiringLease.location_code) : false}
+          onViewOnMap={handleViewOnMap}
+        />
       </div>
 
-      {/* Detail Modals */}
-      <ListingDetailModal
-        listing={detailListing}
-        open={showListingDetail}
-        onOpenChange={setShowListingDetail}
-      />
-
-      <OpportunityDetailModal
-        opportunity={detailOpportunity}
-        open={showOpportunityDetail}
-        onOpenChange={setShowOpportunityDetail}
-        onExpressInterest={() => {
-          if (detailOpportunity) {
-            handleExpressInterest(detailOpportunity);
-          }
-        }}
-      />
-
+      {/* Express Interest Modal (still a dialog, not a full panel) */}
       <ExpressInterestModal
         opportunity={expressInterestOpportunity}
         open={showExpressInterest}

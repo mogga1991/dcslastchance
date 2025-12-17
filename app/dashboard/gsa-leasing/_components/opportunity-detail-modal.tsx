@@ -1,9 +1,3 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +15,8 @@ import {
   Maximize2,
   Loader2,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  X
 } from "lucide-react";
 import type { SAMOpportunity } from "@/lib/sam-gov";
 import { useState } from "react";
@@ -39,7 +34,7 @@ export function OpportunityDetailModal({ opportunity, open, onOpenChange, onExpr
   const [summaries, setSummaries] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
-  if (!opportunity) return null;
+  if (!opportunity || !open) return null;
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
@@ -133,8 +128,17 @@ export function OpportunityDetailModal({ opportunity, open, onOpenChange, onExpr
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl w-[95vw] max-h-[95vh] overflow-y-auto bg-slate-50">
+    <div className="absolute inset-0 bg-white z-50 overflow-y-auto">
+      {/* Close Button - Fixed Position */}
+      <button
+        onClick={() => onOpenChange(false)}
+        className="fixed top-4 right-4 z-50 p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-full shadow-lg transition-colors"
+        aria-label="Close"
+      >
+        <X className="h-6 w-6" />
+      </button>
+
+      <div className="max-w-6xl mx-auto p-6">
         {/* Header with Government Styling */}
         <div className="bg-slate-800 text-white -mx-6 -mt-6 px-6 py-5 mb-6">
           <div className="flex items-start justify-between gap-4">
@@ -145,9 +149,9 @@ export function OpportunityDetailModal({ opportunity, open, onOpenChange, onExpr
                   {opportunity.department}
                 </span>
               </div>
-              <DialogTitle className="text-2xl font-bold leading-tight pr-8">
+              <h1 className="text-2xl font-bold leading-tight pr-8">
                 {opportunity.title}
-              </DialogTitle>
+              </h1>
             </div>
             {daysLeft !== null && daysLeft > 0 && (
               <Badge className={`${
@@ -451,7 +455,7 @@ export function OpportunityDetailModal({ opportunity, open, onOpenChange, onExpr
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

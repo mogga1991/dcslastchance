@@ -30,13 +30,15 @@ interface ExpiringLeaseCardProps {
   onViewOnMap?: (lat: number, lng: number) => void;
   onSetAlert?: (lease: LeaseData) => void;
   hasAlert?: boolean;
+  onViewDetails?: (e: React.MouseEvent) => void;
 }
 
 export function ExpiringLeaseCard({
   lease,
   onViewOnMap,
   onSetAlert,
-  hasAlert = false
+  hasAlert = false,
+  onViewDetails
 }: ExpiringLeaseCardProps) {
   const [alertSet, setAlertSet] = useState(hasAlert);
 
@@ -169,34 +171,44 @@ export function ExpiringLeaseCard({
         )}
 
         {/* Actions */}
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2">
+          {onViewDetails && (
+            <Button
+              variant="default"
+              size="sm"
+              className="col-span-2 text-xs h-10 sm:h-9 bg-blue-600 hover:bg-blue-700"
+              onClick={onViewDetails}
+            >
+              View Details
+            </Button>
+          )}
           {lease.latitude && lease.longitude && onViewOnMap && (
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 text-xs h-10 sm:h-9"
+              className="text-xs h-10 sm:h-9"
               onClick={() => onViewOnMap(lease.latitude!, lease.longitude!)}
             >
               <MapPin className="h-3 w-3 mr-1" />
-              View on Map
+              Map
             </Button>
           )}
           {onSetAlert && (
             <Button
               variant={alertSet ? "default" : "outline"}
               size="sm"
-              className="flex-1 text-xs h-10 sm:h-9"
+              className="text-xs h-10 sm:h-9"
               onClick={handleSetAlert}
             >
               {alertSet ? (
                 <>
                   <Bell className="h-3 w-3 mr-1" />
-                  Alert Set
+                  Alert
                 </>
               ) : (
                 <>
                   <BellOff className="h-3 w-3 mr-1" />
-                  Set Alert
+                  Alert
                 </>
               )}
             </Button>

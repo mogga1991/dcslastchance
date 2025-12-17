@@ -1,9 +1,3 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +6,8 @@ import {
   Mail,
   Star,
   Eye,
-  CheckCircle2
+  CheckCircle2,
+  X
 } from "lucide-react";
 import type { PublicBrokerListing } from "@/types/broker-listing";
 import { FederalScoreBadge } from "./federal-score-badge";
@@ -24,7 +19,7 @@ interface ListingDetailModalProps {
 }
 
 export function ListingDetailModal({ listing, open, onOpenChange }: ListingDetailModalProps) {
-  if (!listing) return null;
+  if (!listing || !open) return null;
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
@@ -52,11 +47,21 @@ export function ListingDetailModal({ listing, open, onOpenChange }: ListingDetai
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">{listing.title}</DialogTitle>
-        </DialogHeader>
+    <div className="absolute inset-0 bg-white z-50 overflow-y-auto">
+      {/* Close Button - Fixed Position */}
+      <button
+        onClick={() => onOpenChange(false)}
+        className="fixed top-4 right-4 z-50 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-colors"
+        aria-label="Close"
+      >
+        <X className="h-6 w-6" />
+      </button>
+
+      <div className="max-w-4xl mx-auto p-6">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 pr-16">{listing.title}</h1>
+        </div>
 
         <div className="space-y-6">
           {/* Image Gallery Placeholder */}
@@ -225,7 +230,7 @@ export function ListingDetailModal({ listing, open, onOpenChange }: ListingDetai
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
