@@ -134,7 +134,7 @@ export function OpportunityDetailModal({ opportunity, open, onOpenChange, onExpr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-slate-50">
+      <DialogContent className="max-w-6xl w-[95vw] max-h-[95vh] overflow-y-auto bg-slate-50">
         {/* Header with Government Styling */}
         <div className="bg-slate-800 text-white -mx-6 -mt-6 px-6 py-5 mb-6">
           <div className="flex items-start justify-between gap-4">
@@ -201,7 +201,7 @@ export function OpportunityDetailModal({ opportunity, open, onOpenChange, onExpr
             <div className="bg-slate-100 px-5 py-3 border-b-2 border-slate-200">
               <h3 className="font-bold text-slate-900 uppercase tracking-wide text-sm">Opportunity Details</h3>
             </div>
-            <div className="p-5 grid grid-cols-3 gap-6">
+            <div className="p-6 grid grid-cols-4 gap-6">
               {/* Location */}
               {opportunity.placeOfPerformance && (
                 <div>
@@ -240,15 +240,6 @@ export function OpportunityDetailModal({ opportunity, open, onOpenChange, onExpr
                 </div>
               )}
 
-              {/* Response Deadline */}
-              <div className="col-span-2 bg-slate-100 -m-2 p-4 rounded border-2 border-slate-300">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Calendar className="h-4 w-4 text-slate-700" />
-                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Response Deadline</span>
-                </div>
-                <p className="text-xl font-bold text-slate-900">{formatDate(opportunity.responseDeadLine)}</p>
-              </div>
-
               {/* Posted Date */}
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
@@ -257,6 +248,30 @@ export function OpportunityDetailModal({ opportunity, open, onOpenChange, onExpr
                 </div>
                 <p className="font-semibold text-slate-900">{formatDate(opportunity.postedDate)}</p>
               </div>
+            </div>
+          </div>
+
+          {/* Response Deadline - Full Width Prominent */}
+          <div className="bg-slate-100 border-2 border-slate-300 rounded-lg p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="h-5 w-5 text-slate-700" />
+                  <span className="text-sm font-bold text-slate-700 uppercase tracking-wider">Response Deadline</span>
+                </div>
+                <p className="text-3xl font-bold text-slate-900">{formatDate(opportunity.responseDeadLine)}</p>
+              </div>
+              {daysLeft !== null && daysLeft > 0 && (
+                <div className="text-right">
+                  <Badge className={`${
+                    isCritical ? "bg-red-600" :
+                    isUrgent ? "bg-amber-500" :
+                    "bg-slate-600"
+                  } text-white font-bold text-lg px-4 py-2`}>
+                    {daysLeft} DAY{daysLeft !== 1 ? 'S' : ''}
+                  </Badge>
+                </div>
+              )}
             </div>
           </div>
 
