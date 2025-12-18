@@ -3,7 +3,6 @@ import { Hero } from "@/components/landing/hero";
 import { Problem } from "@/components/landing/problem";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { Features } from "@/components/landing/features";
-import { SocialProof } from "@/components/landing/social-proof";
 import { Pricing } from "@/components/landing/pricing";
 import { Personas } from "@/components/landing/personas";
 import { FAQ } from "@/components/landing/faq";
@@ -18,7 +17,6 @@ export default function LandingPage() {
       <Problem />
       <HowItWorks />
       <Features />
-      <SocialProof />
       <Pricing />
       <Personas />
       <FAQ />

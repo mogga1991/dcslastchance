@@ -10,8 +10,31 @@ export function Hero() {
     element?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const stats = [
+    {
+      number: "$6B",
+      label: "Annual Federal Lease Spending",
+      description: "GSA & federal agencies combined",
+    },
+    {
+      number: "7,500+",
+      label: "GSA-Managed Leases",
+      description: "Across all 50 states",
+    },
+    {
+      number: "174M",
+      label: "Square Feet of Federal Space",
+      description: "Leased from private landlords",
+    },
+    {
+      number: "500+",
+      label: "Active Opportunities",
+      description: "Real-time SAM.gov solicitations",
+    },
+  ];
+
   return (
-    <section className="relative overflow-hidden bg-[#FAF9F7] pt-32 pb-40">
+    <section className="relative overflow-hidden bg-[#FAF9F7] pt-32 pb-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto">
           {/* Announcement Badge */}
@@ -43,7 +66,7 @@ export function Hero() {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20">
             <Link href="/sign-up">
               <Button
                 size="lg"
@@ -59,6 +82,36 @@ export function Hero() {
               Learn More
               <ArrowRight className="h-4 w-4" />
             </button>
+          </div>
+        </div>
+
+        {/* Stats Section */}
+        <div className="max-w-7xl mx-auto mt-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+              The Federal Leasing Market
+            </h2>
+            <p className="text-base sm:text-lg text-gray-600">
+              Real GSA and federal lease data powering your opportunities
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="mb-2">
+                  <div className="text-4xl sm:text-5xl font-bold text-[var(--color-fedspace-primary)] mb-2">
+                    {stat.number}
+                  </div>
+                  <div className="text-base font-semibold text-gray-900 mb-1">
+                    {stat.label}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {stat.description}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
