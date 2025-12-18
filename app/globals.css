@@ -171,15 +171,15 @@
        FEDSPACE LANDING PAGE COLORS (Matches Dashboard)
        ============================================ */
 
-    /* Primary - Signal Orange for CTAs, links, accents (matches dashboard) */
-    --color-fedspace-primary: var(--color-signal-orange);
-    --color-fedspace-primary-dark: var(--color-signal-orange-dark);
-    --color-fedspace-primary-rgb: var(--color-signal-orange-rgb);
+    /* Primary - Purple/Indigo for CTAs, links, accents (matches dashboard sidebar) */
+    --color-fedspace-primary: #5B6FCC;
+    --color-fedspace-primary-dark: #4B5EAA;
+    --color-fedspace-primary-rgb: 91, 111, 204;
 
-    /* Navy - Dark sections (hero, footer, dark sections) */
-    --color-fedspace-navy: var(--color-scout-navy);
-    --color-fedspace-navy-light: var(--color-command-blue);
-    --color-fedspace-navy-rgb: var(--color-scout-navy-rgb);
+    /* Purple/Navy - Dark sections (hero, footer, sidebar) */
+    --color-fedspace-navy: #3D4B8C;
+    --color-fedspace-navy-light: #4B5EAA;
+    --color-fedspace-navy-rgb: 61, 75, 140;
 
     /* Surfaces */
     --color-fedspace-surface: #FFFFFF;
@@ -191,7 +191,7 @@
     --color-fedspace-text-muted: #94A3B8;
 
     /* Semantic Colors */
-    --color-fedspace-success: var(--color-radar-green);
+    --color-fedspace-success: #22C55E;
     --color-fedspace-warning: #F59E0B;
     --color-fedspace-danger: #EF4444;
 
