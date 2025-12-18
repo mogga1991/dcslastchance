@@ -82,16 +82,17 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sort_by') || 'created_at';
     const sortOrder = (searchParams.get('sort_order') || 'desc') as 'asc' | 'desc';
 
-    // Build query - EXCLUDE private contact fields
+    // Build query - Query the 'properties' table (Supabase uses plural)
     let query = supabase
-      .from('broker_listings')
-      .select(PUBLIC_LISTING_FIELDS, { count: 'exact' })
-      .eq('status', 'active'); // Only show active listings publicly
+      .from('properties')
+      .select('*', { count: 'exact' })
+      .eq('status', 'available'); // Only show available properties publicly
 
     // Apply filters
     const propertyType = searchParams.get('property_type');
     if (propertyType) {
-      query = query.eq('property_type', propertyType);
+      // Property table doesn't have property_type, skip this filter for now
+      // TODO: Add property_type column to property table
     }
 
     const state = searchParams.get('state');
@@ -116,26 +117,27 @@ export async function GET(request: NextRequest) {
 
     const minRent = searchParams.get('min_rent');
     if (minRent) {
-      query = query.gte('asking_rent_sf', parseFloat(minRent));
+      query = query.gte('asking_rent_per_sf', parseFloat(minRent));
     }
 
     const maxRent = searchParams.get('max_rent');
     if (maxRent) {
-      query = query.lte('asking_rent_sf', parseFloat(maxRent));
+      query = query.lte('asking_rent_per_sf', parseFloat(maxRent));
     }
 
     const gsaEligible = searchParams.get('gsa_eligible');
     if (gsaEligible === 'true') {
-      query = query.eq('gsa_eligible', true);
+      // GSA eligible not in property table, skip for now
+      // TODO: Add gsa_eligible column to property table
     }
 
     const search = searchParams.get('search');
     if (search) {
-      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,street_address.ilike.%${search}%`);
+      query = query.or(`property_name.ilike.%${search}%,address.ilike.%${search}%,city.ilike.%${search}%`);
     }
 
     // Apply sorting
-    const sortColumn = sortBy === 'federal_score' ? 'federal_score' : sortBy;
+    const sortColumn = sortBy === 'asking_rent_sf' ? 'asking_rent_per_sf' : sortBy;
     query = query.order(sortColumn, { ascending: sortOrder === 'asc', nullsFirst: false });
 
     // Apply pagination
@@ -155,9 +157,50 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Transform property data to match PublicBrokerListing format
+    const transformedData: PublicBrokerListing[] = (data || []).map((property: any) => ({
+      id: property.id,
+      user_id: property.broker_id,
+      lister_role: 'broker' as const,
+      title: property.property_name || `${property.address}, ${property.city}, ${property.state}`,
+      description: `${property.available_sf.toLocaleString()} SF available at ${property.address}`,
+      property_type: 'office' as const, // Default to office
+      status: 'active' as const,
+      street_address: property.address,
+      suite_unit: undefined,
+      city: property.city,
+      state: property.state,
+      zipcode: property.zip || '',
+      latitude: property.latitude ? parseFloat(property.latitude) : 0,
+      longitude: property.longitude ? parseFloat(property.longitude) : 0,
+      total_sf: property.total_sf,
+      available_sf: property.available_sf,
+      min_divisible_sf: property.min_divisible_sf,
+      asking_rent_sf: property.asking_rent_per_sf ? parseFloat(property.asking_rent_per_sf) : 0,
+      lease_type: 'full_service' as const,
+      available_date: property.available_date || new Date().toISOString(),
+      building_class: property.building_class || undefined,
+      ada_accessible: false, // Not in property table
+      parking_spaces: property.parking_spaces || 0,
+      leed_certified: property.leed_certified || false,
+      year_built: property.year_built,
+      notes: undefined,
+      features: [], // Not in property table
+      amenities: [], // Not in property table
+      gsa_eligible: false, // Not in property table
+      set_aside_eligible: [],
+      federal_score: undefined,
+      federal_score_data: undefined,
+      images: property.images || [],
+      views_count: 0,
+      created_at: property.created_at,
+      updated_at: property.updated_at,
+      published_at: property.created_at
+    }));
+
     return NextResponse.json({
       success: true,
-      data: (data || []) as unknown as PublicBrokerListing[],
+      data: transformedData,
       meta: {
         total: count || 0,
         limit,

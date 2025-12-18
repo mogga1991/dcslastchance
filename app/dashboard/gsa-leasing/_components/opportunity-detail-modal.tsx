@@ -66,10 +66,40 @@ export function OpportunityDetailModal({ opportunity, open, onOpenChange, onExpr
     return colors[type] || 'bg-slate-100 text-slate-800 border-slate-300';
   };
 
-  const getDocumentName = (url: string) => {
+  const getDocumentName = (url: string, index: number) => {
     const parts = url.split('/');
     const filename = parts[parts.length - 1];
-    return decodeURIComponent(filename);
+    const decodedFilename = decodeURIComponent(filename);
+
+    // Check if filename is meaningful (not just "download", GUIDs, or very short)
+    const isMeaningful = decodedFilename &&
+                        !decodedFilename.match(/^download$/i) &&
+                        !decodedFilename.match(/^[0-9a-f-]{36}$/i) && // GUID pattern
+                        decodedFilename.length > 5 &&
+                        decodedFilename.includes('.');
+
+    if (isMeaningful) {
+      return decodedFilename;
+    }
+
+    // Try to extract document type from URL path
+    const urlLower = url.toLowerCase();
+    let docType = 'Document';
+
+    if (urlLower.includes('solicitation') || urlLower.includes('rfp') || urlLower.includes('rfq')) {
+      docType = 'Solicitation';
+    } else if (urlLower.includes('amendment') || urlLower.includes('modification')) {
+      docType = 'Amendment';
+    } else if (urlLower.includes('attachment')) {
+      docType = 'Attachment';
+    } else if (urlLower.includes('notice')) {
+      docType = 'Notice';
+    } else if (urlLower.includes('award')) {
+      docType = 'Award Document';
+    }
+
+    // Return numbered document with type
+    return `${docType} ${index + 1}`;
   };
 
   // Extract square footage from description
@@ -344,7 +374,7 @@ export function OpportunityDetailModal({ opportunity, open, onOpenChange, onExpr
               </div>
               <div className="p-5 space-y-3">
                 {documents.map((doc, index) => {
-                  const docName = getDocumentName(doc);
+                  const docName = getDocumentName(doc, index);
                   const hasSummary = summaries[doc];
                   return (
                     <div key={index} className="border-2 border-slate-200 rounded-lg overflow-hidden">
