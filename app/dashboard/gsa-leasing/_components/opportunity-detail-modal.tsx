@@ -19,8 +19,15 @@ import {
   X
 } from "lucide-react";
 import type { SAMOpportunity } from "@/lib/sam-gov";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+
+interface DocumentMetadata {
+  url: string;
+  name: string;
+  contentType?: string | null;
+  size?: string | null;
+}
 
 interface OpportunityDetailModalProps {
   opportunity: SAMOpportunity | null;
@@ -32,7 +39,44 @@ interface OpportunityDetailModalProps {
 export function OpportunityDetailModal({ opportunity, open, onOpenChange, onExpressInterest }: OpportunityDetailModalProps) {
   const [summarizing, setSummarizing] = useState<string | null>(null);
   const [summaries, setSummaries] = useState<Record<string, string>>({});
+  const [documentNames, setDocumentNames] = useState<Record<string, string>>({});
+  const [loadingDocNames, setLoadingDocNames] = useState(false);
   const { toast } = useToast();
+
+  // Fetch real document names when modal opens
+  useEffect(() => {
+    if (!opportunity || !open || !opportunity.resourceLinks || opportunity.resourceLinks.length === 0) {
+      return;
+    }
+
+    const fetchDocumentNames = async () => {
+      setLoadingDocNames(true);
+      try {
+        const urls = opportunity.resourceLinks.join(',');
+        const response = await fetch(`/api/sam-documents?urls=${encodeURIComponent(urls)}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch document names');
+        }
+
+        const data = await response.json();
+        const namesMap: Record<string, string> = {};
+
+        data.documents.forEach((doc: DocumentMetadata) => {
+          namesMap[doc.url] = doc.name;
+        });
+
+        setDocumentNames(namesMap);
+      } catch (error) {
+        console.error('Error fetching document names:', error);
+        // Silent fail - will use fallback names
+      } finally {
+        setLoadingDocNames(false);
+      }
+    };
+
+    fetchDocumentNames();
+  }, [opportunity, open]);
 
   if (!opportunity || !open) return null;
 
@@ -67,6 +111,12 @@ export function OpportunityDetailModal({ opportunity, open, onOpenChange, onExpr
   };
 
   const getDocumentName = (url: string, index: number) => {
+    // First, check if we have fetched the real name from HTTP headers
+    if (documentNames[url]) {
+      return documentNames[url];
+    }
+
+    // Fallback to original logic while names are loading
     const parts = url.split('/');
     const filename = parts[parts.length - 1];
     const decodedFilename = decodeURIComponent(filename);

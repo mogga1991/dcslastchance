@@ -11,7 +11,6 @@ import {
   Settings,
   LogOut,
   PlusCircle,
-  Bookmark,
   Home,
 } from "lucide-react";
 import Link from "next/link";
@@ -56,15 +55,6 @@ export default function DashboardSideBar() {
       href: "/dashboard/my-properties",
       icon: (
         <Home
-          className="h-5 w-5 flex-shrink-0"
-        />
-      ),
-    },
-    {
-      label: "Saved Opportunities",
-      href: "/dashboard/saved-opportunities",
-      icon: (
-        <Bookmark
           className="h-5 w-5 flex-shrink-0"
         />
       ),
