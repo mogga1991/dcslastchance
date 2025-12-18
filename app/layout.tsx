@@ -9,18 +9,29 @@ import { validateEnv } from "@/lib/env"; // ✅ FIXED: Validate environment vari
 validateEnv();
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://fedspace.ai'), // ✅ FIXED: Added metadataBase for proper OG images
-  title: "FedSpace - AI-Powered Federal Contract Intelligence",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://fedspace.ai'),
+  title: "FedSpace | AI-Powered Federal Lease Matching",
   description:
-    "AI-powered government contracting platform that extracts requirements, evaluates opportunities, and delivers bid/no-bid recommendations in minutes.",
+    "Stop spending 8-12 hours on RLPs. FedSpace automatically matches commercial properties to federal lease opportunities and generates compliant submissions in 30 minutes. Automated RLP analysis, compliance scoring, and submission generation.",
+  keywords: [
+    "GSA leasing",
+    "federal real estate",
+    "RLP",
+    "government leasing",
+    "commercial property",
+    "SAM.gov",
+    "federal lease opportunities",
+    "GSA contract opportunities",
+    "commercial real estate brokers",
+  ],
   icons: {
     icon: "/favicon.svg",
     apple: "/favicon.svg",
   },
   openGraph: {
-    title: "FedSpace - AI-Powered Federal Contract Intelligence",
+    title: "FedSpace - AI for Federal Leasing",
     description:
-      "Transform complex government solicitations into actionable intelligence. Extract requirements, analyze opportunities, and make data-driven bid decisions.",
+      "Stop spending 8-12 hours on RLPs. Match properties to federal opportunities in 30 minutes. AI-powered GSA lease intelligence for commercial real estate.",
     url: "https://fedspace.ai",
     siteName: "FedSpace",
     images: [
@@ -28,11 +39,16 @@ export const metadata: Metadata = {
         url: "/api/og",
         width: 1200,
         height: 630,
-        alt: "FedSpace - AI-Powered Federal Contract Intelligence",
+        alt: "FedSpace - AI for Federal Leasing",
       },
     ],
     locale: "en-US",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FedSpace - AI for Federal Leasing",
+    description: "Match commercial properties to federal lease opportunities in 30 minutes.",
   },
 };
 

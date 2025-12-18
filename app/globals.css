@@ -166,6 +166,37 @@
     --gradient-subtle: linear-gradient(180deg, #1E3A5F 0%, #0A1628 100%);
     --gradient-glow: radial-gradient(ellipse at center, rgba(249, 115, 22, 0.15) 0%, transparent 70%);
     --gradient-radar: conic-gradient(from 0deg, transparent 0deg, rgba(34, 197, 94, 0.5) 30deg, transparent 60deg);
+
+    /* ============================================
+       FEDSPACE LANDING PAGE COLORS
+       ============================================ */
+
+    /* Primary - Teal/Sky Blue for CTAs, links, accents */
+    --color-fedspace-primary: #0EA5E9;
+    --color-fedspace-primary-dark: #0284C7;
+    --color-fedspace-primary-rgb: 14, 165, 233;
+
+    /* Navy - Dark sections (hero, footer, dark sections) */
+    --color-fedspace-navy: #0F172A;
+    --color-fedspace-navy-light: #1E293B;
+    --color-fedspace-navy-rgb: 15, 23, 42;
+
+    /* Surfaces */
+    --color-fedspace-surface: #FFFFFF;
+    --color-fedspace-surface-alt: #F8FAFC;
+
+    /* Text */
+    --color-fedspace-text-primary: #0F172A;
+    --color-fedspace-text-secondary: #64748B;
+    --color-fedspace-text-muted: #94A3B8;
+
+    /* Semantic Colors */
+    --color-fedspace-success: #10B981;
+    --color-fedspace-warning: #F59E0B;
+    --color-fedspace-danger: #EF4444;
+
+    /* Borders */
+    --color-fedspace-border: #E2E8F0;
 }
 
 @layer base {
