@@ -87,15 +87,6 @@ export function Hero() {
 
         {/* Stats Section */}
         <div className="max-w-7xl mx-auto mt-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-              The Federal Leasing Market
-            </h2>
-            <p className="text-base sm:text-lg text-gray-600">
-              Real GSA and federal lease data powering your opportunities
-            </p>
-          </div>
-
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
