@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import EnhancedStatsCards from "./enhanced-stats-cards";
 import PropertiesTable from "./properties-table";
 import OpportunitiesTable from "./opportunities-table";
-import PropertyPerformanceDashboard from "./property-performance-dashboard";
 import {
   mockProperties,
   mockMatches,
@@ -14,7 +13,6 @@ import {
   PropertyMatch,
 } from "./mock-data";
 import { mockNewMatches } from "./match-queue-mock-data";
-import { mockPropertyPerformances } from "./performance-mock-data";
 
 type TabType = "opportunities" | "properties" | "account";
 
@@ -244,13 +242,108 @@ export default function MyPropertiesClientV2() {
           <div>
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Performance Metrics
+                Account Settings
               </h2>
               <p className="text-sm text-gray-600">
-                Track your property performance and match analytics
+                Manage your account and preferences
               </p>
             </div>
-            <PropertyPerformanceDashboard performances={mockPropertyPerformances} />
+
+            {/* Account Settings Content */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="space-y-6">
+                {/* Profile Section */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Profile Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        placeholder="Your name"
+                        disabled
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        placeholder="your@email.com"
+                        disabled
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Company
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        placeholder="Your company"
+                        disabled
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phone
+                      </label>
+                      <input
+                        type="tel"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        placeholder="(555) 555-5555"
+                        disabled
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notification Preferences */}
+                <div className="pt-6 border-t border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Notification Preferences
+                  </h3>
+                  <div className="space-y-3">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300 text-indigo-600"
+                        defaultChecked
+                      />
+                      <span className="ml-2 text-sm text-gray-700">
+                        Email notifications for new matches
+                      </span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300 text-indigo-600"
+                        defaultChecked
+                      />
+                      <span className="ml-2 text-sm text-gray-700">
+                        Weekly opportunity digest
+                      </span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300 text-indigo-600"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">
+                        SMS alerts for high-priority opportunities
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
