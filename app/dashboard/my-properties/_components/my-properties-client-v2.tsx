@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Building2, FileText, User } from "lucide-react";
+import { Building2, FileText, User, Flame } from "lucide-react";
 import { toast } from "sonner";
 import EnhancedStatsCards from "./enhanced-stats-cards";
 import PropertiesTable from "./properties-table";
-import MatchQueue from "./match-queue";
+import OpportunitiesTable from "./opportunities-table";
 import PropertyPerformanceDashboard from "./property-performance-dashboard";
 import {
   mockProperties,
@@ -177,7 +177,49 @@ export default function MyPropertiesClientV2() {
                 GSA lease opportunities matched to your properties
               </p>
             </div>
-            <MatchQueue matches={mockNewMatches} />
+
+            {/* Opportunity Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white rounded-lg border-2 border-indigo-200 p-4">
+                <p className="text-2xl font-bold text-indigo-600">
+                  {mockNewMatches.length}
+                </p>
+                <p className="text-sm text-gray-600">Total Matches</p>
+              </div>
+
+              <div className="bg-white rounded-lg border-2 border-red-200 p-4">
+                <div className="flex items-center gap-2">
+                  <p className="text-2xl font-bold text-red-600">
+                    {mockNewMatches.filter((m) => m.is_hot_match).length}
+                  </p>
+                  <Flame className="h-5 w-5 text-red-500" />
+                </div>
+                <p className="text-sm text-gray-600">Hot Matches</p>
+              </div>
+
+              <div className="bg-white rounded-lg border-2 border-blue-200 p-4">
+                <p className="text-2xl font-bold text-blue-600">
+                  {mockNewMatches.filter((m) => m.status === "new").length}
+                </p>
+                <p className="text-sm text-gray-600">Unreviewed</p>
+              </div>
+
+              <div className="bg-white rounded-lg border-2 border-orange-200 p-4">
+                <p className="text-2xl font-bold text-orange-600">
+                  {
+                    mockNewMatches.filter(
+                      (m) =>
+                        new Date(m.response_deadline) <=
+                        new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000)
+                    ).length
+                  }
+                </p>
+                <p className="text-sm text-gray-600">Expiring Soon</p>
+              </div>
+            </div>
+
+            {/* Opportunities Table */}
+            <OpportunitiesTable opportunities={mockNewMatches} />
           </div>
         )}
 
