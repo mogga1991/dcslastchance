@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Clock,
   Filter,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
