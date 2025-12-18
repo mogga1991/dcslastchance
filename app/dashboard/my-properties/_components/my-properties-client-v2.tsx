@@ -159,7 +159,7 @@ export default function MyPropertiesClientV2() {
               `}
             >
               <User className="h-5 w-5" />
-              Account
+              Subscription
             </button>
           </nav>
         </div>
@@ -240,109 +240,187 @@ export default function MyPropertiesClientV2() {
 
         {activeTab === "account" && (
           <div>
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Account Settings
+            <div className="mb-8 text-center">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Subscription Packages
               </h2>
-              <p className="text-sm text-gray-600">
-                Manage your account and preferences
+              <p className="text-lg text-gray-600">
+                Choose the plan that fits your business needs
               </p>
             </div>
 
-            {/* Account Settings Content */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="space-y-6">
-                {/* Profile Section */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Profile Information
+            {/* Pricing Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {/* Starter Plan */}
+              <div className="bg-white rounded-lg border-2 border-gray-200 p-8 hover:border-indigo-500 transition-colors">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Starter
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        placeholder="Your name"
-                        disabled
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        placeholder="your@email.com"
-                        disabled
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Company
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        placeholder="Your company"
-                        disabled
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone
-                      </label>
-                      <input
-                        type="tel"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        placeholder="(555) 555-5555"
-                        disabled
-                      />
-                    </div>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold text-gray-900">$49</span>
+                    <span className="text-gray-600">/month</span>
                   </div>
+                  <p className="text-sm text-gray-600">
+                    Perfect for individual brokers
+                  </p>
                 </div>
 
-                {/* Notification Preferences */}
-                <div className="pt-6 border-t border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Notification Preferences
-                  </h3>
-                  <div className="space-y-3">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        className="rounded border-gray-300 text-indigo-600"
-                        defaultChecked
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        Email notifications for new matches
-                      </span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        className="rounded border-gray-300 text-indigo-600"
-                        defaultChecked
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        Weekly opportunity digest
-                      </span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        className="rounded border-gray-300 text-indigo-600"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        SMS alerts for high-priority opportunities
-                      </span>
-                    </label>
-                  </div>
-                </div>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      Up to 5 property listings
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      Unlimited opportunity matches
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      Email notifications
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      Basic analytics
+                    </span>
+                  </li>
+                </ul>
+
+                <button className="w-full py-3 px-4 bg-gray-100 text-gray-900 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+                  Get Started
+                </button>
               </div>
+
+              {/* Professional Plan */}
+              <div className="bg-white rounded-lg border-2 border-indigo-500 p-8 relative shadow-lg">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <span className="bg-indigo-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                    Most Popular
+                  </span>
+                </div>
+
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Professional
+                  </h3>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold text-gray-900">$149</span>
+                    <span className="text-gray-600">/month</span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    For growing brokerage firms
+                  </p>
+                </div>
+
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      Up to 25 property listings
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      Unlimited opportunity matches
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      Priority email & SMS notifications
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      Advanced analytics & insights
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      Priority support
+                    </span>
+                  </li>
+                </ul>
+
+                <button className="w-full py-3 px-4 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                  Get Started
+                </button>
+              </div>
+
+              {/* Enterprise Plan */}
+              <div className="bg-white rounded-lg border-2 border-gray-200 p-8 hover:border-indigo-500 transition-colors">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Enterprise
+                  </h3>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold text-gray-900">Custom</span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    For large organizations
+                  </p>
+                </div>
+
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      Unlimited property listings
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      Unlimited opportunity matches
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      Custom notifications & alerts
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      White-label options
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      Dedicated account manager
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">✓</span>
+                    <span className="text-sm text-gray-700">
+                      API access
+                    </span>
+                  </li>
+                </ul>
+
+                <button className="w-full py-3 px-4 bg-gray-100 text-gray-900 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+                  Contact Sales
+                </button>
+              </div>
+            </div>
+
+            {/* Additional Info */}
+            <div className="mt-12 text-center">
+              <p className="text-sm text-gray-600">
+                All plans include a 14-day free trial. No credit card required.
+              </p>
             </div>
           </div>
         )}
