@@ -12,7 +12,7 @@
     },
     {
       "path": "/api/cron/match-properties",
-      "schedule": "0 30 2 * * *"
+      "schedule": "30 2 * * *"
     }
   ]
 }
