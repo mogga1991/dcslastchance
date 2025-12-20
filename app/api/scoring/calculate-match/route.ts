@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
         grade: matchScore.grade,
         competitive: matchScore.competitive,
         qualified: matchScore.qualified,
-        category_scores: matchScore.categoryScores,
+        category_scores: matchScore.factors,  // Updated from categoryScores to factors
         strengths: matchScore.strengths,
         weaknesses: matchScore.weaknesses,
         recommendations: matchScore.recommendations,
