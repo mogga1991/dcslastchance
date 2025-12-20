@@ -37,16 +37,16 @@ interface OpportunityRequirements {
 }
 
 function generateInsights(
-  scores: MatchScoreResult['categoryScores']
+  factors: MatchScoreResult['factors']
 ): { strengths: string[]; weaknesses: string[]; recommendations: string[] } {
   const strengths: string[] = [];
   const weaknesses: string[] = [];
   const recommendations: string[] = [];
 
   // Location
-  if (scores.location.score >= 90) {
+  if (factors.location.score >= 90) {
     strengths.push('Excellent location - within delineated area');
-  } else if (scores.location.score < 60) {
+  } else if (factors.location.score < 60) {
     weaknesses.push('Location may be outside preferred area');
     recommendations.push(
       'Verify property is within delineated area boundaries'
@@ -54,11 +54,11 @@ function generateInsights(
   }
 
   // Space
-  if (scores.space.score >= 90) {
+  if (factors.space.score >= 90) {
     strengths.push('Space requirements fully met');
-  } else if (scores.space.breakdown?.meetsMinimum === false) {
+  } else if (factors.space.details?.meetsMinimum === false) {
     weaknesses.push(
-      `Space is ${Math.abs(scores.space.breakdown?.variance || 0).toLocaleString()} SF short`
+      `Space is ${Math.abs(factors.space.details?.variance || 0).toLocaleString()} SF short`
     );
     recommendations.push(
       'Consider if government might accept smaller space or if expansion is possible'
@@ -66,25 +66,25 @@ function generateInsights(
   }
 
   // Building
-  if (scores.building.score >= 80) {
+  if (factors.building.score >= 80) {
     strengths.push('Building meets technical requirements');
   }
-  if (scores.building.breakdown?.featuresMissing && scores.building.breakdown.featuresMissing.length > 0) {
+  if (factors.building.details?.featuresMissing && factors.building.details.featuresMissing.length > 0) {
     weaknesses.push(
-      `Missing features: ${scores.building.breakdown.featuresMissing.join(', ')}`
+      `Missing features: ${factors.building.details.featuresMissing.join(', ')}`
     );
     recommendations.push('Evaluate cost to add missing features');
   }
-  if (scores.building.breakdown?.certificationsMet && scores.building.breakdown.certificationsMet.length > 0) {
+  if (factors.building.details?.certificationsMet && factors.building.details.certificationsMet.length > 0) {
     strengths.push(
-      `Certifications: ${scores.building.breakdown.certificationsMet.join(', ')}`
+      `Certifications: ${factors.building.details.certificationsMet.join(', ')}`
     );
   }
 
   // Timeline
-  if (scores.timeline.score >= 90) {
+  if (factors.timeline.score >= 90) {
     strengths.push('Available well before required occupancy date');
-  } else if (scores.timeline.score < 60) {
+  } else if (factors.timeline.score < 60) {
     weaknesses.push('Availability timeline is tight or delayed');
     recommendations.push(
       'Communicate realistic timeline and any acceleration options'
@@ -92,7 +92,7 @@ function generateInsights(
   }
 
   // Experience
-  if (scores.experience.breakdown?.hasGovExperience) {
+  if (factors.experience.details?.hasGovExperience) {
     strengths.push('Prior government lease experience');
   } else {
     recommendations.push(
@@ -124,46 +124,52 @@ export function calculateMatchScore(
     experience: 0.1,
   };
 
-  const categoryScores = {
+  // NEW FORMAT: factors with name and details (for UI component)
+  const factors = {
     location: {
+      name: 'Location',
       score: location.score,
       weight: weights.location,
       weighted: location.score * weights.location,
-      breakdown: location.breakdown,
+      details: location.breakdown,
     },
     space: {
+      name: 'Space',
       score: space.score,
       weight: weights.space,
       weighted: space.score * weights.space,
-      breakdown: space.breakdown,
+      details: space.breakdown,
     },
     building: {
+      name: 'Building',
       score: building.score,
       weight: weights.building,
       weighted: building.score * weights.building,
-      breakdown: building.breakdown,
+      details: building.breakdown,
     },
     timeline: {
+      name: 'Timeline',
       score: timeline.score,
       weight: weights.timeline,
       weighted: timeline.score * weights.timeline,
-      breakdown: timeline.breakdown,
+      details: timeline.breakdown,
     },
     experience: {
+      name: 'Experience',
       score: experience.score,
       weight: weights.experience,
       weighted: experience.score * weights.experience,
-      breakdown: experience.breakdown,
+      details: experience.breakdown,
     },
   };
 
   // Calculate overall
   const overallScore = Math.round(
-    categoryScores.location.weighted +
-      categoryScores.space.weighted +
-      categoryScores.building.weighted +
-      categoryScores.timeline.weighted +
-      categoryScores.experience.weighted
+    factors.location.weighted +
+      factors.space.weighted +
+      factors.building.weighted +
+      factors.timeline.weighted +
+      factors.experience.weighted
   );
 
   // Determine grade
@@ -209,14 +215,14 @@ export function calculateMatchScore(
 
   // Generate insights
   const { strengths, weaknesses, recommendations } =
-    generateInsights(categoryScores);
+    generateInsights(factors);
 
   return {
     overallScore,
     grade,
     competitive,
     qualified,
-    categoryScores,
+    factors,  // NEW FORMAT: renamed from categoryScores
     strengths,
     weaknesses,
     recommendations,

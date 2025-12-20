@@ -9,6 +9,10 @@
     {
       "path": "/api/cron/sync-federal-data",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/match-properties",
+      "schedule": "0 30 2 * * *"
     }
   ]
 }

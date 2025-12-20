@@ -38,6 +38,10 @@ interface PropertyMatch {
     title: string;
     agency: string;
     match_score: number;
+    grade?: string;
+    competitive?: boolean;
+    qualified?: boolean;
+    score_breakdown?: any; // Full breakdown with factors
   }>;
 }
 
@@ -95,39 +99,77 @@ export default function MyPropertiesClient() {
 
   const fetchOpportunityMatches = async (listings: BrokerListing[]) => {
     try {
+      const propertyIds = listings.map((l) => l.id);
+
+      // Fetch real matches from property_matches table
+      const { data: matchData, error } = await supabase
+        .from("property_matches")
+        .select(
+          `
+          property_id,
+          opportunity_id,
+          overall_score,
+          grade,
+          qualified,
+          competitive,
+          score_breakdown,
+          opportunities (
+            id,
+            solicitation_number,
+            title,
+            department
+          )
+        `
+        )
+        .in("property_id", propertyIds)
+        .gte("overall_score", 40) // Only show qualified matches (≥40)
+        .order("overall_score", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching matches:", error);
+        return;
+      }
+
+      // Group matches by property_id
       const matchResults: Record<string, PropertyMatch> = {};
 
-      for (const listing of listings) {
-        const { data: opportunities, error } = await supabase
-          .from("opportunities")
-          .select("id, solicitation_number, title, department, pop_state_code")
-          .eq("pop_state_code", listing.state)
-          .eq("source", "gsa_leasing")
-          .limit(20);
+      for (const match of matchData || []) {
+        const propertyId = match.property_id;
 
-        if (!error && opportunities && opportunities.length > 0) {
-          const scoredOpportunities = opportunities.map((opp) => {
-            const matchScore = 75;
-
-            return {
-              id: opp.id,
-              solicitation_number: opp.solicitation_number || "N/A",
-              title: opp.title,
-              agency: opp.department || "Unknown Agency",
-              match_score: matchScore,
-            };
-          });
-
-          scoredOpportunities.sort((a, b) => b.match_score - a.match_score);
-
-          matchResults[listing.id] = {
-            property_id: listing.id,
-            opportunity_count: scoredOpportunities.length,
-            best_match_score: scoredOpportunities[0]?.match_score || 0,
-            opportunities: scoredOpportunities.slice(0, 5),
+        if (!matchResults[propertyId]) {
+          matchResults[propertyId] = {
+            property_id: propertyId,
+            opportunity_count: 0,
+            best_match_score: 0,
+            opportunities: [],
           };
         }
+
+        const opportunity = match.opportunities as any;
+
+        matchResults[propertyId].opportunities.push({
+          id: opportunity.id,
+          solicitation_number: opportunity.solicitation_number || "N/A",
+          title: opportunity.title,
+          agency: opportunity.department || "Unknown Agency",
+          match_score: match.overall_score,
+          grade: match.grade,
+          competitive: match.competitive,
+          qualified: match.qualified,
+          score_breakdown: match.score_breakdown, // Full breakdown with factors
+        });
+
+        matchResults[propertyId].opportunity_count++;
+
+        if (match.overall_score > matchResults[propertyId].best_match_score) {
+          matchResults[propertyId].best_match_score = match.overall_score;
+        }
       }
+
+      // Keep top 5 matches per property
+      Object.values(matchResults).forEach((match) => {
+        match.opportunities = match.opportunities.slice(0, 5);
+      });
 
       setMatches(matchResults);
     } catch (error) {

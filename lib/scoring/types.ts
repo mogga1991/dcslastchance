@@ -155,18 +155,28 @@ export interface CategoryScore<T> {
   breakdown: T;
 }
 
+// NEW: Factor score with name and details (for UI component)
+export interface FactorScore<T> {
+  name: string;
+  score: number;
+  weight: number;
+  weighted: number;
+  details: T;
+}
+
 export interface MatchScoreResult {
   overallScore: number;
   grade: 'A' | 'B' | 'C' | 'D' | 'F';
   competitive: boolean;
   qualified: boolean;
 
-  categoryScores: {
-    location: CategoryScore<LocationBreakdown>;
-    space: CategoryScore<SpaceBreakdown>;
-    building: CategoryScore<BuildingBreakdown>;
-    timeline: CategoryScore<TimelineBreakdown>;
-    experience: CategoryScore<ExperienceBreakdown>;
+  // NEW FORMAT: factors instead of categoryScores
+  factors: {
+    location: FactorScore<LocationBreakdown>;
+    space: FactorScore<SpaceBreakdown>;
+    building: FactorScore<BuildingBreakdown>;
+    timeline: FactorScore<TimelineBreakdown>;
+    experience: FactorScore<ExperienceBreakdown>;
   };
 
   strengths: string[];
