@@ -91,11 +91,11 @@ export function PropertyMatchScore({ score, opportunityTitle }: PropertyMatchSco
 
       {/* Category Bars */}
       <div className="space-y-2 mb-3">
-        <ScoreBar value={score.categoryScores.location.score} label="Location" />
-        <ScoreBar value={score.categoryScores.space.score} label="Space" />
-        <ScoreBar value={score.categoryScores.building.score} label="Building" />
-        <ScoreBar value={score.categoryScores.timeline.score} label="Timeline" />
-        <ScoreBar value={score.categoryScores.experience.score} label="Experience" />
+        <ScoreBar value={score.factors.location.score} label="Location" />
+        <ScoreBar value={score.factors.space.score} label="Space" />
+        <ScoreBar value={score.factors.building.score} label="Building" />
+        <ScoreBar value={score.factors.timeline.score} label="Timeline" />
+        <ScoreBar value={score.factors.experience.score} label="Experience" />
       </div>
 
       {/* Expand/Collapse */}

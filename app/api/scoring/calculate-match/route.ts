@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
             grade: cachedScore.grade,
             competitive: cachedScore.competitive,
             qualified: cachedScore.qualified,
-            categoryScores: cachedScore.category_scores,
+            factors: cachedScore.category_scores,  // Updated from categoryScores to factors
             strengths: cachedScore.strengths,
             weaknesses: cachedScore.weaknesses,
             recommendations: cachedScore.recommendations,
@@ -326,7 +326,7 @@ export async function GET(request: NextRequest) {
             grade: cachedScore.grade,
             competitive: cachedScore.competitive,
             qualified: cachedScore.qualified,
-            categoryScores: cachedScore.category_scores,
+            factors: cachedScore.category_scores,  // Updated from categoryScores to factors
             strengths: cachedScore.strengths,
             weaknesses: cachedScore.weaknesses,
             recommendations: cachedScore.recommendations,
