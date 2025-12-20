@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, AlertCircle, Building2, Calendar, FileText, Hash, Maximize2, ChevronRight } from "lucide-react";
 import type { SAMOpportunity } from "@/lib/sam-gov";
+import type { MatchScoreResult } from "@/lib/scoring/types";
 
 interface OpportunityCardProps {
   opportunity: SAMOpportunity;
@@ -13,17 +14,7 @@ interface OpportunityCardProps {
   onSave?: (opportunity: SAMOpportunity) => void;
   isSaved?: boolean;
   hasInquiry?: boolean;
-  matchScore?: {
-    overallScore: number;
-    grade: string;
-    categoryScores: {
-      location: { score: number; weight: number };
-      space: { score: number; weight: number };
-      building: { score: number; weight: number };
-      timeline: { score: number; weight: number };
-      experience: { score: number; weight: number };
-    };
-  };
+  matchScore?: MatchScoreResult;
 }
 
 export function OpportunityCard({
