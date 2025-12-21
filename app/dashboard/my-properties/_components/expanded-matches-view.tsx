@@ -1,159 +1,299 @@
-"use client";
+'use client';
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { Target, Building } from "lucide-react";
-import { ScoreBreakdown, ScoreBadge } from "./score-breakdown";
-import { useState } from "react";
+import { useState } from 'react';
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  ExternalLink,
+  Calendar,
+  MapPin,
+  Building2,
+  Sparkles
+} from 'lucide-react';
+import { ScoreBreakdown, ScoreBadge } from './score-breakdown';
+import { OpportunitySummaryCard, SummaryButton } from '@/components/opportunity-summary';
 
-interface Opportunity {
+// =============================================================================
+// TYPES
+// =============================================================================
+
+interface FactorScore {
+  name: string;
+  score: number;
+  weight: number;
+  weighted: number;
+  details: Record<string, any>;
+}
+
+interface ScoreBreakdownData {
+  overall: number;
+  grade: 'A' | 'B' | 'C' | 'D' | 'F';
+  competitive: boolean;
+  qualified: boolean;
+  factors: {
+    location: FactorScore;
+    space: FactorScore;
+    building: FactorScore;
+    timeline: FactorScore;
+    experience: FactorScore;
+  };
+}
+
+interface OpportunityMatch {
   id: string;
-  solicitation_number: string;
-  title: string;
-  agency: string;
-  match_score: number;
-  grade?: string;
-  competitive?: boolean;
-  qualified?: boolean;
-  score_breakdown?: any; // Full breakdown with factors
+  opportunity_id: string;
+  overall_score: number;
+  grade: string;
+  competitive: boolean;
+  qualified: boolean;
+  score_breakdown: ScoreBreakdownData;
+  opportunity: {
+    id: string;
+    title: string;
+    solicitation_number?: string;
+    notice_id?: string;
+    agency?: string;
+    state?: string;
+    city?: string;
+    response_deadline?: string;
+    description?: string;
+  };
 }
 
 interface ExpandedMatchesViewProps {
-  opportunities: Opportunity[];
-  totalCount: number;
+  matches: OpportunityMatch[];
   propertyId: string;
+  propertyTitle?: string;
 }
 
-// Individual match card with expandable score breakdown
-function MatchCard({ opportunity: opp }: { opportunity: Opportunity }) {
-  const [expanded, setExpanded] = useState(false);
-  const hasBreakdown = opp.score_breakdown?.factors;
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
 
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return 'TBD';
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+function getGradeColor(grade: string): string {
+  switch (grade) {
+    case 'A': return 'bg-green-100 text-green-800 border-green-200';
+    case 'B': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    case 'C': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'D': return 'bg-orange-100 text-orange-800 border-orange-200';
+    case 'F': return 'bg-red-100 text-red-800 border-red-200';
+    default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+}
+
+// =============================================================================
+// MATCH CARD COMPONENT
+// =============================================================================
+
+function MatchCard({ match }: { match: OpportunityMatch }) {
+  const [expanded, setExpanded] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  
+  const opp = match.opportunity;
+  const breakdown = match.score_breakdown;
+  
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      {/* Header row */}
-      <div
-        className="flex items-center justify-between p-3 hover:bg-gray-50 cursor-pointer"
+    <div className="border rounded-lg bg-white shadow-sm overflow-hidden">
+      {/* Card Header - Always Visible */}
+      <div 
+        className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-medium text-sm text-gray-900 truncate">
-              {opp.solicitation_number}
-            </span>
-            {opp.grade ? (
-              <ScoreBadge score={opp.match_score} grade={opp.grade} />
+        <div className="flex items-start justify-between gap-4">
+          {/* Left: Opportunity Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h4 className="font-medium text-gray-900 truncate">
+                {opp.title || 'Untitled Opportunity'}
+              </h4>
+              {match.competitive && (
+                <span className="flex-shrink-0 text-xs px-2 py-0.5 bg-green-100 text-green-800 rounded-full">
+                  Competitive
+                </span>
+              )}
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+              {opp.solicitation_number && (
+                <span className="font-mono text-xs">
+                  {opp.solicitation_number}
+                </span>
+              )}
+              {(opp.city || opp.state) && (
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  {[opp.city, opp.state].filter(Boolean).join(', ')}
+                </span>
+              )}
+              {opp.response_deadline && (
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  Due: {formatDate(opp.response_deadline)}
+                </span>
+              )}
+            </div>
+          </div>
+          
+          {/* Right: Score Badge */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <ScoreBadge 
+              score={match.overall_score} 
+              grade={match.grade || 'C'} 
+            />
+            {expanded ? (
+              <ChevronUp className="w-5 h-5 text-gray-400" />
             ) : (
-              <Badge
-                variant="outline"
-                className={
-                  opp.match_score >= 70
-                    ? "bg-green-50 text-green-700 border-green-200"
-                    : opp.match_score >= 50
-                    ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                    : "bg-orange-50 text-orange-700 border-orange-200"
-                }
-              >
-                {opp.match_score}
-              </Badge>
-            )}
-            {opp.competitive && (
-              <Badge className="bg-blue-50 text-blue-700 border-blue-200">
-                Competitive
-              </Badge>
+              <ChevronDown className="w-5 h-5 text-gray-400" />
             )}
           </div>
-          <div className="text-xs text-gray-600 truncate mb-1">
-            {opp.title}
-          </div>
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <Building className="h-3 w-3" />
-            {opp.agency}
-          </div>
-        </div>
-        <div className="flex items-center gap-2 ml-4">
-          <Button variant="outline" size="sm" asChild onClick={(e) => e.stopPropagation()}>
-            <Link href={`/dashboard/gsa-leasing?opportunity=${opp.id}`}>
-              View
-            </Link>
-          </Button>
         </div>
       </div>
-
-      {/* Expanded score breakdown */}
-      {expanded && hasBreakdown && (
-        <div className="border-t border-gray-200 p-4 bg-gray-50">
-          <ScoreBreakdown
-            breakdown={{
-              overall: opp.match_score,
-              grade: (opp.grade || 'C') as 'A' | 'B' | 'C' | 'D' | 'F',
-              competitive: opp.competitive || false,
-              qualified: opp.qualified || false,
-              factors: opp.score_breakdown.factors,
-            }}
-            opportunityTitle={opp.title}
-          />
-        </div>
-      )}
-
-      {/* Fallback if no breakdown data */}
-      {expanded && !hasBreakdown && (
-        <div className="border-t border-gray-200 p-4 bg-gray-50 text-sm text-gray-500">
-          Score breakdown not available for this match.
+      
+      {/* Expanded Content */}
+      {expanded && (
+        <div className="border-t bg-gray-50">
+          {/* Action Bar */}
+          <div className="px-4 py-2 border-b bg-white flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowSummary(!showSummary);
+                }}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  showSummary 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                }`}
+              >
+                <Sparkles className="w-4 h-4" />
+                {showSummary ? 'Hide AI Summary' : 'Show AI Summary'}
+              </button>
+            </div>
+            
+            {opp.notice_id && (
+              <a
+                href={`https://sam.gov/opp/${opp.notice_id}/view`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+              >
+                View on SAM.gov
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            )}
+          </div>
+          
+          {/* AI Summary Section */}
+          {showSummary && (
+            <div className="p-4 border-b">
+              <OpportunitySummaryCard
+                opportunityId={opp.id}
+                opportunityTitle={opp.title}
+                compact={false}
+              />
+            </div>
+          )}
+          
+          {/* Score Breakdown */}
+          <div className="p-4">
+            <h5 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Match Score Breakdown
+            </h5>
+            
+            {breakdown?.factors ? (
+              <ScoreBreakdown
+                breakdown={{
+                  overall: match.overall_score,
+                  grade: (match.grade || 'C') as 'A' | 'B' | 'C' | 'D' | 'F',
+                  competitive: match.competitive,
+                  qualified: match.qualified,
+                  factors: breakdown.factors
+                }}
+              />
+            ) : (
+              <div className="text-sm text-gray-500 italic">
+                Score breakdown not available for this match.
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-export default function ExpandedMatchesView({
-  opportunities,
-  totalCount,
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
+
+export function ExpandedMatchesView({ 
+  matches, 
   propertyId,
+  propertyTitle 
 }: ExpandedMatchesViewProps) {
-  if (opportunities.length === 0) {
+  if (!matches || matches.length === 0) {
     return (
-      <tr>
-        <td colSpan={8} className="px-6 py-4">
-          <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-4 rounded-lg">
-            <Target className="h-5 w-5 flex-shrink-0" />
-            <div>
-              <div className="font-medium text-sm">No Current Matches</div>
-              <div className="text-xs text-amber-700 mt-1">
-                We&apos;ll notify you when new GSA opportunities match this property.
-              </div>
-            </div>
-          </div>
-        </td>
-      </tr>
+      <div className="p-6 text-center text-gray-500">
+        <Building2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
+        <p>No matching opportunities found for this property.</p>
+        <p className="text-sm mt-1">
+          Matches are generated daily at 2:30 AM UTC.
+        </p>
+      </div>
     );
   }
-
+  
+  // Sort by score descending
+  const sortedMatches = [...matches].sort((a, b) => b.overall_score - a.overall_score);
+  
   return (
-    <tr>
-      <td colSpan={8} className="px-6 py-4 bg-gray-50">
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 mb-3">
-            <Target className="h-4 w-4 text-indigo-600" />
-            <span className="font-semibold text-sm text-gray-900">
-              GSA Opportunity Matches ({totalCount})
-            </span>
-          </div>
-
-          {opportunities.map((opp) => (
-            <MatchCard key={opp.id} opportunity={opp} />
-          ))}
-
-          {totalCount > opportunities.length && (
-            <Button variant="link" className="text-indigo-600 text-sm p-0" asChild>
-              <Link href={`/dashboard/gsa-leasing?property=${propertyId}`}>
-                View all {totalCount} matches →
-              </Link>
-            </Button>
-          )}
+    <div className="p-4 space-y-3">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-semibold text-gray-700">
+          {matches.length} Matching Opportunit{matches.length === 1 ? 'y' : 'ies'}
+        </h3>
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+            Competitive (≥70)
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+            Qualified (50-69)
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+            Marginal (40-49)
+          </span>
         </div>
-      </td>
-    </tr>
+      </div>
+      
+      {/* Match Cards */}
+      <div className="space-y-3">
+        {sortedMatches.map((match) => (
+          <MatchCard key={match.id} match={match} />
+        ))}
+      </div>
+    </div>
   );
 }
+
+export default ExpandedMatchesView;

@@ -51,6 +51,10 @@ interface PropertyMatch {
     title: string;
     agency: string;
     match_score: number;
+    grade?: string;
+    competitive?: boolean;
+    qualified?: boolean;
+    score_breakdown?: any;
   }>;
 }
 
@@ -314,9 +318,23 @@ export default function PropertiesTable({
                 </TableRow>
                 {isExpanded && hasMatches && (
                   <ExpandedMatchesView
-                    opportunities={propertyMatches.opportunities}
-                    totalCount={propertyMatches.opportunity_count}
+                    matches={propertyMatches.opportunities.map(opp => ({
+                      id: `${property.id}-${opp.id}`,
+                      opportunity_id: opp.id,
+                      overall_score: opp.match_score,
+                      grade: opp.grade || 'C',
+                      competitive: opp.competitive || false,
+                      qualified: opp.qualified || false,
+                      score_breakdown: opp.score_breakdown,
+                      opportunity: {
+                        id: opp.id,
+                        title: opp.title,
+                        solicitation_number: opp.solicitation_number,
+                        agency: opp.agency,
+                      }
+                    }))}
                     propertyId={property.id}
+                    propertyTitle={property.title || undefined}
                   />
                 )}
               </Fragment>
