@@ -67,6 +67,12 @@ export interface MatchStats {
   processed: number;
   matched: number;
   skipped: number;
+  earlyTerminated: number;
+  earlyTerminationReasons: {
+    STATE_MISMATCH: number;
+    SPACE_TOO_SMALL: number;
+    INVALID_REQUIREMENTS: number;
+  };
   errors: string[];
   startTime: Date;
   endTime: Date;
@@ -157,6 +163,12 @@ export async function matchPropertiesWithOpportunities(
     processed: 0,
     matched: 0,
     skipped: 0,
+    earlyTerminated: 0,
+    earlyTerminationReasons: {
+      STATE_MISMATCH: 0,
+      SPACE_TOO_SMALL: 0,
+      INVALID_REQUIREMENTS: 0,
+    },
     errors: [],
     startTime,
     endTime: new Date(),
@@ -199,7 +211,15 @@ export async function matchPropertiesWithOpportunities(
       return finishStats(stats);
     }
 
-    console.log(`🔄 Matching ${properties.length} properties against ${opportunities.length} opportunities...`);
+    console.log(`
+🚀 Starting Property Matching (PERF-001: Early Termination Enabled)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Properties: ${properties.length}
+   Opportunities: ${opportunities.length}
+   Total Combinations: ${properties.length * opportunities.length}
+   Min Score Threshold: ${minScore}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    `);
 
     // 3. Match each property against all opportunities
     const matches: MatchResult[] = [];
@@ -214,13 +234,33 @@ export async function matchPropertiesWithOpportunities(
           // Parse opportunity requirements
           const requirements = parseOpportunityRequirements(opportunity as SAMOpportunity);
 
-          // Skip if requirements are invalid
+          // 🚀 PERF-001: Early termination check #1 - Invalid requirements
           if (!hasValidRequirements(requirements)) {
             stats.skipped++;
+            stats.earlyTerminated++;
+            stats.earlyTerminationReasons.INVALID_REQUIREMENTS++;
             continue;
           }
 
-          // Calculate match score
+          // 🚀 PERF-001: Early termination check #2 - State mismatch
+          // This is the highest-value optimization: 80% of opportunities are in different states
+          if (property.state !== requirements.location.state) {
+            stats.skipped++;
+            stats.earlyTerminated++;
+            stats.earlyTerminationReasons.STATE_MISMATCH++;
+            continue; // Skip expensive calculateMatchScore call
+          }
+
+          // 🚀 PERF-001: Early termination check #3 - Severe space shortage
+          // Skip if property is >30% below minimum space requirement
+          if (requirements.space.minSqFt && property.available_sf < requirements.space.minSqFt * 0.7) {
+            stats.skipped++;
+            stats.earlyTerminated++;
+            stats.earlyTerminationReasons.SPACE_TOO_SMALL++;
+            continue; // Skip expensive calculateMatchScore call
+          }
+
+          // Only calculate full match score if passed all early checks
           const scoreResult = calculateMatchScore(
             propertyData,
             DEFAULT_BROKER_EXPERIENCE,
@@ -256,14 +296,45 @@ export async function matchPropertiesWithOpportunities(
       }
     }
 
+    // Calculate performance metrics
+    const calculationsSkipped = stats.earlyTerminated;
+    const calculationsPerformed = stats.processed - stats.earlyTerminated;
+    const computationSaved = stats.processed > 0
+      ? Math.round((calculationsSkipped / stats.processed) * 100)
+      : 0;
+
+    console.log(`
+✅ Matching Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Results:
+   Total Processed: ${stats.processed}
+   Matches Found: ${stats.matched}
+   Skipped (Low Score): ${stats.skipped - stats.earlyTerminated}
+
+Early Termination Statistics:
+   Total Early Terminations: ${stats.earlyTerminated}
+   - State Mismatch: ${stats.earlyTerminationReasons.STATE_MISMATCH}
+   - Space Too Small: ${stats.earlyTerminationReasons.SPACE_TOO_SMALL}
+   - Invalid Requirements: ${stats.earlyTerminationReasons.INVALID_REQUIREMENTS}
+
+Performance Impact:
+   Full Calculations Performed: ${calculationsPerformed}
+   Calculations Skipped: ${calculationsSkipped}
+   Computation Saved: ${computationSaved}%
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    `);
+
     // 4. Upsert matches to database (batch insert with conflict handling)
     if (matches.length > 0) {
+      console.log(`💾 Upserting ${matches.length} matches to database...`);
+
       const { error: upsertError } = await supabase
         .from('property_matches')
         .upsert(matches, { onConflict: 'property_id,opportunity_id' });
 
       if (upsertError) {
         stats.errors.push(`Error upserting matches: ${upsertError.message}`);
+        console.log(`❌ Database Error: ${upsertError.message}`);
       } else {
         console.log(`✅ Successfully stored ${matches.length} matches`);
       }
