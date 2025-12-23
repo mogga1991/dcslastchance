@@ -1,86 +1,86 @@
-const { createClient } = require('@supabase/supabase-js');
-const fs = require('fs');
-const path = require('path');
+#!/usr/bin/env node
+/**
+ * Migration Runner - Applies SQL migrations to Neon database
+ */
 
-// Read environment variables
+const { neon } = require('@neondatabase/serverless');
+const fs = require('fs');
 require('dotenv').config({ path: '.env.local' });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const sql = neon(process.env.DATABASE_URL);
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('❌ Missing Supabase credentials in .env.local');
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
-
-async function runMigration(migrationFile) {
-  console.log(`\n📁 Reading migration: ${migrationFile}`);
-
-  const migrationPath = path.join(__dirname, '..', 'supabase', 'migrations', migrationFile);
-  const sql = fs.readFileSync(migrationPath, 'utf8');
-
-  console.log(`📝 Executing SQL (${sql.length} characters)...`);
-
-  try {
-    // Execute the SQL
-    const { data, error } = await supabase.rpc('exec_sql', { sql_query: sql });
-
-    if (error) {
-      // Try direct execution if rpc fails
-      console.log('⚠️  RPC failed, trying direct execution...');
-      const { error: directError } = await supabase.from('_supabase_migrations').select('*').limit(1);
-
-      if (directError && directError.code === '42P01') {
-        console.log('ℹ️  Migration tracking table doesn\'t exist, executing SQL directly via pg...');
-
-        // For this, we'll just log instructions for manual execution
-        console.log('\n' + '='.repeat(60));
-        console.log('⚠️  MANUAL MIGRATION REQUIRED');
-        console.log('='.repeat(60));
-        console.log('\nPlease run this SQL in your Supabase SQL Editor:\n');
-        console.log(sql);
-        console.log('\n' + '='.repeat(60));
-        return false;
+async function runMigration(filename) {
+  console.log(`📦 Reading migration: ${filename}`);
+  
+  const migrationSQL = fs.readFileSync(filename, 'utf8');
+  
+  // Split by $$ delimiters to preserve function bodies
+  const parts = migrationSQL.split('$$');
+  const statements = [];
+  
+  for (let i = 0; i < parts.length; i += 2) {
+    // Even indices are outside functions
+    const outsideParts = parts[i].split(';').map(s => s.trim()).filter(Boolean);
+    statements.push(...outsideParts);
+    
+    // Odd indices are inside functions (if they exist)
+    if (i + 1 < parts.length) {
+      // Reconstruct the function with its delimiters
+      let prevStatement = statements.pop() || '';
+      const nextPart = parts[i + 2] ? parts[i + 2].split(';')[0] : '';
+      statements.push(prevStatement + '$$' + parts[i + 1] + '$$' + nextPart);
+      
+      // Remove the used part from next iteration
+      if (i + 2 < parts.length) {
+        parts[i + 2] = parts[i + 2].substring(nextPart.length + 1);
       }
-
-      throw error;
     }
-
-    console.log('✅ Migration executed successfully!');
-    return true;
-
-  } catch (error) {
-    console.error('❌ Migration failed:', error.message);
-    console.log('\n' + '='.repeat(60));
-    console.log('⚠️  MANUAL MIGRATION REQUIRED');
-    console.log('='.repeat(60));
-    console.log('\nPlease run this SQL in your Supabase SQL Editor:');
-    console.log(`\n${sql}\n`);
-    console.log('='.repeat(60) + '\n');
-    return false;
   }
+  
+  console.log(`📋 Found ${statements.length} SQL statements`);
+  console.log(`🚀 Executing migration...\n`);
+
+  let successCount = 0;
+  let failureCount = 0;
+
+  for (const statement of statements) {
+    if (!statement.trim()) continue;
+    
+    try {
+      await sql.unsafe(statement);
+      successCount++;
+      
+      // Log major operations
+      if (statement.includes('CREATE TABLE')) {
+        const match = statement.match(/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?(\w+)/i);
+        if (match) console.log(`  ✅ Created table: ${match[1]}`);
+      } else if (statement.includes('CREATE OR REPLACE FUNCTION')) {
+        const match = statement.match(/CREATE OR REPLACE FUNCTION\s+(\w+)/i);
+        if (match) console.log(`  ✅ Created function: ${match[1]}()`);
+      } else if (statement.includes('CREATE INDEX')) {
+        const match = statement.match(/CREATE INDEX\s+(\w+)/i);
+        if (match) console.log(`  ✅ Created index: ${match[1]}`);
+      }
+      
+    } catch (error) {
+      if (error.message.includes('already exists')) {
+        successCount++;
+      } else {
+        console.error(`  ❌ Error:`, error.message.substring(0, 100));
+        failureCount++;
+      }
+    }
+  }
+
+  console.log(`\n✅ Migration complete: ${successCount} success, ${failureCount} failed`);
+  return failureCount === 0;
 }
 
-async function main() {
-  console.log('🚀 Supabase Migration Runner\n');
-  console.log(`📍 Supabase URL: ${supabaseUrl}`);
+const filename = process.argv[2] || 'supabase/migrations/20251216000000_create_fedspace_tables.sql';
 
-  const migrations = [
-    '20251214130000_create_saved_opportunities.sql'
-  ];
-
-  for (const migration of migrations) {
-    await runMigration(migration);
-  }
-
-  console.log('\n✨ Migration process complete!\n');
-}
-
-main().catch(console.error);
+runMigration(filename)
+  .then(success => process.exit(success ? 0 : 1))
+  .catch(error => {
+    console.error('\n💥 Fatal error:', error);
+    process.exit(1);
+  });
