@@ -10,6 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:perf": "vitest run performance.bench.test.ts",
+    "test:memory": "node --expose-gc node_modules/vitest/vitest.mjs run memory-profiling.test.ts",
+    "test:db-stress": "ENABLE_STRESS_TESTS=true vitest run database-stress.test.ts",
     "deploy": "vercel",
     "deploy:prod": "vercel --prod",
     "sync-federal-data": "node scripts/sync-federal-data.js"
