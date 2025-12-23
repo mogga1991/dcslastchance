@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { iolpAdapter } from '@/lib/iolp';
 import type { BrokerListingInput, PublicBrokerListing } from '@/types/broker-listing';
 
 /**
@@ -305,21 +304,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Calculate federal score if we have coordinates
-    if (latitude && longitude) {
-      try {
-        const score = await iolpAdapter.calculateFederalNeighborhoodScore(
-          latitude,
-          longitude,
-          5 // 5 mile radius
-        );
-        federalScore = score.score;
-        federalScoreData = score;
-      } catch (error) {
-        console.error('Federal score calculation error:', error);
-        // Continue without federal score
-      }
-    }
+    // Federal score calculation removed - IOLP data no longer available
+    // federalScore and federalScoreData will remain undefined
 
     // Prepare insert data with MVP fields
     const insertData = {

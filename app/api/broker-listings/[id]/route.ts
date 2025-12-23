@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { iolpAdapter } from '@/lib/iolp';
 import type { BrokerListingInput, PublicBrokerListing } from '@/types/broker-listing';
 
 /**
@@ -172,14 +171,8 @@ export async function PATCH(
     let federalScoreData: Record<string, unknown> | undefined;
 
     if (coordsChanged && input.latitude && input.longitude) {
-      // Recalculate federal score
-      const score = await iolpAdapter.calculateFederalNeighborhoodScore(
-        input.latitude,
-        input.longitude,
-        5
-      );
-      federalScore = score.score;
-      federalScoreData = score;
+      // Federal score calculation removed - IOLP data no longer available
+      // federalScore and federalScoreData will remain undefined
     }
 
     // Prepare update data (only include provided fields)

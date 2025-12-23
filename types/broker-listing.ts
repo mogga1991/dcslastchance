@@ -1,4 +1,14 @@
-import { FederalNeighborhoodScore } from '@/lib/iolp';
+// FederalNeighborhoodScore type removed - IOLP data no longer available
+export interface FederalNeighborhoodScore {
+  score: number;
+  totalProperties: number;
+  leasedProperties: number;
+  ownedProperties: number;
+  totalRSF: number;
+  vacantRSF: number;
+  density: number;
+  percentile: number;
+}
 
 /**
  * Broker Listing Status

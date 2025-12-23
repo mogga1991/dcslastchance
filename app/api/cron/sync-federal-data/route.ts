@@ -1,10 +1,11 @@
 /**
  * Daily Cron Job: Sync Federal Buildings from IOLP
+ * DISABLED: IOLP data has been removed from the application
  *
  * Vercel Cron: Runs daily at 2 AM UTC
  * Manual trigger: GET /api/cron/sync-federal-data?force=true
  *
- * Fetches all federal buildings and leases from IOLP and stores in database
+ * NOTE: This endpoint now returns an error as IOLP data is no longer available
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -28,9 +29,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('[CRON] Starting federal data sync...');
-    const startTime = Date.now();
+    console.log('[CRON] IOLP data sync is disabled - IOLP has been removed from the application');
+    
+    return NextResponse.json({
+      success: false,
+      error: 'IOLP data sync is disabled - IOLP has been removed from the application',
+      message: 'IOLP (Inventory of Owned and Leased Properties) data is no longer available in this application',
+    }, { status: 410 }); // 410 Gone
 
+    /* Removed sync code:
+    const startTime = Date.now();
     const result = await syncIOLPDataToDatabase();
 
     const duration = Date.now() - startTime;
@@ -52,6 +60,7 @@ export async function GET(request: NextRequest) {
         errors: result.errors,
       },
     });
+    */
   } catch (error) {
     console.error('[CRON] Fatal error:', error);
     return NextResponse.json(

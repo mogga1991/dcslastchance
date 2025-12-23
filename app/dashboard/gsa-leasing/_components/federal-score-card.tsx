@@ -54,8 +54,9 @@ export function FederalScoreCard({ latitude, longitude, radiusMiles = 5, classNa
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
+      // IOLP API removed - use fedspace endpoint instead
       const response = await fetch(
-        `/api/iolp/score?lat=${latitude}&lng=${longitude}&radiusMiles=${radiusMiles}`,
+        `/api/fedspace/neighborhood-score?lat=${latitude}&lng=${longitude}&radiusMiles=${radiusMiles}`,
         { signal: controller.signal }
       );
 
@@ -131,7 +132,7 @@ export function FederalScoreCard({ latitude, longitude, radiusMiles = 5, classNa
   };
 
   const calculateFactorScores = (data: FederalScoreData) => {
-    // Reconstruct the factor scores based on the algorithm in lib/iolp.ts
+    // Reconstruct the factor scores based on the federal neighborhood scoring algorithm
     const densityScore = Math.min(25, (data.density / 10) * 25);
 
     const leaseRatio = data.totalProperties > 0 ? data.leasedProperties / data.totalProperties : 0;

@@ -93,8 +93,15 @@ export async function calculateFederalNeighborhoodScore(
 
 /**
  * Build spatial index from IOLP data
+ * DISABLED: IOLP data has been removed from the application
  */
 async function buildSpatialIndex(): Promise<FederalPropertyRTree> {
+  // IOLP adapter removed - return empty index
+  console.warn('IOLP data is no longer available - returning empty spatial index');
+  return new FederalPropertyRTree();
+
+  /* Removed IOLP code - kept for reference:
+   *
   // Import IOLP adapter dynamically to avoid circular dependencies
   const { iolpAdapter } = await import('@/lib/iolp');
 
@@ -161,6 +168,7 @@ async function buildSpatialIndex(): Promise<FederalPropertyRTree> {
   index.bulkLoad(properties);
 
   return index;
+  */
 }
 
 /**

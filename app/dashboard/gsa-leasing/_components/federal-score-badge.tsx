@@ -6,7 +6,17 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Building2 } from "lucide-react";
-import type { FederalNeighborhoodScore } from "@/lib/iolp";
+// FederalNeighborhoodScore type definition
+export interface FederalNeighborhoodScore {
+  score: number;
+  totalProperties: number;
+  leasedProperties: number;
+  ownedProperties: number;
+  totalRSF: number;
+  vacantRSF: number;
+  density: number;
+  percentile: number;
+}
 
 interface FederalScoreBadgeProps {
   score: number;

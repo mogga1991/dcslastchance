@@ -1,11 +1,11 @@
 /**
  * FedSpace Integration Layer
  *
- * Bridges existing SAM.gov and IOLP code with patent-pending algorithms
+ * Bridges existing SAM.gov code with patent-pending algorithms
  * Provides data synchronization and backward compatibility
+ * 
+ * NOTE: IOLP data has been removed from the application
  */
-
-import { iolpAdapter, type IOLPFeatureCollection } from './iolp';
 import {
   calculateFederalNeighborhoodScore,
   calculatePropertyOpportunityMatch,
@@ -21,7 +21,7 @@ import { createClient } from './supabase/server';
 
 /**
  * Sync IOLP data to federal_buildings table
- * Should be run periodically (e.g., daily via cron job)
+ * DISABLED: IOLP data has been removed from the application
  */
 export async function syncIOLPDataToDatabase(): Promise<{
   success: boolean;
@@ -29,201 +29,16 @@ export async function syncIOLPDataToDatabase(): Promise<{
   leasesProcessed: number;
   errors: string[];
 }> {
-  const errors: string[] = [];
-  let buildingsProcessed = 0;
-  let leasesProcessed = 0;
-
-  try {
-    const supabase = await createClient();
-
-    // Fetch all buildings (paginated for large datasets)
-    const buildings = await fetchAllIOLPBuildings();
-
-    // Fetch all leases
-    const leases = await fetchAllIOLPLeases();
-
-    // Process buildings
-    for (const feature of buildings.features) {
-      try {
-        const { attributes } = feature;
-
-        if (!attributes.latitude || !attributes.longitude) {
-          continue; // Skip features without coordinates
-        }
-
-        await supabase.from('federal_buildings').upsert({
-          source_type: 'iolp_building',
-          source_id: `building_${attributes.OBJECTID}`,
-          latitude: attributes.latitude,
-          longitude: attributes.longitude,
-          address: attributes.address,
-          city: attributes.city,
-          state: attributes.state,
-          zipcode: attributes.zipcode,
-          rsf: attributes.building_rsf || 0,
-          vacant: attributes.vacant_rsf ? attributes.vacant_rsf > 0 : false,
-          vacant_rsf: attributes.vacant_rsf || 0,
-          property_type: attributes.owned_or_leased_indicator === 'F' ? 'owned' : 'leased',
-          construction_year: attributes.year_constructed,
-          agency: attributes.agency_abbr,
-          source_data: attributes,
-          last_synced_at: new Date().toISOString(),
-        }, {
-          onConflict: 'source_type,source_id',
-        });
-
-        buildingsProcessed++;
-      } catch (error) {
-        errors.push(`Error processing building ${feature.attributes.OBJECTID}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-    }
-
-    // Process leases
-    for (const feature of leases.features) {
-      try {
-        const { attributes } = feature;
-
-        if (!attributes.latitude || !attributes.longitude) {
-          continue;
-        }
-
-        await supabase.from('federal_buildings').upsert({
-          source_type: 'iolp_lease',
-          source_id: `lease_${attributes.OBJECTID}`,
-          latitude: attributes.latitude,
-          longitude: attributes.longitude,
-          address: attributes.address,
-          city: attributes.city,
-          state: attributes.state,
-          zipcode: attributes.zipcode,
-          rsf: attributes.building_rsf || 0,
-          property_type: 'leased',
-          lease_expiration_date: attributes.lease_expiration_date,
-          agency: attributes.agency_abbr,
-          source_data: attributes,
-          last_synced_at: new Date().toISOString(),
-        }, {
-          onConflict: 'source_type,source_id',
-        });
-
-        leasesProcessed++;
-      } catch (error) {
-        errors.push(`Error processing lease ${feature.attributes.OBJECTID}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-    }
-
-    return {
-      success: errors.length === 0,
-      buildingsProcessed,
-      leasesProcessed,
-      errors,
-    };
-  } catch (error) {
-    errors.push(`Fatal error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    return {
-      success: false,
-      buildingsProcessed,
-      leasesProcessed,
-      errors,
-    };
-  }
+  console.warn('IOLP data sync is disabled - IOLP has been removed from the application');
+  return {
+    success: false,
+    buildingsProcessed: 0,
+    leasesProcessed: 0,
+    errors: ['IOLP data sync is disabled - IOLP has been removed from the application'],
+  };
 }
 
-/**
- * Fetch all IOLP buildings (handles pagination)
- * Fetches in batches to get maximum data
- */
-async function fetchAllIOLPBuildings(): Promise<IOLPFeatureCollection> {
-  const allFeatures: any[] = [];
-  const batchSize = 2000; // IOLP max is typically 2000
-  let offset = 0;
-  let hasMore = true;
-
-  console.log('[IOLP] Fetching buildings...');
-
-  while (hasMore) {
-    const queryString = [
-      'where=1=1',
-      'outFields=*',
-      'returnGeometry=true',
-      `resultRecordCount=${batchSize}`,
-      `resultOffset=${offset}`,
-      'f=json'
-    ].join('&');
-
-    const result = await iolpAdapter.queryBuildings(queryString);
-
-    if (result.features && result.features.length > 0) {
-      allFeatures.push(...result.features);
-      console.log(`[IOLP] Buildings: ${allFeatures.length} total`);
-      offset += batchSize;
-
-      // If we got less than batchSize, we've reached the end
-      if (result.features.length < batchSize) {
-        hasMore = false;
-      }
-    } else {
-      hasMore = false;
-    }
-
-    // Prevent infinite loop - max 50k records
-    if (offset >= 50000) {
-      console.log('[IOLP] Reached maximum fetch limit (50k buildings)');
-      hasMore = false;
-    }
-  }
-
-  console.log(`[IOLP] ✓ Fetched ${allFeatures.length} buildings total`);
-  return { features: allFeatures };
-}
-
-/**
- * Fetch all IOLP leases (handles pagination)
- * Fetches in batches to get maximum data
- */
-async function fetchAllIOLPLeases(): Promise<IOLPFeatureCollection> {
-  const allFeatures: any[] = [];
-  const batchSize = 2000; // IOLP max is typically 2000
-  let offset = 0;
-  let hasMore = true;
-
-  console.log('[IOLP] Fetching leases...');
-
-  while (hasMore) {
-    const queryString = [
-      'where=1=1',
-      'outFields=*',
-      'returnGeometry=true',
-      `resultRecordCount=${batchSize}`,
-      `resultOffset=${offset}`,
-      'f=json'
-    ].join('&');
-
-    const result = await iolpAdapter.queryLeases(queryString);
-
-    if (result.features && result.features.length > 0) {
-      allFeatures.push(...result.features);
-      console.log(`[IOLP] Leases: ${allFeatures.length} total`);
-      offset += batchSize;
-
-      // If we got less than batchSize, we've reached the end
-      if (result.features.length < batchSize) {
-        hasMore = false;
-      }
-    } else {
-      hasMore = false;
-    }
-
-    // Prevent infinite loop - max 50k records
-    if (offset >= 50000) {
-      console.log('[IOLP] Reached maximum fetch limit (50k leases)');
-      hasMore = false;
-    }
-  }
-
-  console.log(`[IOLP] ✓ Fetched ${allFeatures.length} leases total`);
-  return { features: allFeatures };
-}
+// IOLP fetching functions removed - no longer available
 
 /**
  * Build spatial index from database
@@ -266,7 +81,7 @@ export async function buildSpatialIndexFromDatabase(): Promise<FederalPropertyRT
 
 /**
  * Enhanced federal score using patent-pending algorithm
- * Falls back to existing IOLP algorithm if database not synced
+ * IOLP fallback removed - no longer available
  */
 export async function calculateEnhancedFederalScore(
   latitude: number,
@@ -274,13 +89,22 @@ export async function calculateEnhancedFederalScore(
   radiusMiles: number = 5
 ): Promise<any> {
   try {
-    // Try to use patent-pending algorithm with spatial index
+    // Use patent-pending algorithm with spatial index
     const index = await buildSpatialIndexFromDatabase();
     return await calculateFederalNeighborhoodScore(latitude, longitude, radiusMiles, index);
   } catch (error) {
-    console.warn('Falling back to existing IOLP algorithm:', error);
-    // Fallback to existing IOLP algorithm
-    return await iolpAdapter.calculateFederalNeighborhoodScore(latitude, longitude, radiusMiles);
+    console.error('Error calculating federal score:', error);
+    // Return default score since IOLP fallback is no longer available
+    return {
+      score: 0,
+      totalProperties: 0,
+      leasedProperties: 0,
+      ownedProperties: 0,
+      totalRSF: 0,
+      vacantRSF: 0,
+      density: 0,
+      percentile: 0
+    };
   }
 }
 

@@ -15,20 +15,16 @@ import { BrokerListingCard } from "./broker-listing-card";
 import { ListingDetailModal } from "./listing-detail-modal";
 import { OpportunityDetailModal } from "./opportunity-detail-modal";
 import { ExpressInterestModal } from "./express-interest-modal";
-import { ExpiringLeaseCard } from "./expiring-lease-card";
-import { ExpiringLeaseDetailPanel } from "./expiring-lease-detail-panel";
-import type { IOLPFilters } from "./iolp-filters";
+// ExpiringLeaseCard and ExpiringLeaseDetailPanel removed - IOLP data no longer available
 import type { OpportunityFilters } from "./opportunity-filters";
-import { FederalScoreCard } from "./federal-score-card";
-import { useExpiringLeases } from "@/lib/hooks/use-iolp";
 import { useToast } from "@/hooks/use-toast";
 import { calculateAllOpportunityMatches } from "@/lib/scoring/calculate-opportunity-matches";
 import type { MatchScoreResult } from "@/lib/scoring/types";
 
-// Dynamically import the map to avoid SSR issues
-const GSAMapWithIOLP = dynamic(() => import("./gsa-map-with-iolp"), { ssr: false });
+// Map component - IOLP layer removed (component no longer exists)
+// const GSAMap = dynamic(() => import("./gsa-map"), { ssr: false });
 
-type TabType = "opportunities" | "listings" | "expiring";
+type TabType = "opportunities" | "listings";
 
 interface GSALeasingClientProps {
   userEmail?: string;
@@ -44,8 +40,6 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOpportunity, setSelectedOpportunity] = useState<SAMOpportunity | null>(null);
   const [selectedListing, setSelectedListing] = useState<PublicBrokerListing | null>(null);
-  const [showIOLPLayer, setShowIOLPLayer] = useState(false);
-  const [iolpLoading, setIolpLoading] = useState(false);
   const [showListingDetail, setShowListingDetail] = useState(false);
   const [showOpportunityDetail, setShowOpportunityDetail] = useState(false);
   const [detailListing, setDetailListing] = useState<PublicBrokerListing | null>(null);
@@ -54,25 +48,9 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
   const [expressInterestOpportunity, setExpressInterestOpportunity] = useState<SAMOpportunity | null>(null);
   const [submittedInquiries, setSubmittedInquiries] = useState<Set<string>>(new Set());
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
-  const [showExpiringLeaseDetail, setShowExpiringLeaseDetail] = useState(false);
-  const [detailExpiringLease, setDetailExpiringLease] = useState<any | null>(null);
-  const [currentViewport, setCurrentViewport] = useState<{ lat: number; lng: number } | null>(null);
-  const [userAlerts, setUserAlerts] = useState<Set<string>>(new Set());
   const [opportunitiesError, setOpportunitiesError] = useState<string | null>(null);
   const [listingsError, setListingsError] = useState<string | null>(null);
-  const [iolpError, setIolpError] = useState<string | null>(null);
-  const [iolpCount, setIolpCount] = useState<number>(0);
   const [pinFilteredOpportunities, setPinFilteredOpportunities] = useState<SAMOpportunity[] | null>(null);
-
-  // IOLP Filters
-  const [iolpFilters, setIolpFilters] = useState<IOLPFilters>({
-    propertyType: 'all',
-    agencies: [],
-    states: [],
-    timeframe: 24,
-    sortBy: 'expiration',
-    urgencyFilter: undefined
-  });
 
   // Opportunity Filters
   const [opportunityFilters, setOpportunityFilters] = useState<OpportunityFilters>({
@@ -85,9 +63,6 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
 
   // Saved opportunities
   const [savedOpportunities, setSavedOpportunities] = useState<Set<string>>(new Set());
-
-  // Fetch expiring leases (using timeframe from filters)
-  const { data: expiringLeasesData, isLoading: expiringLoading } = useExpiringLeases(iolpFilters.timeframe);
 
   const { toast } = useToast();
 
@@ -156,19 +131,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
     }
   }, [toast]);
 
-  const fetchUserAlerts = useCallback(async () => {
-    try {
-      const response = await fetch("/api/iolp/alerts");
-      const data = await response.json();
-
-      if (data.success) {
-        const alertCodes = new Set<string>(data.alerts.map((a: { location_code: string }) => a.location_code));
-        setUserAlerts(alertCodes);
-      }
-    } catch (error) {
-      console.error("Error fetching alerts:", error);
-    }
-  }, []);
+  // IOLP alerts removed - no longer available
 
   const fetchSavedOpportunities = useCallback(async () => {
     try {
@@ -209,10 +172,9 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
   useEffect(() => {
     fetchOpportunities();
     fetchBrokerListings();
-    fetchUserAlerts();
     fetchSavedOpportunities();
     fetchSubmittedInquiries();
-  }, [fetchOpportunities, fetchBrokerListings, fetchUserAlerts, fetchSavedOpportunities, fetchSubmittedInquiries]);
+  }, [fetchOpportunities, fetchBrokerListings, fetchSavedOpportunities, fetchSubmittedInquiries]);
 
   // Filter listings based on search term
   useEffect(() => {
@@ -300,54 +262,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
     setPinFilteredOpportunities(null);
   };
 
-  const handleSetAlert = async (lease: { location_code?: string; building_name?: string; address?: string }) => {
-    if (!lease.location_code) return;
-
-    const locationCode = lease.location_code; // Capture for type safety
-
-    try {
-      const isAlertSet = userAlerts.has(locationCode);
-
-      if (isAlertSet) {
-        // Remove alert
-        await fetch(`/api/iolp/alerts?location_code=${locationCode}`, {
-          method: 'DELETE'
-        });
-
-        setUserAlerts(prev => {
-          const next = new Set(prev);
-          next.delete(locationCode);
-          return next;
-        });
-
-        toast({
-          title: "Alert removed",
-          description: `You will no longer receive notifications for ${lease.building_name || lease.address}`
-        });
-      } else {
-        // Create alert
-        await fetch('/api/iolp/alerts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(lease)
-        });
-
-        setUserAlerts(prev => new Set([...prev, locationCode]));
-
-        toast({
-          title: "Alert created",
-          description: `You'll be notified when this lease is expiring soon`
-        });
-      }
-    } catch (error) {
-      console.error("Error managing alert:", error);
-      toast({
-        title: "Error",
-        description: "Failed to manage alert",
-        variant: "destructive"
-      });
-    }
-  };
+  // IOLP alert management removed - no longer available
 
   const handleViewOnMap = (lat: number, lng: number) => {
     setMapCenter({ lat, lng });
@@ -477,92 +392,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
   }, [opportunities, searchTerm, opportunityFilters, opportunityMatchScores, pinFilteredOpportunities]);
 
   // Removed unused: availableAgencies and availableStates
-
-  // Filter expiring leases based on filters
-  const filteredExpiringLeases = useMemo(() => {
-    if (!expiringLeasesData?.leases) return [];
-
-    let filtered = [...expiringLeasesData.leases];
-
-    // Filter by property type
-    if (iolpFilters.propertyType === 'leased') {
-      filtered = filtered.filter(l => l.owned_or_leased_indicator === 'L');
-    } else if (iolpFilters.propertyType === 'owned') {
-      filtered = filtered.filter(l => l.owned_or_leased_indicator === 'F');
-    }
-
-    // Filter by agencies
-    if (iolpFilters.agencies.length > 0) {
-      filtered = filtered.filter(l =>
-        l.agency_abbr && iolpFilters.agencies.includes(l.agency_abbr)
-      );
-    }
-
-    // Filter by states
-    if (iolpFilters.states.length > 0) {
-      filtered = filtered.filter(l =>
-        l.state && iolpFilters.states.includes(l.state)
-      );
-    }
-
-    // Filter by minimum RSF
-    if (iolpFilters.minRSF) {
-      filtered = filtered.filter(l =>
-        l.building_rsf && l.building_rsf >= iolpFilters.minRSF!
-      );
-    }
-
-    // Filter by vacancy
-    if (iolpFilters.hasVacancy) {
-      filtered = filtered.filter(l => l.vacant_rsf && l.vacant_rsf > 0);
-    }
-
-    // Filter by urgency
-    if (iolpFilters.urgencyFilter) {
-      filtered = filtered.filter(l => l.urgency === iolpFilters.urgencyFilter);
-    }
-
-    // Sort
-    switch (iolpFilters.sortBy) {
-      case 'expiration':
-        // Sort by soonest expiration
-        filtered.sort((a, b) => {
-          const aDate = a.daysUntilExpiration ?? Infinity;
-          const bDate = b.daysUntilExpiration ?? Infinity;
-          return aDate - bDate;
-        });
-        break;
-      case 'rsf':
-        // Sort by largest RSF
-        filtered.sort((a, b) => {
-          const aRsf = a.building_rsf ?? 0;
-          const bRsf = b.building_rsf ?? 0;
-          return bRsf - aRsf;
-        });
-        break;
-      case 'recent':
-        // Sort by most recently added (using OBJECTID as proxy)
-        filtered.sort((a, b) => {
-          const aId = a.OBJECTID ?? 0;
-          const bId = b.OBJECTID ?? 0;
-          return bId - aId;
-        });
-        break;
-    }
-
-    return filtered;
-  }, [expiringLeasesData, iolpFilters]);
-
-  // Get urgency counts
-  const urgencyCounts = useMemo(() => {
-    if (!filteredExpiringLeases) return { critical: 0, warning: 0, normal: 0 };
-
-    return {
-      critical: filteredExpiringLeases.filter(l => l.urgency === 'critical').length,
-      warning: filteredExpiringLeases.filter(l => l.urgency === 'warning').length,
-      normal: filteredExpiringLeases.filter(l => l.urgency === 'normal').length
-    };
-  }, [filteredExpiringLeases]);
+  // IOLP expiring leases functionality removed
 
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden">
@@ -575,64 +405,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
           </div>
 
 
-          {/* Federal Footprint Toggle */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="iolp-layer" className="text-sm cursor-pointer">
-                Federal Footprint
-              </Label>
-              <div className="flex items-center gap-2">
-                {iolpLoading && <Loader2 className="h-3 w-3 animate-spin text-blue-600" />}
-                <Switch
-                  id="iolp-layer"
-                  checked={showIOLPLayer}
-                  onCheckedChange={setShowIOLPLayer}
-                />
-              </div>
-            </div>
-
-            {/* Feedback text */}
-            {showIOLPLayer && (
-              <div className="text-xs">
-                {iolpLoading ? (
-                  <p className="text-blue-600 animate-pulse">Loading federal properties...</p>
-                ) : iolpError ? (
-                  <p className="text-red-600">{iolpError}</p>
-                ) : iolpCount > 0 ? (
-                  <p className="text-green-600">Showing {iolpCount.toLocaleString()} federal properties</p>
-                ) : (
-                  <p className="text-gray-500">No properties in current view</p>
-                )}
-              </div>
-            )}
-
-            {/* Legend (when layer is active) */}
-            {showIOLPLayer && !iolpLoading && (
-              <div className="text-xs space-y-1 pt-2 border-t">
-                <p className="font-semibold text-gray-700 mb-1">Legend:</p>
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-cyan-500 border border-white"></div>
-                  <span className="text-gray-600">Leased</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-green-500 border border-white"></div>
-                  <span className="text-gray-600">Owned</span>
-                </div>
-              </div>
-            )}
-
-            {/* Federal Neighborhood Score (when footprint is enabled) */}
-            {/* Temporarily disabled to debug opportunities display */}
-            {false && showIOLPLayer && !iolpLoading && (
-              <div className="pt-2 border-t">
-                <FederalScoreCard
-                  latitude={currentViewport?.lat}
-                  longitude={currentViewport?.lng}
-                  radiusMiles={5}
-                />
-              </div>
-            )}
-          </div>
+          {/* Federal Footprint Toggle removed - IOLP data no longer available */}
         </div>
 
 
@@ -642,7 +415,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
           onValueChange={(value) => setActiveTab(value as TabType)}
           className="flex flex-col flex-1 overflow-hidden"
         >
-          <TabsList className="w-full grid grid-cols-3 rounded-none border-b-2 border-slate-200 bg-slate-50 h-auto p-0">
+          <TabsList className="w-full grid grid-cols-2 rounded-none border-b-2 border-slate-200 bg-slate-50 h-auto p-0">
             <TabsTrigger
               value="opportunities"
               className="rounded-none text-sm sm:text-base font-bold px-3 sm:px-6 py-4 hover:bg-slate-100 cursor-pointer transition-all data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:border-b-4 data-[state=active]:border-indigo-700 data-[state=inactive]:text-slate-600"
@@ -656,18 +429,6 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
             >
               <span className="hidden sm:inline">Available Listings</span>
               <span className="sm:hidden">Listings</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="expiring"
-              className="rounded-none text-sm sm:text-base font-bold px-3 sm:px-6 py-4 hover:bg-slate-100 cursor-pointer transition-all data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:border-b-4 data-[state=active]:border-indigo-700 data-[state=inactive]:text-slate-600 relative"
-            >
-              <span className="hidden sm:inline">Expiring Soon</span>
-              <span className="sm:hidden">Expiring</span>
-              {urgencyCounts.critical > 0 && (
-                <Badge variant="destructive" className="ml-1.5 h-5 px-1.5 text-xs font-bold">
-                  {urgencyCounts.critical}
-                </Badge>
-              )}
             </TabsTrigger>
           </TabsList>
 
@@ -867,179 +628,16 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
             )}
           </TabsContent>
 
-          {/* Expiring Leases Tab */}
-          <TabsContent value="expiring" className="flex-1 overflow-y-auto m-0 p-4">
-            {expiringLoading ? (
-              <div className="space-y-4">
-                {/* Urgency Summary Skeleton */}
-                <div className="animate-pulse p-3 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg">
-                  <div className="h-4 bg-gray-200 rounded w-40 mb-2"></div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="text-center">
-                        <div className="h-3 bg-gray-200 rounded w-12 mx-auto mb-1"></div>
-                        <div className="h-6 bg-gray-200 rounded w-8 mx-auto mb-1"></div>
-                        <div className="h-3 bg-gray-200 rounded w-16 mx-auto"></div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Lease Cards Skeleton */}
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="animate-pulse border rounded-lg p-4 bg-white">
-                    <div className="flex justify-between mb-3">
-                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                      <div className="h-5 bg-gray-200 rounded w-20"></div>
-                    </div>
-                    <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="grid grid-cols-2 gap-2 mt-3">
-                      <div className="h-3 bg-gray-200 rounded w-24"></div>
-                      <div className="h-3 bg-gray-200 rounded w-20"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : filteredExpiringLeases.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                <div className="mb-3 text-gray-400">
-                  <svg className="w-16 h-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-1">
-                  {iolpFilters.urgencyFilter || iolpFilters.states.length > 0 || iolpFilters.agencies.length > 0 || iolpFilters.minRSF || iolpFilters.hasVacancy
-                    ? 'No leases match your filters'
-                    : expiringLeasesData?.leases?.length === 0
-                    ? 'No expiring lease data available'
-                    : 'No expiring leases found'
-                  }
-                </h3>
-                <p className="text-xs text-gray-500 mb-4 max-w-xs">
-                  {iolpFilters.urgencyFilter || iolpFilters.states.length > 0 || iolpFilters.agencies.length > 0 || iolpFilters.minRSF || iolpFilters.hasVacancy
-                    ? 'Try adjusting your filters to see more results'
-                    : 'There are no expiring leases in the selected timeframe'
-                  }
-                </p>
-                {(iolpFilters.urgencyFilter || iolpFilters.states.length > 0 || iolpFilters.agencies.length > 0 || iolpFilters.minRSF || iolpFilters.hasVacancy) && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIolpFilters({
-                      propertyType: 'all',
-                      agencies: [],
-                      states: [],
-                      timeframe: iolpFilters.timeframe,
-                      sortBy: iolpFilters.sortBy,
-                      urgencyFilter: undefined
-                    })}
-                  >
-                    Clear Filters
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <>
-                {/* Results Counter */}
-                <div className="mb-3 flex items-center justify-between px-1">
-                  <p className="text-xs text-gray-600">
-                    Showing <span className="font-semibold text-gray-900">{filteredExpiringLeases.length}</span> of{' '}
-                    <span className="font-semibold text-gray-900">{expiringLeasesData?.leases?.length || 0}</span> leases
-                  </p>
-                  {iolpFilters.urgencyFilter && (
-                    <button
-                      onClick={() => setIolpFilters(prev => ({ ...prev, urgencyFilter: undefined }))}
-                      className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                      Clear Urgency
-                    </button>
-                  )}
-                </div>
-
-                {/* Summary */}
-                <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg">
-                  <h3 className="font-semibold text-sm mb-2">Lease Expiration Summary</h3>
-                  <div className="grid grid-cols-3 gap-2 text-xs">
-                    <button
-                      onClick={() => setIolpFilters(prev => ({
-                        ...prev,
-                        urgencyFilter: prev.urgencyFilter === 'critical' ? undefined : 'critical'
-                      }))}
-                      className={`text-left p-2 rounded hover:bg-white/50 transition-colors ${
-                        iolpFilters.urgencyFilter === 'critical' ? 'bg-white ring-2 ring-red-500' : ''
-                      }`}
-                    >
-                      <p className="text-gray-600">Critical</p>
-                      <p className="text-lg font-bold text-red-600">{urgencyCounts.critical}</p>
-                      <p className="text-gray-500">{'<'}6 months</p>
-                    </button>
-                    <button
-                      onClick={() => setIolpFilters(prev => ({
-                        ...prev,
-                        urgencyFilter: prev.urgencyFilter === 'warning' ? undefined : 'warning'
-                      }))}
-                      className={`text-left p-2 rounded hover:bg-white/50 transition-colors ${
-                        iolpFilters.urgencyFilter === 'warning' ? 'bg-white ring-2 ring-orange-500' : ''
-                      }`}
-                    >
-                      <p className="text-gray-600">Warning</p>
-                      <p className="text-lg font-bold text-orange-600">{urgencyCounts.warning}</p>
-                      <p className="text-gray-500">6-12 months</p>
-                    </button>
-                    <button
-                      onClick={() => setIolpFilters(prev => ({
-                        ...prev,
-                        urgencyFilter: prev.urgencyFilter === 'normal' ? undefined : 'normal'
-                      }))}
-                      className={`text-left p-2 rounded hover:bg-white/50 transition-colors ${
-                        iolpFilters.urgencyFilter === 'normal' ? 'bg-white ring-2 ring-blue-500' : ''
-                      }`}
-                    >
-                      <p className="text-gray-600">Normal</p>
-                      <p className="text-lg font-bold text-blue-600">{urgencyCounts.normal}</p>
-                      <p className="text-gray-500">12+ months</p>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Lease Cards */}
-                <div className="space-y-4">
-                  {filteredExpiringLeases.map((lease: { location_code?: string; OBJECTID?: string }) => (
-                    <ExpiringLeaseCard
-                      key={lease.location_code || lease.OBJECTID}
-                      lease={lease}
-                      onViewOnMap={handleViewOnMap}
-                      onSetAlert={handleSetAlert}
-                      hasAlert={lease.location_code ? userAlerts.has(lease.location_code) : false}
-                      onViewDetails={(e) => {
-                        e.stopPropagation();
-                        setDetailExpiringLease(lease);
-                        setShowExpiringLeaseDetail(true);
-                      }}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </TabsContent>
+          {/* Expiring Leases Tab removed - IOLP data no longer available */}
         </Tabs>
       </div>
 
       {/* Right Panel - Map */}
       <div className="flex-1 relative min-h-[40vh] lg:min-h-0">
-        <GSAMapWithIOLP
-          opportunities={activeTab === "opportunities" ? filteredOpportunities : []}
-          listings={activeTab === "listings" ? filteredListings : []}
-          selectedOpportunity={selectedOpportunity}
-          selectedListing={selectedListing}
-          showIOLPLayer={showIOLPLayer}
-          onIOLPLoadingChange={setIolpLoading}
-          center={mapCenter}
-          onIOLPCountChange={setIolpCount}
-          onIOLPError={setIolpError}
-          onViewportChange={setCurrentViewport}
-          onPinClick={activeTab === "opportunities" ? handlePinClick : undefined}
-        />
+        {/* Map component removed - IOLP layer no longer available */}
+        <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500">
+          <p>Map component unavailable - IOLP data removed</p>
+        </div>
 
         {/* Detail Panels - Overlay the map */}
         <ListingDetailModal
@@ -1059,14 +657,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
           }}
         />
 
-        <ExpiringLeaseDetailPanel
-          lease={detailExpiringLease}
-          open={showExpiringLeaseDetail}
-          onOpenChange={setShowExpiringLeaseDetail}
-          onSetAlert={handleSetAlert}
-          hasAlert={detailExpiringLease?.location_code ? userAlerts.has(detailExpiringLease.location_code) : false}
-          onViewOnMap={handleViewOnMap}
-        />
+        {/* ExpiringLeaseDetailPanel removed - IOLP data no longer available */}
       </div>
 
       {/* Express Interest Modal (still a dialog, not a full panel) */}
