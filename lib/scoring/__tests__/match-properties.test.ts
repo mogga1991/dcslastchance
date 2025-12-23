@@ -569,3 +569,156 @@ describe('PERF-001: Early Termination Optimization', () => {
     });
   });
 });
+
+describe('PERF-003: Chunked Batch Processing', () => {
+  const mockSupabaseUrl = 'https://test.supabase.co';
+  const mockServiceKey = 'test-service-key';
+
+  beforeEach(() => {
+    // Reset mock data before each test
+    mockData.broker_listings = [];
+    mockData.opportunities = [];
+  });
+
+  it('should process properties in chunks with default chunk size', async () => {
+    // Create enough properties to trigger multiple chunks with default size (50)
+    mockData.broker_listings = Array(120).fill(null).map((_, i) =>
+      createMockProperty({ id: `prop-${i}`, state: 'DC', available_sf: 50000 })
+    );
+
+    mockData.opportunities = [
+      createMockOpportunity({ id: 'opp-1', pop_state_code: 'DC', description: 'approximately 45,000 SF' }),
+    ];
+
+    const stats = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40);
+
+    expect(stats.processed).toBe(120); // All properties processed
+    expect(stats.durationMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it('should respect custom chunk size parameter', async () => {
+    mockData.broker_listings = Array(30).fill(null).map((_, i) =>
+      createMockProperty({ id: `prop-${i}`, state: 'DC', available_sf: 50000 })
+    );
+
+    mockData.opportunities = [
+      createMockOpportunity({ id: 'opp-1', pop_state_code: 'DC', description: 'approximately 45,000 SF' }),
+    ];
+
+    // Use custom chunk size of 10
+    const stats = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40, 10);
+
+    expect(stats.processed).toBe(30); // All processed
+    expect(stats.durationMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it('should handle chunk size larger than property count', async () => {
+    mockData.broker_listings = Array(5).fill(null).map((_, i) =>
+      createMockProperty({ id: `prop-${i}`, state: 'DC', available_sf: 50000 })
+    );
+
+    mockData.opportunities = [
+      createMockOpportunity({ id: 'opp-1', pop_state_code: 'DC', description: 'approximately 45,000 SF' }),
+    ];
+
+    // Chunk size of 100 is larger than 5 properties
+    const stats = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40, 100);
+
+    expect(stats.processed).toBe(5); // All 5 processed in single chunk
+    expect(stats.durationMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it('should correctly aggregate stats across multiple chunks', async () => {
+    mockData.broker_listings = [
+      createMockProperty({ id: 'prop-dc-1', state: 'DC', available_sf: 50000 }),
+      createMockProperty({ id: 'prop-dc-2', state: 'DC', available_sf: 50000 }),
+      createMockProperty({ id: 'prop-ca-1', state: 'CA', available_sf: 50000 }),
+      createMockProperty({ id: 'prop-ca-2', state: 'CA', available_sf: 50000 }),
+    ];
+
+    mockData.opportunities = [
+      createMockOpportunity({ id: 'opp-dc', pop_state_code: 'DC', description: 'approximately 45,000 SF' }),
+      createMockOpportunity({ id: 'opp-ny', pop_state_code: 'NY', description: 'approximately 45,000 SF' }),
+    ];
+
+    // Chunk size of 2 means 2 chunks
+    const stats = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40, 2);
+
+    expect(stats.processed).toBe(8); // 4 properties × 2 opportunities
+    expect(stats.earlyTerminationReasons.STATE_MISMATCH).toBe(6); // 6 state mismatches
+    expect(stats.earlyTerminated).toBe(6);
+  });
+
+  it('should process large batches efficiently with chunking', async () => {
+    // Simulate realistic production scenario
+    mockData.broker_listings = Array(100).fill(null).map((_, i) =>
+      createMockProperty({
+        id: `prop-${i}`,
+        state: i % 3 === 0 ? 'DC' : i % 3 === 1 ? 'CA' : 'NY',
+        available_sf: 50000
+      })
+    );
+
+    mockData.opportunities = Array(50).fill(null).map((_, i) =>
+      createMockOpportunity({
+        id: `opp-${i}`,
+        pop_state_code: i % 2 === 0 ? 'DC' : 'TX',
+        description: 'approximately 45,000 SF'
+      })
+    );
+
+    const startTime = Date.now();
+    const stats = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40, 25);
+    const duration = Date.now() - startTime;
+
+    expect(stats.processed).toBe(5000); // 100 × 50 = 5000
+    expect(stats.earlyTerminated).toBeGreaterThan(3000); // Most should early terminate
+    expect(duration).toBeLessThan(2000); // Should complete quickly
+    expect(stats.durationMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it('should handle errors in one chunk without failing other chunks', async () => {
+    mockData.broker_listings = [
+      createMockProperty({ id: 'prop-1', state: 'DC', available_sf: 50000 }),
+      createMockProperty({ id: 'prop-2', state: null as any }), // Might cause errors
+      createMockProperty({ id: 'prop-3', state: 'DC', available_sf: 60000 }),
+      createMockProperty({ id: 'prop-4', state: 'DC', available_sf: 40000 }),
+    ];
+
+    mockData.opportunities = [
+      createMockOpportunity({ id: 'opp-1', pop_state_code: 'DC', description: 'approximately 45,000 SF' }),
+    ];
+
+    // Chunk size of 2 means 2 chunks
+    const stats = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40, 2);
+
+    expect(stats.processed).toBeGreaterThan(0); // Some processed
+    expect(stats).toBeDefined();
+  });
+
+  it('should maintain match quality across chunked processing', async () => {
+    const properties = Array(20).fill(null).map((_, i) =>
+      createMockProperty({ id: `prop-${i}`, state: 'DC', available_sf: 50000 })
+    );
+
+    const opportunities = [
+      createMockOpportunity({ id: 'opp-1', pop_state_code: 'DC', description: 'approximately 45,000 SF' }),
+    ];
+
+    mockData.broker_listings = properties;
+    mockData.opportunities = opportunities;
+
+    // Process with different chunk sizes - results should be identical
+    const stats1 = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40, 5);
+
+    mockData.broker_listings = properties;
+    mockData.opportunities = opportunities;
+
+    const stats2 = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40, 10);
+
+    expect(stats1.processed).toBe(stats2.processed);
+    expect(stats1.matched).toBe(stats2.matched);
+    expect(stats1.skipped).toBe(stats2.skipped);
+    expect(stats1.earlyTerminated).toBe(stats2.earlyTerminated);
+  });
+});

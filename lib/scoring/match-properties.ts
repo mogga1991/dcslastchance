@@ -207,6 +207,18 @@ async function processPropertyMatches(
 }
 
 /**
+ * Splits array into chunks of specified size
+ * 🚀 PERF-003: Helper for chunked batch processing
+ */
+function chunkArray<T>(array: T[], chunkSize: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
+
+/**
  * Converts broker_listings row to PropertyData format for scoring
  */
 function convertToPropertyData(listing: BrokerListing) {
@@ -264,11 +276,13 @@ function convertToPropertyData(listing: BrokerListing) {
  * @param supabaseUrl - Supabase project URL
  * @param supabaseServiceKey - Service role key (required for batch operations)
  * @param minScore - Minimum score threshold (default: 40)
+ * @param chunkSize - Number of properties to process in parallel per chunk (default: 50)
  */
 export async function matchPropertiesWithOpportunities(
   supabaseUrl: string,
   supabaseServiceKey: string,
-  minScore: number = 40
+  minScore: number = 40,
+  chunkSize: number = 50
 ): Promise<MatchStats> {
   const startTime = new Date();
   const stats: MatchStats = {
@@ -323,38 +337,59 @@ export async function matchPropertiesWithOpportunities(
       return finishStats(stats);
     }
 
+    const totalChunks = Math.ceil(properties.length / chunkSize);
+
     console.log(`
-🚀 Starting Property Matching (PERF-001 + PERF-002: Early Termination + Parallel Processing)
+🚀 Starting Property Matching (PERF-001 + PERF-002 + PERF-003)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    Properties: ${properties.length}
    Opportunities: ${opportunities.length}
    Total Combinations: ${properties.length * opportunities.length}
    Min Score Threshold: ${minScore}
-   Processing Mode: PARALLEL
+   Processing Mode: CHUNKED PARALLEL
+   Chunk Size: ${chunkSize} properties
+   Total Chunks: ${totalChunks}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     `);
 
-    // 3. 🚀 PERF-002: Process properties in parallel using Promise.all
-    const results = await Promise.all(
-      (properties as BrokerListing[]).map(property =>
-        processPropertyMatches(property, opportunities, minScore)
-      )
-    );
-
-    // 4. Aggregate results from all properties
+    // 3. 🚀 PERF-003: Split properties into chunks for memory-efficient parallel processing
+    const propertyChunks = chunkArray(properties as BrokerListing[], chunkSize);
     const matches: MatchResult[] = [];
-    for (const result of results) {
-      matches.push(...result.matches);
 
-      // Aggregate stats
-      stats.processed += result.stats.processed;
-      stats.matched += result.stats.matched;
-      stats.skipped += result.stats.skipped;
-      stats.earlyTerminated += result.stats.earlyTerminated;
-      stats.earlyTerminationReasons.STATE_MISMATCH += result.stats.earlyTerminationReasons.STATE_MISMATCH;
-      stats.earlyTerminationReasons.SPACE_TOO_SMALL += result.stats.earlyTerminationReasons.SPACE_TOO_SMALL;
-      stats.earlyTerminationReasons.INVALID_REQUIREMENTS += result.stats.earlyTerminationReasons.INVALID_REQUIREMENTS;
-      stats.errors.push(...result.stats.errors);
+    // 4. Process each chunk sequentially (each chunk processes in parallel internally)
+    for (let chunkIndex = 0; chunkIndex < propertyChunks.length; chunkIndex++) {
+      const chunk = propertyChunks[chunkIndex];
+      const chunkStartTime = Date.now();
+
+      console.log(`\n📦 Processing chunk ${chunkIndex + 1}/${propertyChunks.length} (${chunk.length} properties)...`);
+
+      // Process properties in this chunk in parallel
+      const chunkResults = await Promise.all(
+        chunk.map(property => processPropertyMatches(property, opportunities, minScore))
+      );
+
+      // Aggregate results from this chunk
+      for (const result of chunkResults) {
+        matches.push(...result.matches);
+
+        // Aggregate stats
+        stats.processed += result.stats.processed;
+        stats.matched += result.stats.matched;
+        stats.skipped += result.stats.skipped;
+        stats.earlyTerminated += result.stats.earlyTerminated;
+        stats.earlyTerminationReasons.STATE_MISMATCH += result.stats.earlyTerminationReasons.STATE_MISMATCH;
+        stats.earlyTerminationReasons.SPACE_TOO_SMALL += result.stats.earlyTerminationReasons.SPACE_TOO_SMALL;
+        stats.earlyTerminationReasons.INVALID_REQUIREMENTS += result.stats.earlyTerminationReasons.INVALID_REQUIREMENTS;
+        stats.errors.push(...result.stats.errors);
+      }
+
+      const chunkDuration = Date.now() - chunkStartTime;
+      const avgPerProperty = chunk.length > 0 ? chunkDuration / chunk.length : 0;
+      const chunkMatches = chunkResults.reduce((sum, r) => sum + r.matches.length, 0);
+
+      console.log(`✅ Chunk ${chunkIndex + 1} complete in ${chunkDuration}ms (${avgPerProperty.toFixed(0)}ms per property)`);
+      console.log(`   Matches found in chunk: ${chunkMatches}`);
+      console.log(`   Total matches so far: ${matches.length}`);
     }
 
     // Calculate performance metrics
