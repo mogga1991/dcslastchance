@@ -9,6 +9,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { calculateMatchScore } from './calculate-match-score';
 import { parseOpportunityRequirements, hasValidRequirements } from './parse-opportunity';
 import type { SAMOpportunity } from '../sam-gov';
+import { PerformanceTracker, type PerformanceMetrics } from './performance-tracker';
 
 interface BrokerListing {
   id: string;
@@ -77,6 +78,7 @@ export interface MatchStats {
   startTime: Date;
   endTime: Date;
   durationMs: number;
+  performanceMetrics?: PerformanceMetrics;
 }
 
 /**
@@ -301,6 +303,9 @@ export async function matchPropertiesWithOpportunities(
     durationMs: 0,
   };
 
+  // 🚀 PERF-004: Initialize performance tracker
+  const perfTracker = new PerformanceTracker();
+
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
@@ -359,7 +364,9 @@ export async function matchPropertiesWithOpportunities(
     // 4. Process each chunk sequentially (each chunk processes in parallel internally)
     for (let chunkIndex = 0; chunkIndex < propertyChunks.length; chunkIndex++) {
       const chunk = propertyChunks[chunkIndex];
-      const chunkStartTime = Date.now();
+
+      // 🚀 PERF-004: Track chunk performance
+      const chunkData = perfTracker.startChunk(chunkIndex, chunk.length);
 
       console.log(`\n📦 Processing chunk ${chunkIndex + 1}/${propertyChunks.length} (${chunk.length} properties)...`);
 
@@ -383,11 +390,13 @@ export async function matchPropertiesWithOpportunities(
         stats.errors.push(...result.stats.errors);
       }
 
-      const chunkDuration = Date.now() - chunkStartTime;
-      const avgPerProperty = chunk.length > 0 ? chunkDuration / chunk.length : 0;
+      // 🚀 PERF-004: End chunk tracking
+      perfTracker.endChunk(chunkData);
+
+      const chunkMetrics = perfTracker.getMetrics(stats).chunkMetrics[chunkIndex];
       const chunkMatches = chunkResults.reduce((sum, r) => sum + r.matches.length, 0);
 
-      console.log(`✅ Chunk ${chunkIndex + 1} complete in ${chunkDuration}ms (${avgPerProperty.toFixed(0)}ms per property)`);
+      console.log(`✅ Chunk ${chunkIndex + 1} complete in ${chunkMetrics.durationMs}ms (${chunkMetrics.avgMsPerProperty.toFixed(0)}ms per property)`);
       console.log(`   Matches found in chunk: ${chunkMatches}`);
       console.log(`   Total matches so far: ${matches.length}`);
     }
@@ -437,6 +446,13 @@ Performance Impact:
     } else {
       console.log('⚠️ No matches met the minimum score threshold');
     }
+
+    // 🚀 PERF-004: Calculate and log final performance metrics
+    const performanceMetrics = perfTracker.getMetrics(stats);
+    perfTracker.logMetrics(performanceMetrics, stats);
+
+    // Add performance metrics to stats
+    stats.performanceMetrics = performanceMetrics;
 
     return finishStats(stats);
   } catch (error) {

@@ -722,3 +722,146 @@ describe('PERF-003: Chunked Batch Processing', () => {
     expect(stats1.earlyTerminated).toBe(stats2.earlyTerminated);
   });
 });
+
+describe('PERF-004: Performance Instrumentation', () => {
+  const mockSupabaseUrl = 'https://test.supabase.co';
+  const mockServiceKey = 'test-service-key';
+
+  beforeEach(() => {
+    // Reset mock data before each test
+    mockData.broker_listings = [];
+    mockData.opportunities = [];
+  });
+
+  it('should include performance metrics in response', async () => {
+    mockData.broker_listings = Array(10).fill(null).map((_, i) =>
+      createMockProperty({ id: `prop-${i}`, state: 'DC', available_sf: 50000 })
+    );
+
+    mockData.opportunities = [
+      createMockOpportunity({ id: 'opp-1', pop_state_code: 'DC', description: 'approximately 45,000 SF' }),
+    ];
+
+    const stats = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40);
+
+    expect(stats.performanceMetrics).toBeDefined();
+    expect(stats.performanceMetrics?.totalDurationMs).toBeGreaterThanOrEqual(0);
+    expect(stats.performanceMetrics?.memoryUsageMB).toBeGreaterThan(0);
+    expect(stats.performanceMetrics?.peakMemoryUsageMB).toBeGreaterThan(0);
+  });
+
+  it('should track chunk-level performance metrics', async () => {
+    mockData.broker_listings = Array(25).fill(null).map((_, i) =>
+      createMockProperty({ id: `prop-${i}`, state: 'DC', available_sf: 50000 })
+    );
+
+    mockData.opportunities = [
+      createMockOpportunity({ id: 'opp-1', pop_state_code: 'DC', description: 'approximately 45,000 SF' }),
+    ];
+
+    // Use chunk size of 10 to create 3 chunks
+    const stats = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40, 10);
+
+    expect(stats.performanceMetrics?.chunkMetrics).toBeDefined();
+    expect(stats.performanceMetrics?.chunkMetrics.length).toBe(3); // 25 properties / 10 chunk size = 3 chunks
+
+    // Verify each chunk has proper metrics
+    stats.performanceMetrics?.chunkMetrics.forEach((chunk, index) => {
+      expect(chunk.chunkIndex).toBe(index);
+      expect(chunk.propertiesInChunk).toBeGreaterThan(0);
+      expect(chunk.durationMs).toBeGreaterThanOrEqual(0);
+      expect(chunk.avgMsPerProperty).toBeGreaterThanOrEqual(0);
+      expect(chunk.memoryUsageMB).toBeGreaterThan(0);
+    });
+  });
+
+  it('should calculate early termination rate', async () => {
+    mockData.broker_listings = [
+      createMockProperty({ id: 'prop-dc', state: 'DC', available_sf: 50000 }),
+      createMockProperty({ id: 'prop-ca', state: 'CA', available_sf: 50000 }),
+    ];
+
+    mockData.opportunities = [
+      createMockOpportunity({ id: 'opp-dc', pop_state_code: 'DC', description: 'approximately 45,000 SF' }),
+      createMockOpportunity({ id: 'opp-ny', pop_state_code: 'NY', description: 'approximately 45,000 SF' }),
+    ];
+
+    const stats = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40);
+
+    expect(stats.performanceMetrics?.earlyTerminationRate).toBeDefined();
+    expect(stats.performanceMetrics?.earlyTerminationRate).toBeGreaterThan(0);
+    expect(stats.performanceMetrics?.earlyTerminationRate).toBeLessThanOrEqual(1);
+
+    // Should be 75% early termination rate (3 state mismatches out of 4 total)
+    // prop-dc × opp-dc = match, prop-dc × opp-ny = mismatch, prop-ca × opp-dc = mismatch, prop-ca × opp-ny = mismatch
+    expect(stats.performanceMetrics?.earlyTerminationRate).toBeCloseTo(0.75, 1);
+  });
+
+  it('should calculate throughput metrics', async () => {
+    mockData.broker_listings = Array(10).fill(null).map((_, i) =>
+      createMockProperty({ id: `prop-${i}`, state: 'DC', available_sf: 50000 })
+    );
+
+    mockData.opportunities = Array(5).fill(null).map((_, i) =>
+      createMockOpportunity({ id: `opp-${i}`, pop_state_code: 'DC', description: 'approximately 45,000 SF' })
+    );
+
+    const stats = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40);
+
+    // Throughput metrics should be calculated (can be 0 if test runs very fast)
+    expect(stats.performanceMetrics?.propertiesPerSecond).toBeGreaterThanOrEqual(0);
+    expect(stats.performanceMetrics?.opportunitiesProcessedPerSecond).toBeGreaterThanOrEqual(0);
+    expect(stats.performanceMetrics?.calculationsPerSecond).toBeGreaterThanOrEqual(0);
+  });
+
+  it('should track memory usage across chunks', async () => {
+    mockData.broker_listings = Array(30).fill(null).map((_, i) =>
+      createMockProperty({ id: `prop-${i}`, state: 'DC', available_sf: 50000 })
+    );
+
+    mockData.opportunities = [
+      createMockOpportunity({ id: 'opp-1', pop_state_code: 'DC', description: 'approximately 45,000 SF' }),
+    ];
+
+    const stats = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40, 10);
+
+    expect(stats.performanceMetrics?.memoryUsageMB).toBeGreaterThan(0);
+    expect(stats.performanceMetrics?.peakMemoryUsageMB).toBeGreaterThan(0);
+    expect(stats.performanceMetrics?.peakMemoryUsageMB).toBeGreaterThanOrEqual(stats.performanceMetrics?.memoryUsageMB);
+  });
+
+  it('should handle single chunk performance tracking', async () => {
+    mockData.broker_listings = [
+      createMockProperty({ id: 'prop-1', state: 'DC', available_sf: 50000 }),
+    ];
+
+    mockData.opportunities = [
+      createMockOpportunity({ id: 'opp-1', pop_state_code: 'DC', description: 'approximately 45,000 SF' }),
+    ];
+
+    const stats = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40);
+
+    expect(stats.performanceMetrics?.chunkMetrics.length).toBe(1);
+    expect(stats.performanceMetrics?.chunkMetrics[0].chunkIndex).toBe(0);
+    expect(stats.performanceMetrics?.chunkMetrics[0].propertiesInChunk).toBe(1);
+  });
+
+  it('should calculate correct average time per property', async () => {
+    mockData.broker_listings = Array(20).fill(null).map((_, i) =>
+      createMockProperty({ id: `prop-${i}`, state: 'DC', available_sf: 50000 })
+    );
+
+    mockData.opportunities = [
+      createMockOpportunity({ id: 'opp-1', pop_state_code: 'DC', description: 'approximately 45,000 SF' }),
+    ];
+
+    const stats = await matchPropertiesWithOpportunities(mockSupabaseUrl, mockServiceKey, 40, 10);
+
+    // Each chunk should have valid average time per property
+    stats.performanceMetrics?.chunkMetrics.forEach(chunk => {
+      expect(chunk.avgMsPerProperty).toBeGreaterThanOrEqual(0);
+      // Average should not exceed total duration
+      expect(chunk.avgMsPerProperty).toBeLessThanOrEqual(chunk.durationMs);
+    });
+  });
+});
