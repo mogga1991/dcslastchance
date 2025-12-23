@@ -95,6 +95,118 @@ const DEFAULT_BROKER_EXPERIENCE = {
 };
 
 /**
+ * Process all opportunity matches for a single property
+ * 🚀 PERF-002: Extracted for parallel processing
+ *
+ * @returns Object containing matches and stats for this property
+ */
+async function processPropertyMatches(
+  property: BrokerListing,
+  opportunities: any[],
+  minScore: number
+): Promise<{
+  matches: MatchResult[];
+  stats: {
+    processed: number;
+    matched: number;
+    skipped: number;
+    earlyTerminated: number;
+    earlyTerminationReasons: {
+      STATE_MISMATCH: number;
+      SPACE_TOO_SMALL: number;
+      INVALID_REQUIREMENTS: number;
+    };
+    errors: string[];
+  };
+}> {
+  const matches: MatchResult[] = [];
+  const stats = {
+    processed: 0,
+    matched: 0,
+    skipped: 0,
+    earlyTerminated: 0,
+    earlyTerminationReasons: {
+      STATE_MISMATCH: 0,
+      SPACE_TOO_SMALL: 0,
+      INVALID_REQUIREMENTS: 0,
+    },
+    errors: [] as string[],
+  };
+
+  const propertyData = convertToPropertyData(property);
+
+  for (const opportunity of opportunities) {
+    try {
+      stats.processed++;
+
+      // Parse opportunity requirements
+      const requirements = parseOpportunityRequirements(opportunity as SAMOpportunity);
+
+      // 🚀 PERF-001: Early termination check #1 - Invalid requirements
+      if (!hasValidRequirements(requirements)) {
+        stats.skipped++;
+        stats.earlyTerminated++;
+        stats.earlyTerminationReasons.INVALID_REQUIREMENTS++;
+        continue;
+      }
+
+      // 🚀 PERF-001: Early termination check #2 - State mismatch
+      // This is the highest-value optimization: 80% of opportunities are in different states
+      if (property.state !== requirements.location.state) {
+        stats.skipped++;
+        stats.earlyTerminated++;
+        stats.earlyTerminationReasons.STATE_MISMATCH++;
+        continue; // Skip expensive calculateMatchScore call
+      }
+
+      // 🚀 PERF-001: Early termination check #3 - Severe space shortage
+      // Skip if property is >30% below minimum space requirement
+      if (requirements.space.minSqFt && property.available_sf < requirements.space.minSqFt * 0.7) {
+        stats.skipped++;
+        stats.earlyTerminated++;
+        stats.earlyTerminationReasons.SPACE_TOO_SMALL++;
+        continue; // Skip expensive calculateMatchScore call
+      }
+
+      // Only calculate full match score if passed all early checks
+      const scoreResult = calculateMatchScore(
+        propertyData,
+        DEFAULT_BROKER_EXPERIENCE,
+        requirements
+      );
+
+      // Only store matches meeting minimum threshold
+      if (scoreResult.overallScore >= minScore) {
+        matches.push({
+          property_id: property.id,
+          opportunity_id: opportunity.id,
+          overall_score: scoreResult.overallScore,
+          grade: scoreResult.grade,
+          competitive: scoreResult.competitive,
+          qualified: scoreResult.qualified,
+          location_score: scoreResult.factors.location.score,
+          space_score: scoreResult.factors.space.score,
+          building_score: scoreResult.factors.building.score,
+          timeline_score: scoreResult.factors.timeline.score,
+          experience_score: scoreResult.factors.experience.score,
+          score_breakdown: scoreResult,
+        });
+        stats.matched++;
+      } else {
+        stats.skipped++;
+      }
+    } catch (error) {
+      const err = error as Error;
+      stats.errors.push(
+        `Error matching property ${property.id} with opportunity ${opportunity.id}: ${err.message}`
+      );
+    }
+  }
+
+  return { matches, stats };
+}
+
+/**
  * Converts broker_listings row to PropertyData format for scoring
  */
 function convertToPropertyData(listing: BrokerListing) {
@@ -212,88 +324,37 @@ export async function matchPropertiesWithOpportunities(
     }
 
     console.log(`
-🚀 Starting Property Matching (PERF-001: Early Termination Enabled)
+🚀 Starting Property Matching (PERF-001 + PERF-002: Early Termination + Parallel Processing)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    Properties: ${properties.length}
    Opportunities: ${opportunities.length}
    Total Combinations: ${properties.length * opportunities.length}
    Min Score Threshold: ${minScore}
+   Processing Mode: PARALLEL
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     `);
 
-    // 3. Match each property against all opportunities
+    // 3. 🚀 PERF-002: Process properties in parallel using Promise.all
+    const results = await Promise.all(
+      (properties as BrokerListing[]).map(property =>
+        processPropertyMatches(property, opportunities, minScore)
+      )
+    );
+
+    // 4. Aggregate results from all properties
     const matches: MatchResult[] = [];
+    for (const result of results) {
+      matches.push(...result.matches);
 
-    for (const property of properties as BrokerListing[]) {
-      const propertyData = convertToPropertyData(property);
-
-      for (const opportunity of opportunities) {
-        try {
-          stats.processed++;
-
-          // Parse opportunity requirements
-          const requirements = parseOpportunityRequirements(opportunity as SAMOpportunity);
-
-          // 🚀 PERF-001: Early termination check #1 - Invalid requirements
-          if (!hasValidRequirements(requirements)) {
-            stats.skipped++;
-            stats.earlyTerminated++;
-            stats.earlyTerminationReasons.INVALID_REQUIREMENTS++;
-            continue;
-          }
-
-          // 🚀 PERF-001: Early termination check #2 - State mismatch
-          // This is the highest-value optimization: 80% of opportunities are in different states
-          if (property.state !== requirements.location.state) {
-            stats.skipped++;
-            stats.earlyTerminated++;
-            stats.earlyTerminationReasons.STATE_MISMATCH++;
-            continue; // Skip expensive calculateMatchScore call
-          }
-
-          // 🚀 PERF-001: Early termination check #3 - Severe space shortage
-          // Skip if property is >30% below minimum space requirement
-          if (requirements.space.minSqFt && property.available_sf < requirements.space.minSqFt * 0.7) {
-            stats.skipped++;
-            stats.earlyTerminated++;
-            stats.earlyTerminationReasons.SPACE_TOO_SMALL++;
-            continue; // Skip expensive calculateMatchScore call
-          }
-
-          // Only calculate full match score if passed all early checks
-          const scoreResult = calculateMatchScore(
-            propertyData,
-            DEFAULT_BROKER_EXPERIENCE,
-            requirements
-          );
-
-          // Only store matches meeting minimum threshold
-          if (scoreResult.overallScore >= minScore) {
-            matches.push({
-              property_id: property.id,
-              opportunity_id: opportunity.id,
-              overall_score: scoreResult.overallScore,
-              grade: scoreResult.grade,
-              competitive: scoreResult.competitive,
-              qualified: scoreResult.qualified,
-              location_score: scoreResult.factors.location.score,
-              space_score: scoreResult.factors.space.score,
-              building_score: scoreResult.factors.building.score,
-              timeline_score: scoreResult.factors.timeline.score,
-              experience_score: scoreResult.factors.experience.score,
-              score_breakdown: scoreResult,
-            });
-            stats.matched++;
-          } else {
-            stats.skipped++;
-          }
-        } catch (error) {
-          const err = error as Error;
-          stats.errors.push(
-            `Error matching property ${property.id} with opportunity ${opportunity.id}: ${err.message}`
-          );
-        }
-      }
+      // Aggregate stats
+      stats.processed += result.stats.processed;
+      stats.matched += result.stats.matched;
+      stats.skipped += result.stats.skipped;
+      stats.earlyTerminated += result.stats.earlyTerminated;
+      stats.earlyTerminationReasons.STATE_MISMATCH += result.stats.earlyTerminationReasons.STATE_MISMATCH;
+      stats.earlyTerminationReasons.SPACE_TOO_SMALL += result.stats.earlyTerminationReasons.SPACE_TOO_SMALL;
+      stats.earlyTerminationReasons.INVALID_REQUIREMENTS += result.stats.earlyTerminationReasons.INVALID_REQUIREMENTS;
+      stats.errors.push(...result.stats.errors);
     }
 
     // Calculate performance metrics
