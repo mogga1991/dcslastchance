@@ -71,7 +71,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
       setLoading(true);
       setOpportunitiesError(null);
 
-      const response = await fetch("/api/gsa-leasing?limit=100");
+      const response = await fetch("/api/gsa-leasing?limit=1000");
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -104,7 +104,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
     try {
       setListingsError(null);
 
-      const response = await fetch("/api/broker-listings?limit=100");
+      const response = await fetch("/api/broker-listings?limit=1000");
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

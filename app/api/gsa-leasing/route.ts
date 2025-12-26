@@ -5,8 +5,8 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
 
-    // Extract query parameters
-    const limit = parseInt(searchParams.get("limit") || "100");
+    // Extract query parameters (SAM.gov API max limit is 1000)
+    const limit = Math.min(parseInt(searchParams.get("limit") || "1000"), 1000);
     const offset = parseInt(searchParams.get("offset") || "0");
     const postedFrom = searchParams.get("postedFrom") || undefined;
     const postedTo = searchParams.get("postedTo") || undefined;

@@ -148,7 +148,7 @@ export async function fetchGSALeaseOpportunities(
 
   const baseUrl = "https://api.sam.gov/opportunities/v2/search";
 
-  // Calculate date range (SAM.gov API max is 1 year, use 6 months to be safe)
+  // Calculate date range (SAM.gov API max is 1 year)
   const formatDate = (date: Date) => {
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
@@ -156,12 +156,12 @@ export async function fetchGSALeaseOpportunities(
     return `${m}/${d}/${y}`;
   };
 
-  // Default to 6-month rolling window
+  // Default to 364-day rolling window (just under SAM.gov's 1-year max) to get as many RLPs as possible
   const today = new Date();
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(today.getMonth() - 6);
+  const oneYearAgo = new Date();
+  oneYearAgo.setDate(today.getDate() - 364);
 
-  const defaultFrom = formatDate(sixMonthsAgo);
+  const defaultFrom = formatDate(oneYearAgo);
   const defaultTo = formatDate(today);
 
   try {
@@ -184,8 +184,8 @@ export async function fetchGSALeaseOpportunities(
       // Response date filter (only active opportunities)
       rdlfrom: formatDate(today),
 
-      // Pagination
-      limit: String(params.limit || 1000),
+      // Pagination (max 1000 records per request per SAM.gov API limits)
+      limit: String(Math.min(params.limit || 1000, 1000)),
       offset: String(params.offset || 0),
 
       // Optional location filters
