@@ -21,8 +21,15 @@ import { useToast } from "@/hooks/use-toast";
 import { calculateAllOpportunityMatches } from "@/lib/scoring/calculate-opportunity-matches";
 import type { MatchScoreResult } from "@/lib/scoring/types";
 
-// Map component - IOLP layer removed (component no longer exists)
-// const GSAMap = dynamic(() => import("./gsa-map"), { ssr: false });
+// Map component with Google Maps
+const OpportunitiesMap = dynamic(() => import("./opportunities-map").then((mod) => mod.OpportunitiesMap), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+      <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+    </div>
+  ),
+});
 
 type TabType = "opportunities" | "listings";
 
@@ -634,10 +641,12 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
 
       {/* Right Panel - Map */}
       <div className="flex-1 relative min-h-[40vh] lg:min-h-0">
-        {/* Map component removed - IOLP layer no longer available */}
-        <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500">
-          <p>Map component unavailable - IOLP data removed</p>
-        </div>
+        <OpportunitiesMap
+          opportunities={filteredAndSortedOpportunities}
+          selectedOpportunity={selectedOpportunity}
+          onOpportunityClick={setSelectedOpportunity}
+          center={mapCenter}
+        />
 
         {/* Detail Panels - Overlay the map */}
         <ListingDetailModal

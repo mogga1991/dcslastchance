@@ -1,6 +1,3 @@
-import { Suspense } from "react";
-import MyPropertiesClientV2 from "./_components/my-properties-client-v2";
-
 export const metadata = {
   title: "My Properties | FedSpace",
   description: "Manage your property listings, view GSA opportunity matches, and track saved opportunities",
@@ -8,8 +5,8 @@ export const metadata = {
 
 export default function MyPropertiesPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <MyPropertiesClientV2 />
-    </Suspense>
+    <div className="p-6">
+      {/* My Properties page - To be implemented */}
+    </div>
   );
 }
