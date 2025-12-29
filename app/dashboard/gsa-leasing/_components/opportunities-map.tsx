@@ -465,11 +465,15 @@ export function OpportunitiesMap({
             <div className="w-5 h-5 rounded-full bg-indigo-600 border-2 border-white flex items-center justify-center">
               <span className="text-white text-[8px] font-bold">1</span>
             </div>
-            <span className="text-xs text-gray-600">Federal Opportunities</span>
+            <span className="text-xs text-gray-600">
+              Federal Opportunities ({opportunities.length})
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-full bg-orange-500 border-2 border-white"></div>
-            <span className="text-xs text-gray-600">Available Properties</span>
+            <span className="text-xs text-gray-600">
+              Available Properties ({brokerListings.length})
+            </span>
           </div>
         </div>
       </div>
