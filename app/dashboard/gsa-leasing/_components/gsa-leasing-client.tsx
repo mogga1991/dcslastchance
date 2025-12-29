@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
@@ -15,6 +12,7 @@ import { BrokerListingCard } from "./broker-listing-card";
 import { ListingDetailModal } from "./listing-detail-modal";
 import { OpportunityDetailModal } from "./opportunity-detail-modal";
 import { ExpressInterestModal } from "./express-interest-modal";
+import { OpportunityChatView } from "./opportunity-chat-view";
 // ExpiringLeaseCard and ExpiringLeaseDetailPanel removed - IOLP data no longer available
 import type { OpportunityFilters } from "./opportunity-filters";
 import { useToast } from "@/hooks/use-toast";
@@ -44,7 +42,6 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
   const [brokerListings, setBrokerListings] = useState<PublicBrokerListing[]>([]);
   const [filteredListings, setFilteredListings] = useState<PublicBrokerListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedOpportunity, setSelectedOpportunity] = useState<SAMOpportunity | null>(null);
   const [selectedListing, setSelectedListing] = useState<PublicBrokerListing | null>(null);
   const [showListingDetail, setShowListingDetail] = useState(false);
@@ -58,6 +55,10 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
   const [opportunitiesError, setOpportunitiesError] = useState<string | null>(null);
   const [listingsError, setListingsError] = useState<string | null>(null);
   const [pinFilteredOpportunities, setPinFilteredOpportunities] = useState<SAMOpportunity[] | null>(null);
+
+  // Chat view state
+  const [showChatView, setShowChatView] = useState(false);
+  const [chatOpportunity, setChatOpportunity] = useState<SAMOpportunity | null>(null);
 
   // Opportunity Filters
   const [opportunityFilters, setOpportunityFilters] = useState<OpportunityFilters>({
@@ -183,22 +184,10 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
     fetchSubmittedInquiries();
   }, [fetchOpportunities, fetchBrokerListings, fetchSavedOpportunities, fetchSubmittedInquiries]);
 
-  // Filter listings based on search term
+  // Set filtered listings to all listings (search removed)
   useEffect(() => {
-    if (searchTerm) {
-      const filteredLstgs = brokerListings.filter(
-        (listing) =>
-          listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          listing.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          listing.street_address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          listing.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          listing.state.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredListings(filteredLstgs);
-    } else {
-      setFilteredListings(brokerListings);
-    }
-  }, [searchTerm, brokerListings]);
+    setFilteredListings(brokerListings);
+  }, [brokerListings]);
 
   const handleSaveOpportunity = async (opportunity: SAMOpportunity) => {
     try {
@@ -296,16 +285,6 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
 
     let filtered = [...baseOpportunities];
 
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(opp =>
-        opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        opp.solicitationNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        opp.placeOfPerformance?.city?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        opp.placeOfPerformance?.state?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
     // Filter by states
     if (opportunityFilters.states.length > 0) {
       filtered = filtered.filter(opp =>
@@ -396,287 +375,337 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
     }
 
     return filtered;
-  }, [opportunities, searchTerm, opportunityFilters, opportunityMatchScores, pinFilteredOpportunities]);
+  }, [opportunities, opportunityFilters, opportunityMatchScores, pinFilteredOpportunities]);
 
   // Removed unused: availableAgencies and availableStates
   // IOLP expiring leases functionality removed
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden">
-      {/* Left Panel */}
-      <div className="w-full lg:w-[620px] bg-white border-r lg:border-b-0 border-b flex flex-col max-h-[60vh] lg:max-h-none overflow-y-auto">
-        {/* Header */}
-        <div className="p-4 border-b bg-gray-50">
-          <div className="flex items-center justify-between mb-3">
-            <h1 className="text-lg font-semibold">GSA Leasing</h1>
-          </div>
-
-
-          {/* Federal Footprint Toggle removed - IOLP data no longer available */}
-        </div>
-
-
-        {/* Tabs */}
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) => setActiveTab(value as TabType)}
-          className="flex flex-col flex-1 overflow-hidden"
-        >
-          <TabsList className="w-full grid grid-cols-2 rounded-none border-b-2 border-slate-200 bg-slate-50 h-auto p-0">
-            <TabsTrigger
-              value="opportunities"
-              className="rounded-none text-sm sm:text-base font-bold px-3 sm:px-6 py-4 hover:bg-slate-100 cursor-pointer transition-all data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:border-b-4 data-[state=active]:border-indigo-700 data-[state=inactive]:text-slate-600"
-            >
-              <span className="hidden sm:inline">Opportunities</span>
-              <span className="sm:hidden">Opps</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="listings"
-              className="rounded-none text-sm sm:text-base font-bold px-3 sm:px-6 py-4 hover:bg-slate-100 cursor-pointer transition-all data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:border-b-4 data-[state=active]:border-indigo-700 data-[state=inactive]:text-slate-600"
-            >
-              <span className="hidden sm:inline">Available Listings</span>
-              <span className="sm:hidden">Listings</span>
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Opportunities Tab */}
-          <TabsContent value="opportunities" className="flex-1 overflow-y-auto m-0 p-4">
-            {opportunitiesError ? (
-              <div className="flex flex-col items-center justify-center py-12 px-4">
-                <div className="text-center max-w-sm">
-                  <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                    Failed to Load Opportunities
-                  </h3>
-                  <p className="text-xs text-gray-600 mb-4">
-                    {opportunitiesError}
-                  </p>
-                  <Button
-                    onClick={fetchOpportunities}
-                    size="sm"
-                    variant="outline"
-                  >
-                    Try Again
-                  </Button>
-                </div>
-              </div>
-            ) : loading ? (
-              <div className="space-y-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="animate-pulse border rounded-lg p-4 bg-white">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
-                    <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-5/6 mb-3"></div>
-                    <div className="flex gap-4 mt-3">
-                      <div className="h-3 bg-gray-200 rounded w-20"></div>
-                      <div className="h-3 bg-gray-200 rounded w-24"></div>
-                      <div className="h-3 bg-gray-200 rounded w-16"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : filteredAndSortedOpportunities.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                {searchTerm || opportunityFilters.states.length > 0 || opportunityFilters.postedWithin !== 'all' || opportunityFilters.setAsideTypes.length > 0 ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <p>No opportunities match your filters</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSearchTerm("");
-                        setOpportunityFilters({
-                          states: [],
-                          postedWithin: 'all',
-                          setAsideTypes: [],
-                          sortBy: 'newest',
-                          onlyMatches: undefined
-                        });
-                      }}
-                    >
-                      Clear Filters
-                    </Button>
-                  </div>
-                ) : (
-                  <p>No opportunities available</p>
-                )}
-              </div>
-            ) : (
-              <>
-                {/* Pin Filter Notification */}
-                {pinFilteredOpportunities && (
-                  <div className="mb-4 p-3 bg-indigo-50 border-2 border-indigo-300 rounded-lg flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        {pinFilteredOpportunities.length}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-indigo-900">
-                          Viewing {pinFilteredOpportunities.length} opportunit{pinFilteredOpportunities.length !== 1 ? 'ies' : 'y'} from {pinFilteredOpportunities[0]?.placeOfPerformance?.state?.code || 'selected location'}
-                        </p>
-                        <p className="text-xs text-indigo-700">Click on map pins to filter opportunities by location</p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={clearPinFilter}
-                      className="border-indigo-300 text-indigo-700 hover:bg-indigo-100"
-                    >
-                      Show All
-                    </Button>
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  {filteredAndSortedOpportunities.map((opp) => (
-                  <OpportunityCard
-                    key={opp.noticeId}
-                    opportunity={opp}
-                    isSelected={selectedOpportunity?.noticeId === opp.noticeId}
-                    onClick={() => setSelectedOpportunity(opp)}
-                    onViewDetails={(e) => {
-                      e.stopPropagation();
-                      setDetailOpportunity(opp);
-                      setShowOpportunityDetail(true);
-                    }}
-                    onExpressInterest={(e) => {
-                      e.stopPropagation();
-                      handleExpressInterest(opp);
-                    }}
-                    onSave={handleSaveOpportunity}
-                    isSaved={savedOpportunities.has(opp.noticeId)}
-                    hasInquiry={submittedInquiries.has(opp.noticeId || opp.solicitationNumber)}
-                    matchScore={opportunityMatchScores.get(opp.noticeId)}
-                  />
-                ))}
-                </div>
-              </>
-            )}
-          </TabsContent>
-
-          {/* Available Listings Tab */}
-          <TabsContent value="listings" className="flex-1 overflow-y-auto m-0 p-4">
-            {listingsError ? (
-              <div className="flex flex-col items-center justify-center py-12 px-4">
-                <div className="text-center max-w-sm">
-                  <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                    Failed to Load Listings
-                  </h3>
-                  <p className="text-xs text-gray-600 mb-4">
-                    {listingsError}
-                  </p>
-                  <Button
-                    onClick={fetchBrokerListings}
-                    size="sm"
-                    variant="outline"
-                  >
-                    Try Again
-                  </Button>
-                </div>
-              </div>
-            ) : loading ? (
-              <div className="space-y-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="animate-pulse border rounded-lg p-4 bg-white">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
-                    <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-5/6 mb-3"></div>
-                    <div className="flex gap-4 mt-3">
-                      <div className="h-3 bg-gray-200 rounded w-20"></div>
-                      <div className="h-3 bg-gray-200 rounded w-24"></div>
-                      <div className="h-3 bg-gray-200 rounded w-16"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : filteredListings.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                {searchTerm ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <p>No matches for &quot;{searchTerm}&quot;</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSearchTerm("")}
-                    >
-                      Clear Search
-                    </Button>
-                  </div>
-                ) : (
-                  <p>No broker listings available</p>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredListings.map((listing) => (
-                  <BrokerListingCard
-                    key={listing.id}
-                    listing={listing}
-                    isSelected={selectedListing?.id === listing.id}
-                    onClick={() => setSelectedListing(listing)}
-                    onViewDetails={(e) => {
-                      e.stopPropagation();
-                      setDetailListing(listing);
-                      setShowListingDetail(true);
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Expiring Leases Tab removed - IOLP data no longer available */}
-        </Tabs>
-      </div>
-
-      {/* Right Panel - Map */}
-      <div className="flex-1 relative min-h-[40vh] lg:min-h-0">
-        <OpportunitiesMap
-          opportunities={filteredAndSortedOpportunities}
-          selectedOpportunity={selectedOpportunity}
-          onOpportunityClick={setSelectedOpportunity}
-          center={mapCenter}
-        />
-
-        {/* Detail Panels - Overlay the map */}
-        <ListingDetailModal
-          listing={detailListing}
-          open={showListingDetail}
-          onOpenChange={setShowListingDetail}
-        />
-
-        <OpportunityDetailModal
-          opportunity={detailOpportunity}
-          open={showOpportunityDetail}
-          onOpenChange={setShowOpportunityDetail}
-          onExpressInterest={() => {
-            if (detailOpportunity) {
-              handleExpressInterest(detailOpportunity);
-            }
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
+      {showChatView && chatOpportunity ? (
+        // Chat View - Replaces entire view
+        <OpportunityChatView
+          opportunity={chatOpportunity}
+          onBack={() => {
+            setShowChatView(false);
+            setChatOpportunity(null);
           }}
         />
+      ) : (
+        <>
+          {/* Main Content Area - Side by Side */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Left Panel - Content */}
+            <div className="w-[450px] bg-gray-50 border-r overflow-y-auto">
+              <Tabs
+                value={activeTab}
+                onValueChange={(value) => setActiveTab(value as TabType)}
+                className="h-full"
+              >
+                <TabsList className="hidden">
+                  <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
+                  <TabsTrigger value="listings">Listings</TabsTrigger>
+                </TabsList>
 
-        {/* ExpiringLeaseDetailPanel removed - IOLP data no longer available */}
-      </div>
+                {/* Opportunities Tab */}
+                <TabsContent value="opportunities" className="m-0 bg-gray-50 h-full">
+                  {/* Header with Toggle */}
+                  <div className="bg-white p-4 border-b">
+                    <h2 className="text-xl font-bold text-gray-900 mb-3">Federal Lease Opportunities</h2>
 
-      {/* Express Interest Modal (still a dialog, not a full panel) */}
-      <ExpressInterestModal
-        opportunity={expressInterestOpportunity}
-        open={showExpressInterest}
-        onOpenChange={setShowExpressInterest}
-        userEmail={userEmail || ""}
-        onInquirySubmitted={handleInquirySubmitted}
-      />
+                    {/* Modern Toggle */}
+                    <div className="inline-flex items-center gap-1 p-1 bg-gray-100 rounded-full">
+                      <button
+                        onClick={() => setActiveTab("opportunities")}
+                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                          activeTab === "opportunities"
+                            ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md"
+                            : "text-gray-600 hover:text-gray-900"
+                        }`}
+                      >
+                        Opportunities
+                      </button>
+                      <button
+                        onClick={() => setActiveTab("listings")}
+                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                          activeTab === "listings"
+                            ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md"
+                            : "text-gray-600 hover:text-gray-900"
+                        }`}
+                      >
+                        Available Properties
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-3">
+                    {opportunitiesError ? (
+                    <div className="flex flex-col items-center justify-center py-12 px-4">
+                      <div className="text-center max-w-sm">
+                        <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                          <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                          Failed to Load Opportunities
+                        </h3>
+                        <p className="text-xs text-gray-600 mb-4">
+                          {opportunitiesError}
+                        </p>
+                        <Button
+                          onClick={fetchOpportunities}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Try Again
+                        </Button>
+                      </div>
+                    </div>
+                  ) : loading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="animate-pulse border rounded-lg p-4 bg-white">
+                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+                          <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                          <div className="h-3 bg-gray-200 rounded w-5/6 mb-3"></div>
+                          <div className="flex gap-4 mt-3">
+                            <div className="h-3 bg-gray-200 rounded w-20"></div>
+                            <div className="h-3 bg-gray-200 rounded w-24"></div>
+                            <div className="h-3 bg-gray-200 rounded w-16"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : filteredAndSortedOpportunities.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">
+                      {opportunityFilters.states.length > 0 || opportunityFilters.postedWithin !== 'all' || opportunityFilters.setAsideTypes.length > 0 ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <p>No opportunities match your filters</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setOpportunityFilters({
+                                states: [],
+                                postedWithin: 'all',
+                                setAsideTypes: [],
+                                sortBy: 'newest',
+                                onlyMatches: undefined
+                              });
+                            }}
+                          >
+                            Clear Filters
+                          </Button>
+                        </div>
+                      ) : (
+                        <p>No opportunities available</p>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      {/* Pin Filter Notification */}
+                      {pinFilteredOpportunities && pinFilteredOpportunities.length > 0 && (
+                        <div className="mb-4 p-3 bg-indigo-50 border-2 border-indigo-300 rounded-lg flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                              {pinFilteredOpportunities.length}
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-indigo-900">
+                                Viewing {pinFilteredOpportunities.length} opportunit{pinFilteredOpportunities.length !== 1 ? 'ies' : 'y'} in {
+                                  (() => {
+                                    const city = pinFilteredOpportunities[0]?.placeOfPerformance?.city?.name;
+                                    const state = pinFilteredOpportunities[0]?.placeOfPerformance?.state?.code;
+                                    return city && state ? `${city}, ${state}` : state || 'selected location';
+                                  })()
+                                }
+                              </p>
+                              <p className="text-xs text-indigo-700">Click on map pins to filter opportunities by location</p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={clearPinFilter}
+                            className="border-indigo-300 text-indigo-700 hover:bg-indigo-100"
+                          >
+                            Show All
+                          </Button>
+                        </div>
+                      )}
+
+                      <div className="space-y-3">
+                        {filteredAndSortedOpportunities.map((opp) => (
+                          <OpportunityCard
+                            key={opp.noticeId}
+                            opportunity={opp}
+                            isSelected={selectedOpportunity?.noticeId === opp.noticeId}
+                            onClick={() => setSelectedOpportunity(opp)}
+                            onViewDetails={(e) => {
+                              e.stopPropagation();
+                              setChatOpportunity(opp);
+                              setShowChatView(true);
+                            }}
+                            onExpressInterest={(e) => {
+                              e.stopPropagation();
+                              handleExpressInterest(opp);
+                            }}
+                            onSave={handleSaveOpportunity}
+                            isSaved={savedOpportunities.has(opp.noticeId)}
+                            hasInquiry={submittedInquiries.has(opp.noticeId || opp.solicitationNumber)}
+                            matchScore={opportunityMatchScores.get(opp.noticeId)}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  </div>
+                </TabsContent>
+
+                {/* Available Listings Tab */}
+                <TabsContent value="listings" className="m-0 bg-gray-50 h-full">
+                  {/* Header with Toggle */}
+                  <div className="bg-white p-4 border-b">
+                    <h2 className="text-xl font-bold text-gray-900 mb-3">Federal Lease Opportunities</h2>
+
+                    {/* Modern Toggle */}
+                    <div className="inline-flex items-center gap-1 p-1 bg-gray-100 rounded-full">
+                      <button
+                        onClick={() => setActiveTab("opportunities")}
+                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                          activeTab === "opportunities"
+                            ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md"
+                            : "text-gray-600 hover:text-gray-900"
+                        }`}
+                      >
+                        Opportunities
+                      </button>
+                      <button
+                        onClick={() => setActiveTab("listings")}
+                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                          activeTab === "listings"
+                            ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md"
+                            : "text-gray-600 hover:text-gray-900"
+                        }`}
+                      >
+                        Available Properties
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-3">
+                    {listingsError ? (
+                    <div className="flex flex-col items-center justify-center py-12 px-4">
+                      <div className="text-center max-w-sm">
+                        <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                          <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                          Failed to Load Listings
+                        </h3>
+                        <p className="text-xs text-gray-600 mb-4">
+                          {listingsError}
+                        </p>
+                        <Button
+                          onClick={fetchBrokerListings}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Try Again
+                        </Button>
+                      </div>
+                    </div>
+                  ) : loading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="animate-pulse border rounded-lg p-4 bg-white">
+                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+                          <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                          <div className="h-3 bg-gray-200 rounded w-5/6 mb-3"></div>
+                          <div className="flex gap-4 mt-3">
+                            <div className="h-3 bg-gray-200 rounded w-20"></div>
+                            <div className="h-3 bg-gray-200 rounded w-24"></div>
+                            <div className="h-3 bg-gray-200 rounded w-16"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : filteredListings.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">
+                      <p>No broker listings available</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredListings.map((listing) => (
+                        <BrokerListingCard
+                          key={listing.id}
+                          listing={listing}
+                          isSelected={selectedListing?.id === listing.id}
+                          onClick={() => setSelectedListing(listing)}
+                          onViewDetails={(e) => {
+                            e.stopPropagation();
+                            setDetailListing(listing);
+                            setShowListingDetail(true);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  </div>
+                </TabsContent>
+
+                {/* Expiring Leases Tab removed - IOLP data no longer available */}
+              </Tabs>
+            </div>
+
+            {/* Right Panel - Map */}
+            <div className="flex-1 relative">
+              <OpportunitiesMap
+                opportunities={filteredAndSortedOpportunities}
+                brokerListings={filteredListings}
+                selectedOpportunity={selectedOpportunity}
+                selectedListing={selectedListing}
+                onOpportunityClick={setSelectedOpportunity}
+                onListingClick={setSelectedListing}
+                onPinClick={handlePinClick}
+                center={mapCenter ?? undefined}
+              />
+
+              {/* Detail Panels - Overlay the map */}
+              <ListingDetailModal
+                listing={detailListing}
+                open={showListingDetail}
+                onOpenChange={setShowListingDetail}
+              />
+
+              <OpportunityDetailModal
+                opportunity={detailOpportunity}
+                open={showOpportunityDetail}
+                onOpenChange={setShowOpportunityDetail}
+                onExpressInterest={() => {
+                  if (detailOpportunity) {
+                    handleExpressInterest(detailOpportunity);
+                  }
+                }}
+              />
+
+              {/* ExpiringLeaseDetailPanel removed - IOLP data no longer available */}
+            </div>
+          </div>
+
+          {/* Express Interest Modal (still a dialog, not a full panel) */}
+          <ExpressInterestModal
+            opportunity={expressInterestOpportunity}
+            open={showExpressInterest}
+            onOpenChange={setShowExpressInterest}
+            userEmail={userEmail || ""}
+            onInquirySubmitted={handleInquirySubmitted}
+          />
+        </>
+      )}
     </div>
   );
 }

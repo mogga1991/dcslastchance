@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { MapPin, AlertCircle, Building2, Calendar, FileText, Hash, Maximize2, ChevronRight } from "lucide-react";
+import { ButtonColorful } from "@/components/ui/button-colorful";
+import { MapPin, Calendar, FileText, Hash, Maximize2, Building2, User, Mail, Phone } from "lucide-react";
 import type { SAMOpportunity } from "@/lib/sam-gov";
 import type { MatchScoreResult } from "@/lib/scoring/types";
 
@@ -105,135 +105,160 @@ export function OpportunityCard({
 
   return (
     <Card
-      className={`group overflow-hidden cursor-pointer transition-all duration-200 bg-white border border-slate-200 border-l-4 ${urgencyStyle.border} hover:shadow-xl hover:border-slate-300 ${
-        isSelected ? "ring-2 ring-blue-600 shadow-xl border-slate-300" : "shadow-sm"
+      className={`group overflow-hidden cursor-pointer transition-all duration-300 bg-white rounded-2xl border-2 ${
+        isSelected
+          ? "border-indigo-400 shadow-lg scale-[1.02]"
+          : "border-gray-100 hover:border-indigo-200 hover:shadow-md"
       }`}
       onClick={onClick}
     >
-      {/* Status Bar */}
-      <div className={`px-6 py-3 ${urgencyStyle.bg} border-b border-slate-200`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-slate-600" />
-              <span className="text-sm font-semibold text-slate-900 uppercase tracking-wide">
-                {opportunity.department?.substring(0, 30) || 'Federal Agency'}
-              </span>
-            </div>
-            <Badge variant="outline" className="bg-white border-slate-300 text-slate-700 text-xs font-semibold uppercase">
-              {getNoticeTypeLabel(opportunity.type)}
-            </Badge>
+      <div className="p-3 space-y-2">
+        {/* Header with Location and Price Badge */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-base leading-tight line-clamp-2 text-gray-800 mb-2">
+              {opportunity.title}
+            </h3>
+            {/* Location */}
+            {opportunity.placeOfPerformance && (
+              <div className="flex items-center gap-1.5 text-gray-600">
+                <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className="text-sm truncate">
+                  {formatDate(opportunity.postedDate)} {opportunity.placeOfPerformance.city?.name}, {opportunity.placeOfPerformance.state?.code}
+                </span>
+              </div>
+            )}
           </div>
+
+          {/* Status Badge */}
           {daysLeft !== null && daysLeft > 0 && (
-            <Badge className={`${urgencyStyle.badge} text-white font-bold uppercase tracking-wide text-xs`}>
-              {isCritical && <AlertCircle className="h-3 w-3 mr-1" />}
-              {daysLeft} DAY{daysLeft !== 1 ? 'S' : ''}
+            <Badge
+              className={`flex-shrink-0 text-white font-medium px-3 py-1 rounded-full ${
+                isCritical
+                  ? 'bg-gradient-to-r from-red-500 to-red-600'
+                  : isUrgent
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-500'
+                  : 'bg-gradient-to-r from-gray-700 to-gray-800'
+              }`}
+            >
+              {daysLeft}d
             </Badge>
           )}
         </div>
-      </div>
 
-      <div className="p-6 space-y-4">
-        {/* Solicitation Number - Prominent */}
+        {/* Notice Type Badge */}
+        {opportunity.type && (
+          <div className="flex items-center gap-2 pt-2">
+            <Badge variant="outline" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
+              {getNoticeTypeLabel(opportunity.type)}
+            </Badge>
+          </div>
+        )}
+
+        {/* Info Pills */}
+        <div className="flex flex-wrap gap-2 pt-2">
+          {/* Square Footage */}
+          {squareFootage && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-lg">
+              <Maximize2 className="h-3.5 w-3.5 text-gray-500" />
+              <span className="text-xs font-medium text-gray-700">{squareFootage}</span>
+            </div>
+          )}
+
+          {/* NAICS */}
+          {opportunity.naicsCode && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-lg">
+              <Hash className="h-3.5 w-3.5 text-gray-500" />
+              <span className="text-xs font-medium text-gray-700">{opportunity.naicsCode}</span>
+            </div>
+          )}
+
+          {/* Set Aside */}
+          {(opportunity.typeOfSetAsideDescription && opportunity.typeOfSetAsideDescription !== 'None') && (
+            <div className="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg">
+              <span className="text-xs font-medium">{opportunity.typeOfSetAsideDescription}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Agency/Department */}
+        {opportunity.fullParentPathName && (
+          <div className="flex items-center gap-2 pt-2">
+            <Building2 className="h-3.5 w-3.5 text-gray-400" />
+            <span className="text-xs text-gray-600 line-clamp-1">
+              {opportunity.fullParentPathName}
+            </span>
+          </div>
+        )}
+
+        {/* Solicitation Number */}
         {opportunity.solicitationNumber && (
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <FileText className="h-4 w-4 text-slate-500" />
-            <span className="text-xs font-medium text-slate-600 uppercase tracking-wider">Solicitation</span>
-            <span className="text-sm font-bold text-slate-900 font-mono">
+          <div className="flex items-center gap-2 pt-2">
+            <FileText className="h-3.5 w-3.5 text-gray-400" />
+            <span className="text-xs text-gray-500">SOL:</span>
+            <span className="text-xs font-mono text-gray-700">
               {opportunity.solicitationNumber}
             </span>
           </div>
         )}
 
-        {/* Title */}
-        <h3 className="font-bold text-lg leading-snug line-clamp-3 text-slate-900 min-h-[4rem]">
-          {opportunity.title}
-        </h3>
-
-        {/* Key Information Grid */}
-        <div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-100">
-          {/* Location */}
-          {opportunity.placeOfPerformance && (
-            <div>
-              <div className="flex items-center gap-1.5 mb-1">
-                <MapPin className="h-3.5 w-3.5 text-slate-500" />
-                <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Location</span>
-              </div>
-              <p className="text-sm font-medium text-slate-900 truncate">
-                {opportunity.placeOfPerformance.city?.name}, {opportunity.placeOfPerformance.state?.code}
+        {/* Point of Contact */}
+        {opportunity.pointOfContact && opportunity.pointOfContact.length > 0 && (
+          <div className="pt-2 space-y-1.5 border-t border-gray-100">
+            <div className="flex items-center gap-1.5 text-gray-600">
+              <User className="h-3.5 w-3.5" />
+              <span className="text-xs font-medium">Contact</span>
+            </div>
+            <div className="ml-5 space-y-1">
+              <p className="text-xs text-gray-700 font-medium">
+                {opportunity.pointOfContact[0].fullName}
               </p>
+              {opportunity.pointOfContact[0].email && (
+                <div className="flex items-center gap-1.5">
+                  <Mail className="h-3 w-3 text-gray-400" />
+                  <a
+                    href={`mailto:${opportunity.pointOfContact[0].email}`}
+                    className="text-xs text-indigo-600 hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {opportunity.pointOfContact[0].email}
+                  </a>
+                </div>
+              )}
+              {opportunity.pointOfContact[0].phone && (
+                <div className="flex items-center gap-1.5">
+                  <Phone className="h-3 w-3 text-gray-400" />
+                  <a
+                    href={`tel:${opportunity.pointOfContact[0].phone}`}
+                    className="text-xs text-gray-600"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {opportunity.pointOfContact[0].phone}
+                  </a>
+                </div>
+              )}
             </div>
-          )}
-
-          {/* Square Footage */}
-          {squareFootage && (
-            <div>
-              <div className="flex items-center gap-1.5 mb-1">
-                <Maximize2 className="h-3.5 w-3.5 text-slate-500" />
-                <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Size</span>
-              </div>
-              <p className="text-sm font-bold text-blue-700">
-                {squareFootage}
-              </p>
-            </div>
-          )}
-
-          {/* NAICS Code */}
-          {opportunity.naicsCode && (
-            <div>
-              <div className="flex items-center gap-1.5 mb-1">
-                <Hash className="h-3.5 w-3.5 text-slate-500" />
-                <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">NAICS</span>
-              </div>
-              <p className="text-sm font-mono text-slate-900">
-                {opportunity.naicsCode}
-              </p>
-            </div>
-          )}
-
-          {/* Posted Date */}
-          <div>
-            <div className="flex items-center gap-1.5 mb-1">
-              <Calendar className="h-3.5 w-3.5 text-slate-500" />
-              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Posted</span>
-            </div>
-            <p className="text-sm text-slate-900">
-              {formatDate(opportunity.postedDate)}
-            </p>
-          </div>
-        </div>
-
-        {/* Deadline Section */}
-        <div className="p-4 bg-slate-50 border-2 border-slate-200 rounded-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Response Deadline</p>
-              <p className="text-lg font-bold text-slate-900">
-                {formatDate(opportunity.responseDeadLine)}
-              </p>
-            </div>
-            <Calendar className="h-8 w-8 text-slate-400" />
-          </div>
-        </div>
-
-        {/* Badges */}
-        {(opportunity.typeOfSetAsideDescription && opportunity.typeOfSetAsideDescription !== 'None') && (
-          <div className="flex items-center gap-2">
-            <Badge className="bg-blue-100 text-blue-800 border border-blue-300 font-semibold uppercase text-xs">
-              {opportunity.typeOfSetAsideDescription}
-            </Badge>
           </div>
         )}
 
-        {/* View More Button */}
-        <Button
-          size="lg"
-          onClick={onViewDetails}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-wide text-sm group-hover:bg-indigo-800 transition-colors"
-        >
-          View More
-          <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-        </Button>
+        {/* Deadline with arrow button */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-gray-400" />
+            <div>
+              <p className="text-xs text-gray-500">Deadline</p>
+              <p className="text-sm font-semibold text-gray-800">
+                {formatDate(opportunity.responseDeadLine)}
+              </p>
+            </div>
+          </div>
+
+          <ButtonColorful
+            onClick={onViewDetails}
+            label="AI Assistant"
+            className="rounded-full"
+          />
+        </div>
       </div>
     </Card>
   );

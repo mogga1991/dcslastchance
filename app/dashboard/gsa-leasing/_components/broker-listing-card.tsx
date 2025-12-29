@@ -94,15 +94,17 @@ export function BrokerListingCard({ listing, isSelected, onClick, onViewDetails 
 
   return (
     <Card
-      className={`group overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg ${
-        isSelected ? "ring-2 ring-blue-500 shadow-lg" : ""
+      className={`group overflow-hidden cursor-pointer transition-all duration-300 bg-white rounded-2xl border-2 ${
+        isSelected
+          ? "border-indigo-400 shadow-lg scale-[1.02]"
+          : "border-gray-100 hover:border-indigo-200 hover:shadow-md"
       }`}
       onClick={onClick}
     >
       {/* Image Section */}
-      <div className="relative h-36 sm:h-44 overflow-hidden bg-gray-200">
+      <div className="relative h-40 overflow-hidden bg-gray-200">
         <Image
-          src={getImageForListing(listing.id)}
+          src={listing.images && listing.images.length > 0 ? listing.images[0] : getImageForListing(listing.id)}
           alt={listing.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
@@ -110,76 +112,70 @@ export function BrokerListingCard({ listing, isSelected, onClick, onViewDetails 
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
 
-        {/* Property Class Badge - Top Right */}
-        <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
-          <Badge className="bg-white/90 text-gray-800 font-semibold shadow-sm text-xs">
-            {getPropertyClass(listing.property_type)}
-          </Badge>
-        </div>
+        {/* Photo count badge */}
+        {listing.images && listing.images.length > 1 && (
+          <div className="absolute bottom-3 right-3">
+            <Badge className="bg-black/60 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm">
+              {listing.images.length} photos
+            </Badge>
+          </div>
+        )}
 
         {/* GSA Eligible Badge - Top Left */}
         {listing.gsa_eligible && (
-          <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
-            <Badge className="bg-green-600 text-white font-semibold shadow-sm text-xs">
+          <div className="absolute top-3 left-3">
+            <Badge className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white font-medium shadow-lg text-xs px-3 py-1 rounded-full">
               GSA Eligible
             </Badge>
           </div>
         )}
 
-        {/* Federal Score - Bottom Right */}
+        {/* Federal Score - Top Right */}
         {scoreInfo && (
-          <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
-            <div className="bg-white/95 rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 shadow-md">
-              <div className="text-xs text-gray-600 font-medium">Score</div>
-              <div className={`text-xl sm:text-2xl font-bold ${scoreInfo.color}`}>
+          <div className="absolute top-3 right-3">
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl px-3 py-2 shadow-lg">
+              <div className={`text-2xl font-bold ${scoreInfo.color}`}>
                 {scoreInfo.grade}
               </div>
-              <div className="text-xs text-gray-500">{listing.federal_score}/100</div>
             </div>
           </div>
         )}
       </div>
 
       {/* Content Section */}
-      <div className="p-3 sm:p-4 space-y-3">
-        {/* Title */}
+      <div className="p-3 space-y-2">
+        {/* Title and Location */}
         <div>
-          <h3 className="font-bold text-sm sm:text-base line-clamp-2 mb-1">{listing.title}</h3>
-          <div className="flex items-center text-xs sm:text-sm text-gray-600 mb-2">
-            <MapPin className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
+          <h3 className="font-semibold text-base leading-tight line-clamp-2 text-gray-800 mb-2">
+            {listing.title}
+          </h3>
+          <div className="flex items-center text-sm text-gray-600">
+            <MapPin className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
             <span className="truncate">{listing.city}, {listing.state} {listing.zipcode}</span>
           </div>
-          {/* Lister Role Badge */}
-          {listing.lister_role && (
-            <Badge
-              variant="outline"
-              className={`text-xs ${getRoleBadge(listing.lister_role).className}`}
-            >
-              {getRoleBadge(listing.lister_role).label}
-            </Badge>
-          )}
         </div>
 
-        {/* Key Metrics - Three Columns */}
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 py-3 border-y text-xs sm:text-sm">
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-0.5">Available SF</div>
-            <div className="font-bold text-sm">{formatSquareFeet(listing.available_sf)}</div>
+        {/* Key Metrics Pills */}
+        <div className="flex flex-wrap gap-2 pt-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-lg">
+            <span className="text-xs text-gray-500">Available SF</span>
+            <span className="text-xs font-semibold text-gray-800">{formatSquareFeet(listing.available_sf)}</span>
           </div>
-          <div className="text-center border-x">
-            <div className="text-xs text-gray-500 mb-0.5">Lease Rate</div>
-            <div className="font-bold text-sm">{formatCurrency(listing.asking_rent_sf)}/SF</div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-lg">
+            <span className="text-xs text-gray-500">Rate</span>
+            <span className="text-xs font-semibold text-gray-800">{formatCurrency(listing.asking_rent_sf)}/SF</span>
           </div>
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-0.5">Available</div>
-            <div className="font-bold text-sm">{formatDate(listing.available_date)}</div>
-          </div>
+          {listing.lister_role && (
+            <div className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium ${getRoleBadge(listing.lister_role).className}`}>
+              {getRoleBadge(listing.lister_role).label.replace('Listed by ', '')}
+            </div>
+          )}
         </div>
 
         {/* Feature Badges */}
         {listing.features && listing.features.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {listing.features.slice(0, 4).map((feature) => (
+            {listing.features.slice(0, 3).map((feature) => (
               <Badge
                 key={feature}
                 variant="outline"
@@ -188,27 +184,21 @@ export function BrokerListingCard({ listing, isSelected, onClick, onViewDetails 
                 {feature.replace('_', ' ')}
               </Badge>
             ))}
-            {listing.features.length > 4 && (
-              <Badge variant="outline" className="text-xs">
-                +{listing.features.length - 4} more
+            {listing.features.length > 3 && (
+              <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600">
+                +{listing.features.length - 3}
               </Badge>
             )}
           </div>
         )}
 
-        {/* Description */}
-        <p className="text-xs text-gray-600 line-clamp-2">
-          {listing.description}
-        </p>
-
         {/* Set-Aside Tags */}
         {listing.set_aside_eligible && listing.set_aside_eligible.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {listing.set_aside_eligible.slice(0, 3).map((setAside) => (
+            {listing.set_aside_eligible.slice(0, 2).map((setAside) => (
               <Badge
                 key={setAside}
-                variant="outline"
-                className="text-xs bg-amber-50 text-amber-700 border-amber-200"
+                className="text-xs bg-amber-50 text-amber-700 border border-amber-200"
               >
                 <Star className="h-3 w-3 mr-1" />
                 {setAside.toUpperCase()}
@@ -216,24 +206,26 @@ export function BrokerListingCard({ listing, isSelected, onClick, onViewDetails 
             ))}
           </div>
         )}
-      </div>
 
-      {/* Footer - Stats & Actions */}
-      <div className="px-3 sm:px-4 py-3 bg-gray-50 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0">
-        <div className="flex items-center gap-4 text-xs text-gray-600">
-          <div className="flex items-center gap-1">
-            <Eye className="h-3.5 w-3.5" />
-            <span>{listing.views_count || 0} views</span>
+        {/* Footer - Available date and action */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-2">
+            <Eye className="h-4 w-4 text-gray-400" />
+            <div>
+              <p className="text-xs text-gray-500">Available</p>
+              <p className="text-sm font-semibold text-gray-800">{formatDate(listing.available_date)}</p>
+            </div>
           </div>
+
+          <Button
+            size="sm"
+            onClick={onViewDetails}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full h-9 px-4 text-sm font-medium transition-all group-hover:scale-105"
+          >
+            View
+            <ExternalLink className="h-4 w-4 ml-1" />
+          </Button>
         </div>
-        <Button
-          size="sm"
-          onClick={onViewDetails}
-          className="bg-blue-600 hover:bg-blue-700 text-white h-10 w-full sm:w-auto"
-        >
-          View Details
-          <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-        </Button>
       </div>
     </Card>
   );
