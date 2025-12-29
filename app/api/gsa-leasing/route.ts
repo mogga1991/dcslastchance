@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 import { transformDBToOpportunity } from "@/lib/sync-opportunities";
 
 /**
@@ -7,11 +7,18 @@ import { transformDBToOpportunity } from "@/lib/sync-opportunities";
  *
  * This endpoint reads from the local database which is synced 2x per week
  * from SAM.gov, providing much faster response times (~100ms vs 4.5s)
+ *
+ * Uses service role key to bypass RLS since opportunities are public data
  */
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const supabase = await createClient();
+
+    // Use service role client to bypass RLS for public opportunities data
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Extract query parameters
     const limit = Math.min(parseInt(searchParams.get("limit") || "1000"), 1000);
