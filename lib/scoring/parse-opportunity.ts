@@ -49,7 +49,7 @@ function extractSquareFootage(description: string): { min: number; max: number; 
   }
 
   // Try single value patterns (try pattern [1] first for "approximately" matches)
-  let values: number[] = [];
+  const values: number[] = [];
 
   for (let i = 1; i < sfPatterns.length; i++) {
     const matches = description.matchAll(sfPatterns[i]);

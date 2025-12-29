@@ -5,7 +5,7 @@
  * calculates scores, and stores results in property_matches table.
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import { calculateMatchScore } from './calculate-match-score';
 import { parseOpportunityRequirements, hasValidRequirements } from './parse-opportunity';
 import type { SAMOpportunity } from '../sam-gov';
