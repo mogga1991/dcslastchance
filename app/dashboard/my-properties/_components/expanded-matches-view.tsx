@@ -269,7 +269,7 @@ function MatchCard({ match }: { match: OpportunityMatch }) {
                   variant="outline"
                   onClick={(e) => {
                     e.stopPropagation();
-                    window.open(`https://sam.gov/search/?index=opp&page=1&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&q=${encodeURIComponent(opp.solicitation_number)}`, '_blank');
+                    window.open(`https://sam.gov/search/?index=opp&page=1&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&q=${encodeURIComponent(opp.solicitation_number || '')}`, '_blank');
                   }}
                   className="border-gray-300 hover:bg-gray-50"
                 >
