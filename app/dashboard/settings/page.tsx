@@ -816,7 +816,7 @@ function SettingsContent() {
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <p className="text-sm text-gray-600">
-                      The system automatically syncs opportunities from SAM.gov twice weekly (Mondays and Thursdays at 2 AM).
+                      The system automatically syncs opportunities from SAM.gov twice weekly (Mondays and Thursdays at 6 AM MST).
                       Use this button to trigger an immediate sync if you need the latest data.
                     </p>
 
