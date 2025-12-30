@@ -86,66 +86,228 @@ export function OpportunitiesMap({
     const newMarkers: google.maps.Marker[] = [];
     const bounds = new google.maps.LatLngBounds();
 
-    // Group opportunities by location to create clustered markers
-    const locationGroups = new Map<string, SAMOpportunity[]>();
-
-    opportunities.forEach((opp) => {
-      const city = opp.placeOfPerformance?.city?.name || "";
-      const state = opp.placeOfPerformance?.state?.code || "";
-      const key = `${city}, ${state}`;
-
-      if (!locationGroups.has(key)) {
-        locationGroups.set(key, []);
-      }
-      locationGroups.get(key)!.push(opp);
-    });
+    // Track markers by location for offset calculation
+    const locationCounts = new Map<string, number>();
 
     let geocodedCount = 0;
-    const totalLocations = locationGroups.size;
+    const totalOpportunities = opportunities.length;
 
-    // Create markers for each location group
-    locationGroups.forEach((opps, location) => {
-      const firstOpp = opps[0];
-      const city = firstOpp.placeOfPerformance?.city?.name;
-      const state = firstOpp.placeOfPerformance?.state?.code;
+    // Helper function to create InfoWindow content for opportunities
+    const createOpportunityInfoContent = (opp: SAMOpportunity) => {
+      const deadline = opp.responseDeadLine
+        ? new Date(opp.responseDeadLine).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          })
+        : 'Not specified';
+
+      const postedDate = opp.postedDate
+        ? new Date(opp.postedDate).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          })
+        : 'Unknown';
+
+      // Truncate description to ~200 characters
+      const shortDescription = opp.description
+        ? (opp.description.length > 200
+            ? opp.description.substring(0, 200) + '...'
+            : opp.description)
+        : 'No description available.';
+
+      return `
+        <div style="width: 340px; font-family: system-ui, -apple-system, sans-serif; line-height: 1.4; animation: fadeInSlideUp 0.5s ease-out;">
+          <style>
+            @keyframes fadeInSlideUp {
+              from {
+                opacity: 0;
+                transform: translateY(10px);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+          </style>
+          <div style="padding: 6px 2px;">
+            <h3 style="font-size: 15px; font-weight: 600; margin: 0 0 10px 0; color: #1f2937; line-height: 1.3;">
+              ${opp.title}
+            </h3>
+            <div style="margin-bottom: 12px;">
+              <p style="font-size: 13px; color: #6b7280; margin: 0 0 2px 0; line-height: 1.4;">
+                ${opp.placeOfPerformance?.streetAddress || ''}
+              </p>
+              <p style="font-size: 13px; color: #6b7280; margin: 0;">
+                ${opp.placeOfPerformance?.city?.name || ''}, ${opp.placeOfPerformance?.state?.code || ''} ${opp.placeOfPerformance?.zip || ''}
+              </p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+              <div style="font-size: 12px;">
+                <div style="color: #9ca3af; margin-bottom: 2px;">Solicitation #</div>
+                <div style="color: #1f2937; font-weight: 600;">
+                  ${opp.solicitationNumber || 'N/A'}
+                </div>
+              </div>
+              <div style="font-size: 12px;">
+                <div style="color: #9ca3af; margin-bottom: 2px;">Notice ID</div>
+                <div style="color: #1f2937; font-weight: 600;">
+                  ${opp.noticeId}
+                </div>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+              <div style="font-size: 12px;">
+                <div style="color: #9ca3af; margin-bottom: 2px;">Posted Date</div>
+                <div style="color: #1f2937; font-weight: 600;">
+                  ${postedDate}
+                </div>
+              </div>
+              <div style="font-size: 12px;">
+                <div style="color: #9ca3af; margin-bottom: 2px;">Response Deadline</div>
+                <div style="color: #dc2626; font-weight: 600;">
+                  ${deadline}
+                </div>
+              </div>
+            </div>
+
+            ${opp.typeOfSetAsideDescription ? `
+              <div style="font-size: 12px; margin-bottom: 12px;">
+                <span style="color: #9ca3af;">Set-Aside:</span>
+                <span style="color: #1f2937; font-weight: 600; margin-left: 6px;">
+                  ${opp.typeOfSetAsideDescription}
+                </span>
+              </div>
+            ` : ''}
+
+            <div style="font-size: 12px; color: #6b7280; margin-bottom: 12px; line-height: 1.5;">
+              ${shortDescription}
+            </div>
+
+            ${(opp.naicsCode || opp.office) ? `
+              <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;">
+                ${opp.naicsCode ? `
+                  <span style="padding: 5px 10px; background: #e0e7ff; color: #4338ca; font-size: 11px; font-weight: 500; border-radius: 4px; white-space: nowrap;">
+                    NAICS: ${opp.naicsCode}
+                  </span>
+                ` : ''}
+                ${opp.office ? `
+                  <span style="padding: 5px 10px; background: #f3f4f6; color: #374151; font-size: 11px; font-weight: 500; border-radius: 4px; white-space: nowrap;">
+                    ${opp.office}
+                  </span>
+                ` : ''}
+              </div>
+            ` : ''}
+
+            ${opp.uiLink ? `
+              <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                <a
+                  href="${opp.uiLink}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style="display: inline-block; font-size: 12px; font-weight: 600; color: #4f46e5; text-decoration: none; padding: 6px 12px; background: #eef2ff; border-radius: 4px; transition: background 0.2s;"
+                  onmouseover="this.style.background='#e0e7ff'"
+                  onmouseout="this.style.background='#eef2ff'"
+                >
+                  View on SAM.gov →
+                </a>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    };
+
+    // Create individual markers for each opportunity with slight offsets if in same location
+    opportunities.forEach((opp) => {
+      const city = opp.placeOfPerformance?.city?.name;
+      const state = opp.placeOfPerformance?.state?.code;
 
       if (!city || !state) {
         geocodedCount++;
         return;
       }
 
+      const locationKey = `${city}, ${state}`;
+
       // Geocode the location
       geocoder.geocode({ address: `${city}, ${state}, USA` }, (results, status) => {
         if (status === "OK" && results && results[0]) {
-          const position = results[0].geometry.location;
+          const basePosition = results[0].geometry.location;
+
+          // Calculate offset for markers in the same location
+          const currentCount = locationCounts.get(locationKey) || 0;
+          locationCounts.set(locationKey, currentCount + 1);
+
+          // Apply small circular offset pattern (0.002 degrees ≈ 200 meters)
+          const angle = (currentCount * 2 * Math.PI) / 5; // Distribute in circle (max 5 per ring)
+          const ring = Math.floor(currentCount / 5);
+          const radius = 0.002 * (ring + 1);
+
+          const offsetLat = basePosition.lat() + (radius * Math.cos(angle));
+          const offsetLng = basePosition.lng() + (radius * Math.sin(angle));
+
+          const position = { lat: offsetLat, lng: offsetLng };
 
           const marker = new google.maps.Marker({
             position,
             map,
-            title: `${opps.length} opportunit${opps.length > 1 ? 'ies' : 'y'} in ${city}, ${state}`,
-            label: {
-              text: `${opps.length}`,
-              color: "white",
-              fontSize: "12px",
-              fontWeight: "bold",
-            },
+            title: opp.title,
             icon: {
               path: google.maps.SymbolPath.CIRCLE,
-              scale: opps.length > 1 ? 12 : 8,
-              fillColor: opps.length > 1 ? "#4F46E5" : "#6366F1",
+              scale: 8,
+              fillColor: "#6366F1", // Purple color for federal opportunities
               fillOpacity: 1,
               strokeColor: "white",
               strokeWeight: 2,
             },
+            zIndex: 50, // Lower than listings (100) so listings appear on top
           });
 
-          // Click handler - zoom to location and filter/select opportunities
+          // Create InfoWindow with detailed card
+          const infoWindow = new google.maps.InfoWindow({
+            content: createOpportunityInfoContent(opp),
+            maxWidth: 380,
+          });
+
+          // Listen for InfoWindow close event
+          infoWindow.addListener('closeclick', () => {
+            // Smooth zoom out to show all USA
+            const usaCenter = { lat: 39.8283, lng: -98.5795 };
+            map.panTo(usaCenter);
+
+            // Smooth zoom transition back to USA view
+            const targetZoom = 4;
+            const currentZoom = map.getZoom() || 14;
+            const zoomStep = currentZoom > targetZoom ? -1 : 1;
+
+            const smoothZoom = (current: number, target: number) => {
+              if (current !== target) {
+                const next = current + zoomStep;
+                map.setZoom(next);
+                setTimeout(() => smoothZoom(next, target), 100);
+              }
+            };
+
+            smoothZoom(currentZoom, targetZoom);
+          });
+
+          // Click handler
           marker.addListener("click", () => {
+            // Close any open opportunity info windows
+            newMarkers.forEach((m) => {
+              const iw = (m as any).infoWindow;
+              if (iw) iw.close();
+            });
+
             // Smooth zoom and pan to the clicked location
             map.panTo(position);
 
             // Smooth zoom transition
-            const targetZoom = 10; // City-level zoom
+            const targetZoom = 14;
             const currentZoom = map.getZoom() || 4;
             const zoomStep = currentZoom < targetZoom ? 1 : -1;
 
@@ -154,27 +316,32 @@ export function OpportunitiesMap({
                 const next = current + zoomStep;
                 map.setZoom(next);
                 setTimeout(() => smoothZoom(next, target), 80);
+              } else {
+                // Once zoom is complete, open InfoWindow
+                setTimeout(() => {
+                  // Pan down to give space for InfoWindow
+                  map.panBy(0, -150);
+                  setTimeout(() => {
+                    infoWindow.open(map, marker);
+                    if (onOpportunityClick) onOpportunityClick(opp);
+                  }, 200);
+                }, 100);
               }
             };
 
             smoothZoom(currentZoom, targetZoom);
-
-            if (opps.length > 1 && onPinClick) {
-              // Multiple opportunities - filter the list to show only these
-              onPinClick(opps);
-            } else if (opps.length === 1 && onOpportunityClick) {
-              // Single opportunity - select it
-              onOpportunityClick(opps[0]);
-            }
           });
 
+          // Store the info window reference on the marker
+          (marker as any).infoWindow = infoWindow;
+
           newMarkers.push(marker);
-          bounds.extend(position);
+          bounds.extend(basePosition);
         }
 
         // Increment count and check if all geocoding is complete
         geocodedCount++;
-        if (geocodedCount === totalLocations && newMarkers.length > 0) {
+        if (geocodedCount === totalOpportunities && newMarkers.length > 0) {
           // All markers created - fit map to show all of them
           map.fitBounds(bounds);
 
