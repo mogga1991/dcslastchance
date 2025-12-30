@@ -123,7 +123,7 @@ export default function HorizontalNav() {
                   {item.label}
                 </Button>
                 {hasBadge && (
-                  <span className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1.5 flex items-center justify-center bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg border-2 border-indigo-700 animate-pulse">
+                  <span className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1.5 flex items-center justify-center bg-red-600 text-white text-xs font-semibold rounded-full shadow-sm">
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}

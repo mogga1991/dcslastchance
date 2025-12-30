@@ -209,16 +209,16 @@ function MatchCard({ match }: { match: OpportunityMatch }) {
       {/* Expanded Content */}
       {expanded && (
         <div className="border-t bg-gray-50">
-          {/* AI Insight Section - Prominently Displayed */}
+          {/* AI Insight Section */}
           {aiInsight && (
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-b-2 border-purple-200 p-5">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="h-4 w-4 text-white" />
+            <div className="bg-blue-50 border-b border-blue-100 p-4">
+              <div className="flex items-start gap-3">
+                <div className="h-7 w-7 rounded bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="h-4 w-4 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <h5 className="font-semibold text-purple-900 mb-1">AI Match Insight</h5>
-                  <p className="text-sm text-purple-800 leading-relaxed">{aiInsight}</p>
+                  <h5 className="font-medium text-gray-900 text-sm mb-1">AI Match Analysis</h5>
+                  <p className="text-sm text-gray-700 leading-relaxed">{aiInsight}</p>
                 </div>
               </div>
             </div>
@@ -227,13 +227,13 @@ function MatchCard({ match }: { match: OpportunityMatch }) {
           {loadingInsight && !aiInsight && (
             <div className="bg-gray-50 p-4 border-b">
               <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Sparkles className="h-4 w-4 animate-pulse" />
-                <span>Loading AI insights...</span>
+                <Sparkles className="h-4 w-4" />
+                <span>Loading analysis...</span>
               </div>
             </div>
           )}
 
-          {/* Action CTAs */}
+          {/* Action Buttons */}
           <div className="p-4 border-b bg-white">
             <div className="flex flex-wrap gap-2">
               {opp.notice_id && (
@@ -243,10 +243,10 @@ function MatchCard({ match }: { match: OpportunityMatch }) {
                     e.stopPropagation();
                     window.open(`https://sam.gov/opp/${opp.notice_id}/view`, '_blank');
                   }}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  View Full Listing on SAM.gov
+                  View on SAM.gov
                 </Button>
               )}
 
@@ -257,10 +257,9 @@ function MatchCard({ match }: { match: OpportunityMatch }) {
                   e.stopPropagation();
                   setShowSummary(!showSummary);
                 }}
-                className="border-purple-300 hover:bg-purple-50"
               >
-                <Sparkles className="h-4 w-4 mr-2" />
-                {showSummary ? 'Hide Details' : 'Show AI Summary'}
+                <FileText className="h-4 w-4 mr-2" />
+                {showSummary ? 'Hide Summary' : 'Show Summary'}
               </Button>
 
               {opp.solicitation_number && (
@@ -271,10 +270,9 @@ function MatchCard({ match }: { match: OpportunityMatch }) {
                     e.stopPropagation();
                     window.open(`https://sam.gov/search/?index=opp&page=1&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&q=${encodeURIComponent(opp.solicitation_number || '')}`, '_blank');
                   }}
-                  className="border-gray-300 hover:bg-gray-50"
                 >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Search by Solicitation #
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Search Solicitation
                 </Button>
               )}
             </div>

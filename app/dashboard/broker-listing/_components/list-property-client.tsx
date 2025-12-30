@@ -37,21 +37,21 @@ const US_STATES = [
 const STEPS = [
   {
     number: 1,
-    label: "Property Location",
+    label: "Location & Owner",
     icon: MapPin,
-    description: "Where is your property located?"
+    description: "Property address and ownership"
   },
   {
     number: 2,
-    label: "Property Details",
+    label: "Building Details",
     icon: Building2,
-    description: "Tell us about the space"
+    description: "Square footage and specifications"
   },
   {
     number: 3,
-    label: "Features & Amenities",
+    label: "HVAC & Amenities",
     icon: CheckSquare,
-    description: "What amenities are available?"
+    description: "Operating hours and features"
   },
   {
     number: 4,
@@ -61,21 +61,17 @@ const STEPS = [
   },
 ];
 
-const PROPERTY_TYPES = [
-  { value: "general_office", label: "General Purpose Office", icon: "📄" },
-  { value: "warehouse", label: "Warehouse/Distribution", icon: "📦" },
-  { value: "flex_space", label: "Flex Space", icon: "🔄" },
-  { value: "land_antenna", label: "Land/Antenna Site", icon: "📡" },
-  { value: "parking", label: "Parking", icon: "🅿️" },
-];
+// Determine property type based on RSF breakdown
+const determinePropertyType = (rsf_office: string, rsf_warehouse: string): PropertyType => {
+  const office = parseInt(rsf_office || "0");
+  const warehouse = parseInt(rsf_warehouse || "0");
 
-// Map form values to database PropertyType
-const propertyTypeMap: Record<string, PropertyType> = {
-  general_office: "office",
-  warehouse: "warehouse",
-  flex_space: "industrial",
-  land_antenna: "land",
-  parking: "other",
+  if (warehouse > office) {
+    return "warehouse";
+  } else if (office > 0) {
+    return "office";
+  }
+  return "office"; // Default to office
 };
 
 const AMENITIES = [
@@ -100,11 +96,14 @@ export default function ListPropertyClient() {
   const [marker, setMarker] = useState<google.maps.Marker | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [formData, setFormData] = useState({
-    // Step 1: Property Location
+    // Step 1: Property Location & Owner
     street_address: "",
     city: "",
     state: "",
     zipcode: "",
+    property_owner_name: "",
+    owner_same_as_contact: false,
+    owner_relationship: "" as 'owner' | 'broker' | 'agent' | 'property_manager' | '',
     // Step 2: Space Details
     total_sf: "",
     available_sf: "",
@@ -113,16 +112,36 @@ export default function ListPropertyClient() {
     floors_available: "",
     ceiling_height: "",
     column_spacing: "",
+    // RSF Breakdown
+    rsf_office: "",
+    rsf_warehouse: "",
+    rsf_other: "",
+    // ANSI/BOMA details
+    aboa_sf: "",
+    building_caf: "",
+    // Parking details
+    parking_surface: "",
+    parking_structured: "",
+    parking_onsite: "" as 'yes' | 'no' | '',
+    parking_code_required: "",
     // Step 3: Property Type
     property_type: "",
     building_class: "",
     year_built: "",
     year_renovated: "",
+    renovation_description: "",
     // Step 4: Pricing & Terms
     lease_rate: "",
     lease_term: "",
     // Step 5: Features & Amenities
     amenities: [] as string[],
+    // HVAC Hours
+    hvac_weekday_start: "",
+    hvac_weekday_end: "",
+    hvac_saturday_start: "",
+    hvac_saturday_end: "",
+    hvac_sunday_start: "",
+    hvac_sunday_end: "",
     // Step 6: Photos & Documents
     photos: [] as File[],
     // Step 7: Contact Information
@@ -301,12 +320,38 @@ export default function ListPropertyClient() {
         }
       }
 
-      // Map building_class from "Class A" to "class_a"
-      const buildingClassMap: Record<string, string> = {
-        "Class A": "class_a",
-        "Class B": "class_b",
-        "Class C": "class_c",
-      };
+      // Calculate total SF from RSF breakdown
+      const totalSF = parseInt(formData.rsf_office || "0") +
+                     parseInt(formData.rsf_warehouse || "0") +
+                     parseInt(formData.rsf_other || "0");
+
+      // Determine property type based on RSF breakdown
+      const propertyType = determinePropertyType(formData.rsf_office, formData.rsf_warehouse);
+
+      // Calculate total parking
+      const totalParking = parseInt(formData.parking_surface || "0") +
+                          parseInt(formData.parking_structured || "0");
+
+      // Build comprehensive notes from GSA fields
+      const notesArray = [
+        `Property Owner: ${formData.property_owner_name}`,
+        `Owner Relationship: ${formData.owner_relationship}`,
+        `UEI: UWYXHXWNH5P8`, // Company UEI number
+        `CAGE: 9RLA8`, // Company CAGE code
+        `RSF Office: ${formData.rsf_office || 0} SF`,
+        `RSF Warehouse: ${formData.rsf_warehouse || 0} SF`,
+        `RSF Other: ${formData.rsf_other || 0} SF`,
+        `ABOA: ${formData.aboa_sf || 0} SF`,
+        `CAF: ${formData.building_caf || 'N/A'}`,
+        `Surface Parking: ${formData.parking_surface || 0} spaces`,
+        `Structured Parking: ${formData.parking_structured || 0} spaces`,
+        `Parking On-site: ${formData.parking_onsite || 'N/A'}`,
+        `Parking Code Required: ${formData.parking_code_required || 0} spaces`,
+        formData.renovation_description ? `Renovation: ${formData.renovation_description}` : null,
+        formData.hvac_weekday_start && formData.hvac_weekday_end ? `HVAC Weekday: ${formData.hvac_weekday_start} - ${formData.hvac_weekday_end}` : null,
+        formData.hvac_saturday_start && formData.hvac_saturday_end ? `HVAC Saturday: ${formData.hvac_saturday_start} - ${formData.hvac_saturday_end}` : null,
+        formData.hvac_sunday_start && formData.hvac_sunday_end ? `HVAC Sunday: ${formData.hvac_sunday_start} - ${formData.hvac_sunday_end}` : null,
+      ].filter(Boolean).join(' | ');
 
       // Prepare data for API
       const listingData: BrokerListingInput = {
@@ -315,10 +360,10 @@ export default function ListPropertyClient() {
         city: formData.city,
         state: formData.state,
         zipcode: formData.zipcode,
-        total_sf: parseInt(formData.total_sf),
-        available_sf: parseInt(formData.available_sf) || parseInt(formData.total_sf),
-        available_date: formData.availableDate || new Date().toISOString().split('T')[0],
-        building_class: (buildingClassMap[formData.building_class] || 'class_a') as 'class_a' | 'class_b' | 'class_c',
+        total_sf: totalSF,
+        available_sf: totalSF, // All space is available for new listings
+        available_date: new Date().toISOString().split('T')[0],
+        building_class: 'class_a' as 'class_a' | 'class_b' | 'class_c', // Default to Class A for GSA
         broker_email: formData.contact_email,
 
         // Optional fields
@@ -328,14 +373,13 @@ export default function ListPropertyClient() {
         lister_role: formData.lister_role as 'owner' | 'broker' | 'agent' | 'salesperson' | undefined,
         license_number: formData.license_number || undefined,
         brokerage_company: formData.brokerage_company || undefined,
-        property_type: (formData.property_type ? propertyTypeMap[formData.property_type] : undefined) as PropertyType | undefined,
+        property_type: propertyType,
         year_built: formData.year_built ? parseInt(formData.year_built) : undefined,
-        asking_rent_sf: formData.lease_rate ? parseFloat(formData.lease_rate) : undefined,
         leed_certified: formData.amenities.includes("LEED Certified"),
         ada_accessible: formData.amenities.includes("ADA Accessible"),
-        parking_spaces: formData.amenities.includes("Parking") ? 50 : undefined,
+        parking_spaces: totalParking > 0 ? totalParking : undefined,
         amenities: formData.amenities,
-        notes: `Ceiling Height: ${formData.ceiling_height}ft. ${formData.column_spacing ? `Column Spacing: ${formData.column_spacing}ft.` : ''}`,
+        notes: notesArray,
         images: imageUrls, // Add uploaded image URLs
       };
 
@@ -403,422 +447,687 @@ export default function ListPropertyClient() {
                 key={currentStep}
                 className="animate-in fade-in slide-in-from-right-4 duration-500"
               >
-          {/* Step 1: Property Location */}
+          {/* Step 1: Property Location & Owner */}
           {currentStep === 1 && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 text-indigo-600">
-                <MapPin className="h-5 w-5" />
-                <h2 className="text-lg font-semibold">Property Location</h2>
-              </div>
-              <p className="text-gray-600 text-sm">
-                Location is the #1 criterion for GSA lease matching
-              </p>
-
-              <div className="space-y-4 mt-6">
-                <div className="space-y-2">
-                  <Label htmlFor="street_address">
-                    Street Address
-                  </Label>
-                  <Input
-                    id="street_address"
-                    placeholder="123 Main Street"
-                    value={formData.street_address}
-                    onChange={(e) => updateFormData("street_address", e.target.value)}
-                  />
+            <div className="space-y-8">
+              {/* Property Location Section */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 text-indigo-600">
+                  <MapPin className="h-5 w-5" />
+                  <h2 className="text-lg font-semibold">Property Location</h2>
                 </div>
+                <p className="text-gray-600 text-sm">
+                  Location is the #1 criterion for GSA lease matching
+                </p>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4 mt-6">
                   <div className="space-y-2">
-                    <Label htmlFor="city">
-                      City
+                    <Label htmlFor="street_address">
+                      Street Address <span className="text-red-500">*</span>
                     </Label>
                     <Input
-                      id="city"
-                      placeholder="Washington"
-                      value={formData.city}
-                      onChange={(e) => updateFormData("city", e.target.value)}
+                      id="street_address"
+                      placeholder="600 W Santa Ana Blvd"
+                      value={formData.street_address}
+                      onChange={(e) => updateFormData("street_address", e.target.value)}
                     />
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">
+                        City <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="city"
+                        placeholder="Santa Ana"
+                        value={formData.city}
+                        onChange={(e) => updateFormData("city", e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="state">
+                        State <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        value={formData.state}
+                        onValueChange={(value) => updateFormData("state", value)}
+                      >
+                        <SelectTrigger id="state">
+                          <SelectValue placeholder="Select state" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {US_STATES.map((state) => (
+                            <SelectItem key={state} value={state}>
+                              {state}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="state">
-                      State
+                    <Label htmlFor="zipcode">
+                      9-Digit ZIP Code <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="zipcode"
+                      placeholder="92701-4554"
+                      value={formData.zipcode}
+                      onChange={(e) => updateFormData("zipcode", e.target.value)}
+                      maxLength={10}
+                    />
+                    <p className="text-xs text-gray-500">Format: 12345-6789</p>
+                  </div>
+
+                  {/* Map Preview */}
+                  <div className="mt-6 border-2 border-gray-300 rounded-lg overflow-hidden bg-gray-100 relative">
+                    <div ref={mapRef} className="w-full h-64" />
+                    {!formData.city && !formData.state && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/90 pointer-events-none rounded-lg">
+                        <MapPin className="h-12 w-12 mb-3 text-gray-400" />
+                        <p className="text-sm text-gray-500">Enter address to see map preview</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-gray-200"></div>
+
+              {/* Property Owner Section */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 text-indigo-600">
+                  <User className="h-5 w-5" />
+                  <h2 className="text-lg font-semibold">Property Owner</h2>
+                </div>
+                <p className="text-gray-600 text-sm">
+                  Information about the property's legal owner
+                </p>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="property_owner_name">
+                      Property Owner's Recorded Name <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="property_owner_name"
+                      placeholder="Civic Center LLC."
+                      value={formData.property_owner_name}
+                      onChange={(e) => updateFormData("property_owner_name", e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-3 border rounded-lg bg-gray-50">
+                    <Checkbox
+                      id="owner_same_as_contact"
+                      checked={formData.owner_same_as_contact}
+                      onCheckedChange={(checked) => updateFormData("owner_same_as_contact", checked as boolean)}
+                    />
+                    <Label htmlFor="owner_same_as_contact" className="cursor-pointer">
+                      Check if same as offeror/contact
+                    </Label>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="owner_relationship">
+                      Your Relationship to Property Owner <span className="text-red-500">*</span>
                     </Label>
                     <Select
-                      value={formData.state}
-                      onValueChange={(value) => updateFormData("state", value)}
+                      value={formData.owner_relationship}
+                      onValueChange={(value) => updateFormData("owner_relationship", value)}
                     >
-                      <SelectTrigger id="state">
-                        <SelectValue placeholder="Select state" />
+                      <SelectTrigger id="owner_relationship">
+                        <SelectValue placeholder="Select relationship" />
                       </SelectTrigger>
                       <SelectContent>
-                        {US_STATES.map((state) => (
-                          <SelectItem key={state} value={state}>
-                            {state}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="owner">Owner</SelectItem>
+                        <SelectItem value="broker">Broker</SelectItem>
+                        <SelectItem value="agent">Agent</SelectItem>
+                        <SelectItem value="property_manager">Property Manager</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="zipcode">
-                    ZIP Code
-                  </Label>
-                  <Input
-                    id="zipcode"
-                    placeholder="20001"
-                    value={formData.zipcode}
-                    onChange={(e) => updateFormData("zipcode", e.target.value)}
-                    maxLength={10}
-                  />
-                </div>
-
-                {/* Map Preview */}
-                <div className="mt-6 border-2 border-gray-300 rounded-lg overflow-hidden bg-gray-100 relative">
-                  <div ref={mapRef} className="w-full h-64" />
-                  {!formData.city && !formData.state && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/90 pointer-events-none rounded-lg">
-                      <MapPin className="h-12 w-12 mb-3 text-gray-400" />
-                      <p className="text-sm text-gray-500">Enter address to see map preview</p>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 2: Property Details (Space Details + Property Type + Pricing & Terms) */}
+          {/* Step 2: Property Overview & Details */}
           {currentStep === 2 && (
             <div className="space-y-8">
-              {/* Space Details Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 text-indigo-600">
-                  <Maximize2 className="h-5 w-5" />
-                  <h2 className="text-lg font-semibold">Space Details</h2>
-                </div>
-                <p className="text-gray-600 text-sm">
-                  Square footage is the #2 criterion for GSA lease matching
-                </p>
-
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="total_sf">
-                        Total Square Footage
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="total_sf"
-                          type="number"
-                          placeholder="50000"
-                          value={formData.total_sf}
-                          onChange={(e) => updateFormData("total_sf", e.target.value)}
-                          className="pr-12"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                          SF
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="available_sf">
-                        Available Square Footage
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="available_sf"
-                          type="number"
-                          placeholder="25000"
-                          value={formData.available_sf}
-                          onChange={(e) => updateFormData("available_sf", e.target.value)}
-                          className="pr-12"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                          SF
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="num_floors">
-                        Number of Floors
-                      </Label>
-                      <Input
-                        id="num_floors"
-                        type="number"
-                        placeholder="5"
-                        value={formData.num_floors}
-                        onChange={(e) => updateFormData("num_floors", e.target.value)}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="floors_available">Floor(s) Available</Label>
-                      <Input
-                        id="floors_available"
-                        placeholder="2, 3, 4"
-                        value={formData.floors_available}
-                        onChange={(e) => updateFormData("floors_available", e.target.value)}
-                      />
-                      <p className="text-xs text-gray-500">Enter floor numbers separated by commas</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="availableDate">
-                        Available Date
-                      </Label>
-                      <Input
-                        id="availableDate"
-                        type="date"
-                        value={formData.availableDate}
-                        onChange={(e) => updateFormData("availableDate", e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="ceiling_height">
-                        Ceiling Height
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="ceiling_height"
-                          type="number"
-                          placeholder="12"
-                          value={formData.ceiling_height}
-                          onChange={(e) => updateFormData("ceiling_height", e.target.value)}
-                          className="pr-12"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                          ft
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="column_spacing">Column Spacing / Clear Span</Label>
-                      <div className="relative">
-                        <Input
-                          id="column_spacing"
-                          type="number"
-                          placeholder="30"
-                          value={formData.column_spacing}
-                          onChange={(e) => updateFormData("column_spacing", e.target.value)}
-                          className="pr-12"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                          ft
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500">For warehouse properties</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div className="border-t border-gray-200"></div>
-
-              {/* Property Type Section */}
+              {/* Building Overview Section */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 text-indigo-600">
                   <Building2 className="h-5 w-5" />
-                  <h2 className="text-lg font-semibold">Property Type</h2>
+                  <h2 className="text-lg font-semibold">Building Overview</h2>
                 </div>
                 <p className="text-gray-600 text-sm">
-                  Property classification is the #3 criterion for GSA matching
-                </p>
-
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <Label>
-                      Property Type
-                    </Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {PROPERTY_TYPES.map((type) => (
-                        <button
-                          key={type.value}
-                          type="button"
-                          onClick={() => updateFormData("property_type", type.value)}
-                          className={`
-                            p-4 border-2 rounded-lg text-left transition-all
-                            ${
-                              formData.property_type === type.value
-                                ? "border-indigo-600 bg-indigo-50"
-                                : "border-gray-200 hover:border-gray-300"
-                            }
-                          `}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-2xl">{type.icon}</span>
-                            <span className="font-medium text-sm">{type.label}</span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label>
-                      Building Class
-                    </Label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {["Class A", "Class B", "Class C"].map((cls) => (
-                        <button
-                          key={cls}
-                          type="button"
-                          onClick={() => updateFormData("building_class", cls)}
-                          className={`
-                            p-4 border-2 rounded-lg font-medium transition-all
-                            ${
-                              formData.building_class === cls
-                                ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                                : "border-gray-200 hover:border-gray-300"
-                            }
-                          `}
-                        >
-                          {cls}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Class A: Premium | Class B: Mid-range | Class C: Budget
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="year_built">
-                        Year Built
-                      </Label>
-                      <Input
-                        id="year_built"
-                        type="number"
-                        placeholder="2005"
-                        value={formData.year_built}
-                        onChange={(e) => updateFormData("year_built", e.target.value)}
-                        min="1800"
-                        max={new Date().getFullYear() + 2}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="year_renovated">Year Renovated</Label>
-                      <Input
-                        id="year_renovated"
-                        type="number"
-                        placeholder="2020"
-                        value={formData.year_renovated}
-                        onChange={(e) => updateFormData("year_renovated", e.target.value)}
-                        min="1800"
-                        max={new Date().getFullYear() + 2}
-                      />
-                      <p className="text-xs text-gray-500">Optional</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div className="border-t border-gray-200"></div>
-
-              {/* Pricing & Terms Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 text-indigo-600">
-                  <FileText className="h-5 w-5" />
-                  <h2 className="text-lg font-semibold">Pricing & Terms</h2>
-                </div>
-                <p className="text-gray-600 text-sm">
-                  Lease terms and pricing information
+                  General building characteristics and layout
                 </p>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="lease_rate">
-                      Annual Lease Rate ($/SF)
+                    <Label htmlFor="num_floors">
+                      Number of Floors in Building <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="num_floors"
+                      type="number"
+                      placeholder="5"
+                      value={formData.num_floors}
+                      onChange={(e) => updateFormData("num_floors", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-gray-200"></div>
+
+              {/* Rentable Square Footage Section */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 text-indigo-600">
+                  <Maximize2 className="h-5 w-5" />
+                  <h2 className="text-lg font-semibold">Total Rentable Square Feet (RSF) in Building</h2>
+                </div>
+                <p className="text-gray-600 text-sm">
+                  Break down the building's rentable square footage by use type
+                </p>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="rsf_office">
+                      General Purpose/Office <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                       <Input
-                        id="lease_rate"
+                        id="rsf_office"
                         type="number"
-                        placeholder="35.00"
-                        value={formData.lease_rate}
-                        onChange={(e) => updateFormData("lease_rate", e.target.value)}
-                        className="pl-8 pr-16"
-                        step="0.01"
+                        placeholder="50000"
+                        value={formData.rsf_office}
+                        onChange={(e) => updateFormData("rsf_office", e.target.value)}
+                        className="pr-12"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                        /SF/Year
+                        SF
                       </span>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="lease_term">
-                      Preferred Lease Term
+                    <Label htmlFor="rsf_warehouse">
+                      Warehouse <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="rsf_warehouse"
+                        type="number"
+                        placeholder="0"
+                        value={formData.rsf_warehouse}
+                        onChange={(e) => updateFormData("rsf_warehouse", e.target.value)}
+                        className="pr-12"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                        SF
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="rsf_other">
+                      Other <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="rsf_other"
+                        type="number"
+                        placeholder="0"
+                        value={formData.rsf_other}
+                        onChange={(e) => updateFormData("rsf_other", e.target.value)}
+                        className="pr-12"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                        SF
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Total RSF Calculation */}
+                  <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-gray-900">Total RSF:</span>
+                      <span className="text-lg font-bold text-indigo-600">
+                        {(parseInt(formData.rsf_office || "0") +
+                          parseInt(formData.rsf_warehouse || "0") +
+                          parseInt(formData.rsf_other || "0")).toLocaleString()} SF
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-gray-200"></div>
+
+              {/* ANSI/BOMA Section */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 text-indigo-600">
+                  <FileText className="h-5 w-5" />
+                  <h2 className="text-lg font-semibold">ANSI/BOMA Measurements</h2>
+                </div>
+                <p className="text-gray-600 text-sm">
+                  Standard building measurement data
+                </p>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="aboa_sf">
+                      Total ANSI/BOMA Occupant Area (ABOA) Square Feet <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="aboa_sf"
+                        type="number"
+                        placeholder="45000"
+                        value={formData.aboa_sf}
+                        onChange={(e) => updateFormData("aboa_sf", e.target.value)}
+                        className="pr-12"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                        SF
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      ABOA = Rentable area minus common areas
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="building_caf">
+                      Building Common Area Factor (CAF) <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="building_caf"
+                        type="number"
+                        step="0.01"
+                        placeholder="1.15"
+                        value={formData.building_caf}
+                        onChange={(e) => updateFormData("building_caf", e.target.value)}
+                        className="pr-12"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                        ratio
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      CAF = RSF ÷ ABOA (typically 1.10-1.20)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-gray-200"></div>
+
+              {/* Parking Section */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 text-indigo-600">
+                  <span className="text-xl">🅿️</span>
+                  <h2 className="text-lg font-semibold">Parking Details</h2>
+                </div>
+                <p className="text-gray-600 text-sm">
+                  Parking facilities under offeror's control
+                </p>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="parking_surface">
+                        Total Surface Parking Spaces <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="parking_surface"
+                        type="number"
+                        placeholder="100"
+                        value={formData.parking_surface}
+                        onChange={(e) => updateFormData("parking_surface", e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="parking_structured">
+                        Total Structured Parking Spaces <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="parking_structured"
+                        type="number"
+                        placeholder="50"
+                        value={formData.parking_structured}
+                        onChange={(e) => updateFormData("parking_structured", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="parking_onsite">
+                      Is All Parking On-site? <span className="text-red-500">*</span>
                     </Label>
                     <Select
-                      value={formData.lease_term}
-                      onValueChange={(value) => updateFormData("lease_term", value)}
+                      value={formData.parking_onsite}
+                      onValueChange={(value) => updateFormData("parking_onsite", value)}
                     >
-                      <SelectTrigger id="lease_term">
-                        <SelectValue placeholder="Select lease term" />
+                      <SelectTrigger id="parking_onsite">
+                        <SelectValue placeholder="Select option" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="5">5 years</SelectItem>
-                        <SelectItem value="10">10 years</SelectItem>
-                        <SelectItem value="15">15 years</SelectItem>
-                        <SelectItem value="20">20 years</SelectItem>
-                        <SelectItem value="flexible">Flexible</SelectItem>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="parking_code_required">
+                      Number of Spaces Required by Local Code <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="parking_code_required"
+                      type="number"
+                      placeholder="150"
+                      value={formData.parking_code_required}
+                      onChange={(e) => updateFormData("parking_code_required", e.target.value)}
+                    />
+                    <p className="text-xs text-gray-500">
+                      Check your local zoning requirements
+                    </p>
+                  </div>
+
+                  {/* Total Parking Calculation */}
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-gray-900">Total Available Parking:</span>
+                      <span className="text-lg font-bold text-blue-600">
+                        {(parseInt(formData.parking_surface || "0") +
+                          parseInt(formData.parking_structured || "0")).toLocaleString()} spaces
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Building History Section */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 text-indigo-600">
+                  <FileText className="h-5 w-5" />
+                  <h2 className="text-lg font-semibold">Building History</h2>
+                </div>
+                <p className="text-gray-600 text-sm">
+                  Construction and renovation timeline
+                </p>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="year_built">
+                      Year Original Building Construction Completed <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="year_built"
+                      type="number"
+                      placeholder="2005"
+                      value={formData.year_built}
+                      onChange={(e) => updateFormData("year_built", e.target.value)}
+                      min="1800"
+                      max={new Date().getFullYear() + 2}
+                    />
+                    <p className="text-xs text-gray-500">
+                      Year the building was ready for initial occupancy
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="renovation_description">
+                      Last Major Building Renovation <span className="text-red-500">*</span>
+                    </Label>
+                    <textarea
+                      id="renovation_description"
+                      placeholder="Civic Center Plaza Towers offers executive suites, custom offices, and Premium Ground Floor spaces. This building features a recently renovated 2-story lobby with striking granite and marble facades—close access to Orange County's John Wayne Airport."
+                      value={formData.renovation_description}
+                      onChange={(e) => updateFormData("renovation_description", e.target.value)}
+                      className="w-full min-h-[120px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 resize-y"
+                      maxLength={250}
+                    />
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs text-gray-500">
+                        Provide year and brief description. If not applicable, enter "N/A" or state reason (ex: new building)
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formData.renovation_description.length}/250
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 3: Features & Amenities */}
+          {/* Step 3: HVAC & Amenities */}
           {currentStep === 3 && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 text-indigo-600">
-                <CheckSquare className="h-5 w-5" />
-                <h2 className="text-lg font-semibold">Features & Amenities</h2>
-              </div>
-              <p className="text-gray-600 text-sm">
-                Select all amenities that apply to your property
-              </p>
-
-              <div className="space-y-3 mt-6">
-                {AMENITIES.map((amenity) => (
-                  <div
-                    key={amenity}
-                    className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50"
-                  >
-                    <Checkbox
-                      id={amenity}
-                      checked={formData.amenities.includes(amenity)}
-                      onCheckedChange={() => toggleAmenity(amenity)}
-                    />
-                    <Label htmlFor={amenity} className="cursor-pointer flex-1">
-                      {amenity}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
-                <p className="text-sm text-indigo-900">
-                  <strong>GSA Requirements:</strong> Most federal agencies require ADA accessibility,
-                  on-site security, and adequate parking.
+            <div className="space-y-8">
+              {/* HVAC Operating Hours Section */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 text-indigo-600">
+                  <span className="text-xl">🌡️</span>
+                  <h2 className="text-lg font-semibold">HVAC Operating Hours</h2>
+                </div>
+                <p className="text-gray-600 text-sm">
+                  Building's normal hours of operation for HVAC included in operating costs <span className="text-red-500">*</span>
                 </p>
+
+                <div className="space-y-6">
+                  {/* Monday - Friday */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold">Monday - Friday Hours</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="hvac_weekday_start">Start Time</Label>
+                        <Select
+                          value={formData.hvac_weekday_start}
+                          onValueChange={(value) => updateFormData("hvac_weekday_start", value)}
+                        >
+                          <SelectTrigger id="hvac_weekday_start">
+                            <SelectValue placeholder="Select start time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 24 }, (_, i) => {
+                              const hour = i === 0 ? 12 : i > 12 ? i - 12 : i;
+                              const period = i < 12 ? 'AM' : 'PM';
+                              return (
+                                <SelectItem key={i} value={`${i}:00`}>
+                                  {hour}:00 {period}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="hvac_weekday_end">End Time</Label>
+                        <Select
+                          value={formData.hvac_weekday_end}
+                          onValueChange={(value) => updateFormData("hvac_weekday_end", value)}
+                        >
+                          <SelectTrigger id="hvac_weekday_end">
+                            <SelectValue placeholder="Select end time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 24 }, (_, i) => {
+                              const hour = i === 0 ? 12 : i > 12 ? i - 12 : i;
+                              const period = i < 12 ? 'AM' : 'PM';
+                              return (
+                                <SelectItem key={i} value={`${i}:00`}>
+                                  {hour}:00 {period}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Saturday */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold">Saturday Hours</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="hvac_saturday_start">Start Time</Label>
+                        <Select
+                          value={formData.hvac_saturday_start}
+                          onValueChange={(value) => updateFormData("hvac_saturday_start", value)}
+                        >
+                          <SelectTrigger id="hvac_saturday_start">
+                            <SelectValue placeholder="Select start time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 24 }, (_, i) => {
+                              const hour = i === 0 ? 12 : i > 12 ? i - 12 : i;
+                              const period = i < 12 ? 'AM' : 'PM';
+                              return (
+                                <SelectItem key={i} value={`${i}:00`}>
+                                  {hour}:00 {period}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="hvac_saturday_end">End Time</Label>
+                        <Select
+                          value={formData.hvac_saturday_end}
+                          onValueChange={(value) => updateFormData("hvac_saturday_end", value)}
+                        >
+                          <SelectTrigger id="hvac_saturday_end">
+                            <SelectValue placeholder="Select end time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 24 }, (_, i) => {
+                              const hour = i === 0 ? 12 : i > 12 ? i - 12 : i;
+                              const period = i < 12 ? 'AM' : 'PM';
+                              return (
+                                <SelectItem key={i} value={`${i}:00`}>
+                                  {hour}:00 {period}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sunday */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold">Sunday Hours</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="hvac_sunday_start">Start Time</Label>
+                        <Select
+                          value={formData.hvac_sunday_start}
+                          onValueChange={(value) => updateFormData("hvac_sunday_start", value)}
+                        >
+                          <SelectTrigger id="hvac_sunday_start">
+                            <SelectValue placeholder="Select start time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 24 }, (_, i) => {
+                              const hour = i === 0 ? 12 : i > 12 ? i - 12 : i;
+                              const period = i < 12 ? 'AM' : 'PM';
+                              return (
+                                <SelectItem key={i} value={`${i}:00`}>
+                                  {hour}:00 {period}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="hvac_sunday_end">End Time</Label>
+                        <Select
+                          value={formData.hvac_sunday_end}
+                          onValueChange={(value) => updateFormData("hvac_sunday_end", value)}
+                        >
+                          <SelectTrigger id="hvac_sunday_end">
+                            <SelectValue placeholder="Select end time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 24 }, (_, i) => {
+                              const hour = i === 0 ? 12 : i > 12 ? i - 12 : i;
+                              const period = i < 12 ? 'AM' : 'PM';
+                              return (
+                                <SelectItem key={i} value={`${i}:00`}>
+                                  {hour}:00 {period}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-900">
+                      <strong>Note:</strong> HVAC hours indicate when heating and cooling are included in the base operating costs. Additional hours may be available at extra charge.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-gray-200"></div>
+
+              {/* Features & Amenities Section */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 text-indigo-600">
+                  <CheckSquare className="h-5 w-5" />
+                  <h2 className="text-lg font-semibold">Features & Amenities</h2>
+                </div>
+                <p className="text-gray-600 text-sm">
+                  Select all amenities that apply to your property
+                </p>
+
+                <div className="space-y-3 mt-6">
+                  {AMENITIES.map((amenity) => (
+                    <div
+                      key={amenity}
+                      className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50"
+                    >
+                      <Checkbox
+                        id={amenity}
+                        checked={formData.amenities.includes(amenity)}
+                        onCheckedChange={() => toggleAmenity(amenity)}
+                      />
+                      <Label htmlFor={amenity} className="cursor-pointer flex-1">
+                        {amenity}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+                  <p className="text-sm text-indigo-900">
+                    <strong>GSA Requirements:</strong> Most federal agencies require ADA accessibility,
+                    on-site security, and adequate parking.
+                  </p>
+                </div>
               </div>
             </div>
           )}
