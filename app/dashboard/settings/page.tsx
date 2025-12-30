@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
-import { Mail, Phone, MapPin, Upload, Lock, User, Bell, Shield } from "lucide-react";
+import { Mail, Phone, MapPin, Upload, Lock, User, Bell, Shield, Database, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -58,12 +58,13 @@ const US_STATES = [
   "West Virginia", "Wisconsin", "Wyoming"
 ];
 
-type TabType = 'profile' | 'security' | 'notifications';
+type TabType = 'profile' | 'security' | 'notifications' | 'data';
 
 const tabs = [
   { id: 'profile', label: 'My Profile', icon: User },
   { id: 'security', label: 'Security', icon: Shield },
   { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'data', label: 'Data Management', icon: Database },
 ];
 
 function SettingsContent() {
@@ -100,6 +101,9 @@ function SettingsContent() {
   // Profile Picture
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // Data Management
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -299,6 +303,37 @@ function SettingsContent() {
       toast.error("Failed to update password");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleRefreshOpportunities = async () => {
+    setIsSyncing(true);
+
+    try {
+      toast.info("Syncing Opportunities", {
+        description: "Fetching latest opportunities from SAM.gov...",
+      });
+
+      const response = await fetch("/api/sync-opportunities", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      toast.success("Sync Complete", {
+        description: `${data.imported || 0} new opportunities imported, ${data.updated || 0} updated`,
+      });
+    } catch (error) {
+      console.error("Error syncing opportunities:", error);
+      toast.error("Sync Failed", {
+        description: error instanceof Error ? error.message : "Failed to sync opportunities",
+      });
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -734,6 +769,70 @@ function SettingsContent() {
                   <Button variant="default">
                     Save Preferences
                   </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Data Management Tab */}
+          {activeTab === 'data' && (
+            <div className="space-y-8">
+              <div>
+                <h1 className="text-3xl font-semibold tracking-tight">Data Management</h1>
+                <p className="text-sm text-gray-600 mt-1">
+                  Manage your data synchronization and system settings
+                </p>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Database className="h-5 w-5" />
+                    Opportunity Sync
+                  </CardTitle>
+                  <CardDescription>
+                    Manually sync federal leasing opportunities from SAM.gov
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600">
+                      The system automatically syncs opportunities from SAM.gov twice weekly (Mondays and Thursdays at 2 AM).
+                      Use this button to trigger an immediate sync if you need the latest data.
+                    </p>
+
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                      <div className="flex items-start gap-3">
+                        <Database className="h-5 w-5 text-blue-600 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-blue-900">
+                            What happens during sync:
+                          </p>
+                          <ul className="mt-2 space-y-1 text-sm text-blue-800">
+                            <li>• Fetches latest GSA lease opportunities from SAM.gov</li>
+                            <li>• Updates existing opportunities with new information</li>
+                            <li>• Imports new opportunities that match your criteria</li>
+                            <li>• Triggers automated PDF processing for RAG chat features</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={handleRefreshOpportunities}
+                      disabled={isSyncing}
+                      className="gap-2 bg-[#5B3FD9] hover:bg-[#4A2FB8]"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                      {isSyncing ? 'Syncing from SAM.gov...' : 'Sync Opportunities Now'}
+                    </Button>
+
+                    {isSyncing && (
+                      <p className="text-sm text-gray-500">
+                        This may take 5-10 seconds depending on the number of opportunities...
+                      </p>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </div>

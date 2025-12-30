@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
 import { SAMOpportunity } from "@/lib/sam-gov";
@@ -71,9 +71,6 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
 
   // Saved opportunities
   const [savedOpportunities, setSavedOpportunities] = useState<Set<string>>(new Set());
-
-  // Sync state
-  const [isSyncing, setIsSyncing] = useState(false);
 
   const { toast } = useToast();
 
@@ -179,44 +176,6 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
       console.error("Error fetching submitted inquiries:", error);
     }
   }, []);
-
-  const handleRefreshOpportunities = async () => {
-    setIsSyncing(true);
-
-    try {
-      toast({
-        title: "Syncing Opportunities",
-        description: "Fetching latest opportunities from SAM.gov...",
-      });
-
-      const response = await fetch("/api/sync-opportunities", {
-        method: "POST",
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      toast({
-        title: "Sync Complete",
-        description: `${data.imported || 0} new opportunities imported, ${data.updated || 0} updated`,
-      });
-
-      // Refresh the opportunities list
-      await fetchOpportunities();
-    } catch (error) {
-      console.error("Error syncing opportunities:", error);
-      toast({
-        title: "Sync Failed",
-        description: error instanceof Error ? error.message : "Failed to sync opportunities",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSyncing(false);
-    }
-  };
 
   useEffect(() => {
     fetchOpportunities();
@@ -452,21 +411,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
                 <TabsContent value="opportunities" className="m-0 bg-gray-50 h-full">
                   {/* Header with Toggle */}
                   <div className="bg-white p-4 border-b">
-                    <div className="flex items-center justify-between mb-3">
-                      <h2 className="text-xl font-bold text-gray-900">Federal Lease Opportunities</h2>
-
-                      {/* Refresh Button */}
-                      <Button
-                        onClick={handleRefreshOpportunities}
-                        disabled={isSyncing}
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                      >
-                        <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                        {isSyncing ? 'Syncing...' : 'Refresh Data'}
-                      </Button>
-                    </div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-3">Federal Lease Opportunities</h2>
 
                     {/* Modern Toggle */}
                     <div className="inline-flex items-center gap-1 p-1 bg-gray-100 rounded-full">
