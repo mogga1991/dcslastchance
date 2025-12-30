@@ -1,17 +1,22 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-  ChevronDown, 
-  ChevronUp, 
+import { useState, useEffect } from 'react';
+import {
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
   Calendar,
   MapPin,
   Building2,
-  Sparkles
+  Sparkles,
+  Mail,
+  FileText,
+  Phone
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { ScoreBreakdown, ScoreBadge } from './score-breakdown';
 import { OpportunitySummaryCard, SummaryButton } from '@/components/opportunity-summary';
+import { Button } from '@/components/ui/button';
 
 // =============================================================================
 // TYPES
@@ -102,9 +107,47 @@ function getGradeColor(grade: string): string {
 function MatchCard({ match }: { match: OpportunityMatch }) {
   const [expanded, setExpanded] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
-  
+  const [aiInsight, setAiInsight] = useState<string | null>(null);
+  const [loadingInsight, setLoadingInsight] = useState(false);
+  const supabase = createClient();
+
   const opp = match.opportunity;
   const breakdown = match.score_breakdown;
+
+  // Fetch AI insight from notifications table
+  useEffect(() => {
+    if (expanded) {
+      loadAIInsight();
+    }
+  }, [expanded]);
+
+  async function loadAIInsight() {
+    try {
+      setLoadingInsight(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Try to find AI-generated notification for this match
+      const { data } = await supabase
+        .from('notifications')
+        .select('ai_insight')
+        .eq('user_id', user.id)
+        .eq('opportunity_id', match.opportunity_id)
+        .eq('ai_generated', true)
+        .not('ai_insight', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (data?.ai_insight) {
+        setAiInsight(data.ai_insight);
+      }
+    } catch (error) {
+      console.error('Error loading AI insight:', error);
+    } finally {
+      setLoadingInsight(false);
+    }
+  }
   
   return (
     <div className="border rounded-lg bg-white shadow-sm overflow-hidden">
@@ -166,39 +209,77 @@ function MatchCard({ match }: { match: OpportunityMatch }) {
       {/* Expanded Content */}
       {expanded && (
         <div className="border-t bg-gray-50">
-          {/* Action Bar */}
-          <div className="px-4 py-2 border-b bg-white flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <button
+          {/* AI Insight Section - Prominently Displayed */}
+          {aiInsight && (
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-b-2 border-purple-200 p-5">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="h-4 w-4 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h5 className="font-semibold text-purple-900 mb-1">AI Match Insight</h5>
+                  <p className="text-sm text-purple-800 leading-relaxed">{aiInsight}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {loadingInsight && !aiInsight && (
+            <div className="bg-gray-50 p-4 border-b">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Sparkles className="h-4 w-4 animate-pulse" />
+                <span>Loading AI insights...</span>
+              </div>
+            </div>
+          )}
+
+          {/* Action CTAs */}
+          <div className="p-4 border-b bg-white">
+            <div className="flex flex-wrap gap-2">
+              {opp.notice_id && (
+                <Button
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`https://sam.gov/opp/${opp.notice_id}/view`, '_blank');
+                  }}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View Full Listing on SAM.gov
+                </Button>
+              )}
+
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowSummary(!showSummary);
                 }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  showSummary 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                }`}
+                className="border-purple-300 hover:bg-purple-50"
               >
-                <Sparkles className="w-4 h-4" />
-                {showSummary ? 'Hide AI Summary' : 'Show AI Summary'}
-              </button>
+                <Sparkles className="h-4 w-4 mr-2" />
+                {showSummary ? 'Hide Details' : 'Show AI Summary'}
+              </Button>
+
+              {opp.solicitation_number && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`https://sam.gov/search/?index=opp&page=1&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&q=${encodeURIComponent(opp.solicitation_number)}`, '_blank');
+                  }}
+                  className="border-gray-300 hover:bg-gray-50"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Search by Solicitation #
+                </Button>
+              )}
             </div>
-            
-            {opp.notice_id && (
-              <a
-                href={`https://sam.gov/opp/${opp.notice_id}/view`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-              >
-                View on SAM.gov
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            )}
           </div>
-          
+
           {/* AI Summary Section */}
           {showSummary && (
             <div className="p-4 border-b">

@@ -157,6 +157,18 @@ export default function PropertyCard({
             {getStatusBadge(property.status)}
           </div>
 
+          {/* Match Badge - Tinder Style */}
+          {hasMatches && matches.opportunity_count > 0 && (
+            <div className="absolute top-3 left-3 z-10 ml-24">
+              <div className="relative group">
+                <div className="h-9 px-3 flex items-center justify-center bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold rounded-full shadow-lg border-2 border-white cursor-pointer hover:scale-105 transition-transform">
+                  <span className="text-sm">🔥 {matches.opportunity_count} {matches.opportunity_count === 1 ? 'Match' : 'Matches'}</span>
+                </div>
+                <div className="absolute -bottom-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+              </div>
+            </div>
+          )}
+
           {/* Actions Menu */}
           <div className="absolute top-3 right-3 z-10" onClick={(e) => e.preventDefault()}>
             <PropertyActionsMenu
