@@ -51,7 +51,7 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
-  serverExternalPackages: ['better-auth', '@polar-sh/better-auth'],
+  serverExternalPackages: ['better-auth', '@polar-sh/better-auth', 'pdf-parse'],
 };
 
 export default nextConfig;
