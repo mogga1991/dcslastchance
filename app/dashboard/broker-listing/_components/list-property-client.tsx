@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,13 @@ import type { BrokerListingInput, PropertyType } from "@/types/broker-listing";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { uploadImages } from "@/lib/upload-images";
+
+// Declare google as a global variable
+declare global {
+  interface Window {
+    google: typeof google;
+  }
+}
 
 const US_STATES = [
   "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -88,6 +95,10 @@ export default function ListPropertyClient() {
   const supabase = createClient();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [marker, setMarker] = useState<google.maps.Marker | null>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [formData, setFormData] = useState({
     // Step 1: Property Location
     street_address: "",
@@ -149,6 +160,92 @@ export default function ListPropertyClient() {
 
     loadUserProfile();
   }, [supabase]);
+
+  // Load Google Maps script
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+    if (!apiKey) {
+      console.error("Google Maps API key not found");
+      return;
+    }
+
+    // Check if already loaded
+    if (window.google?.maps) {
+      setIsMapLoaded(true);
+      return;
+    }
+
+    // Create script element
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => setIsMapLoaded(true);
+    script.onerror = () => console.error("Failed to load Google Maps script");
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup: remove script if component unmounts before loading
+      if (!isMapLoaded) {
+        document.head.removeChild(script);
+      }
+    };
+  }, []);
+
+  // Initialize Google Maps after script loads
+  useEffect(() => {
+    if (!isMapLoaded || !mapRef.current || map) return;
+
+    const newMap = new window.google.maps.Map(mapRef.current, {
+      center: { lat: 39.8283, lng: -98.5795 }, // Center of USA
+      zoom: 4,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+    });
+
+    setMap(newMap);
+  }, [isMapLoaded, map]);
+
+  // Geocode address and update map when location fields change
+  useEffect(() => {
+    if (!map || !window.google) return;
+
+    const fullAddress = `${formData.street_address}, ${formData.city}, ${formData.state} ${formData.zipcode}`.trim();
+
+    // Only geocode if we have at least city and state
+    if (!formData.city || !formData.state) {
+      return;
+    }
+
+    const geocoder = new window.google.maps.Geocoder();
+
+    geocoder.geocode({ address: fullAddress }, (results, status) => {
+      if (status === "OK" && results && results[0]) {
+        const location = results[0].geometry.location;
+
+        // Update map center and zoom
+        map.setCenter(location);
+        map.setZoom(15);
+
+        // Remove old marker if exists
+        if (marker) {
+          marker.setMap(null);
+        }
+
+        // Add new marker
+        const newMarker = new window.google.maps.Marker({
+          position: location,
+          map: map,
+          title: formData.street_address || "Your Property",
+        });
+
+        setMarker(newMarker);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.street_address, formData.city, formData.state, formData.zipcode, map]);
 
   const updateFormData = (field: string, value: string | string[] | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -378,12 +475,15 @@ export default function ListPropertyClient() {
                   />
                 </div>
 
-                {/* Map Preview Placeholder */}
-                <div className="mt-6 border-2 border-dashed border-gray-300 rounded-lg p-12 bg-gray-50">
-                  <div className="flex flex-col items-center justify-center text-gray-400">
-                    <MapPin className="h-12 w-12 mb-3" />
-                    <p className="text-sm">Map preview will appear here</p>
-                  </div>
+                {/* Map Preview */}
+                <div className="mt-6 border-2 border-gray-300 rounded-lg overflow-hidden bg-gray-100 relative">
+                  <div ref={mapRef} className="w-full h-64" />
+                  {!formData.city && !formData.state && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/90 pointer-events-none rounded-lg">
+                      <MapPin className="h-12 w-12 mb-3 text-gray-400" />
+                      <p className="text-sm text-gray-500">Enter address to see map preview</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

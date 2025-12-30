@@ -55,6 +55,7 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
   const [opportunitiesError, setOpportunitiesError] = useState<string | null>(null);
   const [listingsError, setListingsError] = useState<string | null>(null);
   const [pinFilteredOpportunities, setPinFilteredOpportunities] = useState<SAMOpportunity[] | null>(null);
+  const [pinFilteredListings, setPinFilteredListings] = useState<PublicBrokerListing[] | null>(null);
 
   // Chat view state
   const [showChatView, setShowChatView] = useState(false);
@@ -184,10 +185,11 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
     fetchSubmittedInquiries();
   }, [fetchOpportunities, fetchBrokerListings, fetchSavedOpportunities, fetchSubmittedInquiries]);
 
-  // Set filtered listings to all listings (search removed)
+  // Set filtered listings to all listings, or pinFiltered if a pin was clicked
   useEffect(() => {
-    setFilteredListings(brokerListings);
-  }, [brokerListings]);
+    // Use pinFilteredListings if available (when user clicks a pin), otherwise use all listings
+    setFilteredListings(pinFilteredListings || brokerListings);
+  }, [brokerListings, pinFilteredListings]);
 
   const handleSaveOpportunity = async (opportunity: SAMOpportunity) => {
     try {
@@ -256,6 +258,23 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
 
   const clearPinFilter = () => {
     setPinFilteredOpportunities(null);
+  };
+
+  const handleListingPinClick = (listing: PublicBrokerListing) => {
+    setPinFilteredListings([listing]); // Single listing array
+    setSelectedListing(listing); // Also select it
+  };
+
+  const clearListingPinFilter = () => {
+    setPinFilteredListings(null);
+    setSelectedListing(null);
+  };
+
+  const handleViewDetailsFromMap = () => {
+    if (selectedListing) {
+      setDetailListing(selectedListing);
+      setShowListingDetail(true);
+    }
   };
 
   // IOLP alert management removed - no longer available
@@ -595,6 +614,31 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
                   </div>
 
                   <div className="p-3">
+                    {/* Pin Filter Notification */}
+                    {pinFilteredListings && pinFilteredListings.length > 0 && (
+                      <div className="mb-4 p-3 bg-orange-50 border-2 border-orange-300 rounded-lg flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            1
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-orange-900">
+                              Viewing selected property: {pinFilteredListings[0].title}
+                            </p>
+                            <p className="text-xs text-orange-700">Click on map pins to view different properties</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={clearListingPinFilter}
+                          className="border-orange-300 text-orange-700 hover:bg-orange-100"
+                        >
+                          Show All
+                        </Button>
+                      </div>
+                    )}
+
                     {listingsError ? (
                     <div className="flex flex-col items-center justify-center py-12 px-4">
                       <div className="text-center max-w-sm">
@@ -669,8 +713,10 @@ export default function GSALeasingClient({ userEmail }: GSALeasingClientProps) {
                 selectedOpportunity={selectedOpportunity}
                 selectedListing={selectedListing}
                 onOpportunityClick={setSelectedOpportunity}
-                onListingClick={setSelectedListing}
+                onListingClick={handleListingPinClick}
                 onPinClick={handlePinClick}
+                onInfoCardClose={clearListingPinFilter}
+                onViewDetails={handleViewDetailsFromMap}
                 center={mapCenter ?? undefined}
               />
 

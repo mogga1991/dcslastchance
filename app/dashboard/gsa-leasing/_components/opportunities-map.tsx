@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SAMOpportunity } from "@/lib/sam-gov";
 import type { PublicBrokerListing } from "@/types/broker-listing";
+import { FloatingInfoCard } from "./floating-info-card";
 
 interface OpportunitiesMapProps {
   opportunities: SAMOpportunity[];
@@ -12,6 +13,8 @@ interface OpportunitiesMapProps {
   onOpportunityClick?: (opportunity: SAMOpportunity) => void;
   onListingClick?: (listing: PublicBrokerListing) => void;
   onPinClick?: (opportunities: SAMOpportunity[]) => void;
+  onInfoCardClose?: () => void;
+  onViewDetails?: () => void;
   center?: { lat: number; lng: number };
 }
 
@@ -31,6 +34,8 @@ export function OpportunitiesMap({
   onOpportunityClick,
   onListingClick,
   onPinClick,
+  onInfoCardClose,
+  onViewDetails,
   center,
 }: OpportunitiesMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -385,174 +390,18 @@ export function OpportunitiesMap({
         zIndex: 100, // Higher z-index so listings appear above opportunities
       });
 
-      // Create InfoWindow for the listing
-      const infoContent = `
-        <div style="width: 340px; font-family: system-ui, -apple-system, sans-serif; line-height: 1.4; animation: fadeInSlideUp 0.5s ease-out;">
-          <style>
-            @keyframes fadeInSlideUp {
-              from {
-                opacity: 0;
-                transform: translateY(10px);
-              }
-              to {
-                opacity: 1;
-                transform: translateY(0);
-              }
-            }
-          </style>
-          ${listing.images && listing.images.length > 0 ? `
-            <img
-              src="${listing.images[0]}"
-              alt="${listing.title || 'Property'}"
-              style="width: 100%; height: 180px; object-fit: cover; border-radius: 6px 6px 0 0; margin: -16px -16px 14px -16px; display: block;"
-            />
-          ` : ''}
-          <div style="padding: ${listing.images && listing.images.length > 0 ? '0 2px' : '6px 2px'};">
-            <h3 style="font-size: 15px; font-weight: 600; margin: 0 0 10px 0; color: #1f2937; line-height: 1.3;">
-              ${listing.title || 'Property Details'}
-            </h3>
-            <div style="margin-bottom: 12px;">
-              <p style="font-size: 13px; color: #6b7280; margin: 0 0 2px 0; line-height: 1.4;">
-                ${listing.street_address}${listing.suite_unit ? `, ${listing.suite_unit}` : ''}
-              </p>
-              <p style="font-size: 13px; color: #6b7280; margin: 0;">
-                ${listing.city}, ${listing.state} ${listing.zipcode}
-              </p>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-              <div style="font-size: 12px;">
-                <div style="color: #9ca3af; margin-bottom: 2px;">Type</div>
-                <div style="color: #1f2937; font-weight: 600; text-transform: capitalize;">
-                  ${listing.property_type?.replace(/_/g, ' ') || 'N/A'}
-                </div>
-              </div>
-              ${listing.building_class ? `
-                <div style="font-size: 12px;">
-                  <div style="color: #9ca3af; margin-bottom: 2px;">Class</div>
-                  <div style="color: #1f2937; font-weight: 600; text-transform: uppercase;">
-                    ${listing.building_class.replace('class_', 'Class ')}
-                  </div>
-                </div>
-              ` : ''}
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-              <div style="font-size: 12px;">
-                <div style="color: #9ca3af; margin-bottom: 2px;">Available Space</div>
-                <div style="color: #1f2937; font-weight: 600;">
-                  ${listing.available_sf?.toLocaleString() || listing.total_sf?.toLocaleString() || 'N/A'} SF
-                </div>
-              </div>
-              ${listing.asking_rent_sf && listing.asking_rent_sf > 0 ? `
-                <div style="font-size: 12px;">
-                  <div style="color: #9ca3af; margin-bottom: 2px;">Rate</div>
-                  <div style="color: #1f2937; font-weight: 600;">
-                    $${listing.asking_rent_sf.toFixed(2)}/SF/yr
-                  </div>
-                </div>
-              ` : ''}
-            </div>
-
-            ${listing.lease_type ? `
-              <div style="font-size: 12px; margin-bottom: 12px;">
-                <span style="color: #9ca3af;">Lease Type:</span>
-                <span style="color: #1f2937; font-weight: 600; text-transform: capitalize; margin-left: 6px;">
-                  ${listing.lease_type.replace(/_/g, ' ')}
-                </span>
-              </div>
-            ` : ''}
-
-            ${(listing.ada_accessible || listing.leed_certified || listing.parking_spaces || listing.year_built) ? `
-              <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;">
-                ${listing.ada_accessible ? `
-                  <span style="padding: 5px 10px; background: #dbeafe; color: #1e40af; font-size: 11px; font-weight: 500; border-radius: 4px; white-space: nowrap;">
-                    ADA Accessible
-                  </span>
-                ` : ''}
-                ${listing.leed_certified ? `
-                  <span style="padding: 5px 10px; background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 500; border-radius: 4px; white-space: nowrap;">
-                    LEED Certified
-                  </span>
-                ` : ''}
-                ${listing.parking_spaces && listing.parking_spaces > 0 ? `
-                  <span style="padding: 5px 10px; background: #f3f4f6; color: #374151; font-size: 11px; font-weight: 500; border-radius: 4px; white-space: nowrap;">
-                    ${listing.parking_spaces} Parking
-                  </span>
-                ` : ''}
-                ${listing.year_built ? `
-                  <span style="padding: 5px 10px; background: #f3f4f6; color: #374151; font-size: 11px; font-weight: 500; border-radius: 4px; white-space: nowrap;">
-                    Built ${listing.year_built}
-                  </span>
-                ` : ''}
-              </div>
-            ` : ''}
-
-            ${listing.available_date ? `
-              <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 12px;">
-                <span style="color: #9ca3af;">Available:</span>
-                <span style="color: #1f2937; font-weight: 600; margin-left: 6px;">
-                  ${new Date(listing.available_date).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </span>
-              </div>
-            ` : ''}
-          </div>
-        </div>
-      `;
-
-      const infoWindow = new google.maps.InfoWindow({
-        content: infoContent,
-        maxWidth: 380,
-      });
-
-      // Listen for InfoWindow close event
-      infoWindow.addListener('closeclick', () => {
-        // Smooth zoom out to show all USA
-        const usaCenter = { lat: 39.8283, lng: -98.5795 }; // Center of USA
-        map.panTo(usaCenter);
-
-        // Smooth zoom transition back to USA view
-        const targetZoom = 4; // USA-level zoom
-        const currentZoom = map.getZoom() || 18;
-        const zoomStep = currentZoom > targetZoom ? -1 : 1;
-
-        const smoothZoom = (current: number, target: number) => {
-          if (current !== target) {
-            const next = current + zoomStep;
-            map.setZoom(next);
-            setTimeout(() => smoothZoom(next, target), 100); // Slightly slower for zoom out
-          }
-        };
-
-        smoothZoom(currentZoom, targetZoom);
-
-        // Clear the selected listing
-        if (onListingClick) {
-          onListingClick(null as any);
-        }
-      });
-
-      // Click handler for listing
+      // Click handler for listing - simplified (no InfoWindow)
       marker.addListener("click", () => {
-        // Close any open info windows
-        listingMarkers.forEach((m) => {
-          const iw = (m as any).infoWindow;
-          if (iw) iw.close();
-        });
-
+        // Notify parent that listing was clicked
         if (onListingClick) {
           onListingClick(listing);
         }
 
-        // Smooth zoom and pan to the listing location first
+        // Smooth zoom and pan to the listing location
         map.panTo(position);
 
-        // Smooth zoom transition to building level (not too close)
-        const targetZoom = 14; // Neighborhood-level zoom to keep InfoWindow visible
+        // Smooth zoom transition to neighborhood level
+        const targetZoom = 14;
         const currentZoom = map.getZoom() || 4;
         const zoomStep = currentZoom < targetZoom ? 1 : -1;
 
@@ -561,25 +410,13 @@ export function OpportunitiesMap({
             const next = current + zoomStep;
             map.setZoom(next);
             setTimeout(() => smoothZoom(next, target), 80);
-          } else {
-            // Once zoom is complete, adjust the pan to center the marker and InfoWindow
-            setTimeout(() => {
-              // Pan down by 150 pixels to give space for InfoWindow above the marker
-              map.panBy(0, -150);
-
-              // Open the info window after re-centering
-              setTimeout(() => {
-                infoWindow.open(map, marker);
-              }, 200);
-            }, 100);
           }
         };
 
         smoothZoom(currentZoom, targetZoom);
       });
 
-      // Store the info window reference and listing ID on the marker for later access
-      (marker as any).infoWindow = infoWindow;
+      // Store the listing ID on the marker for later access
       (marker as any).listingId = listing.id;
 
       newListingMarkers.push(marker);
@@ -605,7 +442,7 @@ export function OpportunitiesMap({
     });
   }, [map, geocoder, selectedOpportunity]);
 
-  // Highlight selected listing - trigger marker click to zoom and open InfoWindow
+  // Highlight selected listing - pan to marker position
   useEffect(() => {
     if (!map || !selectedListing || listingMarkers.length === 0 || !window.google) return;
 
@@ -615,14 +452,56 @@ export function OpportunitiesMap({
     );
 
     if (marker) {
-      // Trigger the marker's click event to zoom and open InfoWindow
-      window.google.maps.event.trigger(marker, 'click');
+      // Just pan to the marker (FloatingInfoCard will show the details)
+      const position = marker.getPosition();
+      if (position) {
+        map.panTo(position);
+      }
     }
   }, [map, selectedListing, listingMarkers]);
 
   return (
     <div className="relative w-full h-full">
       <div ref={mapRef} className="w-full h-full" />
+
+      {/* Floating Info Card for Selected Listing */}
+      {selectedListing && (
+        <FloatingInfoCard
+          listing={selectedListing}
+          onClose={() => {
+            if (onInfoCardClose) {
+              onInfoCardClose();
+            }
+
+            // Zoom back to USA view
+            if (map) {
+              const usaCenter = { lat: 39.8283, lng: -98.5795 };
+              map.panTo(usaCenter);
+
+              // Smooth zoom transition back to USA view
+              const targetZoom = 4;
+              const currentZoom = map.getZoom() || 14;
+              const zoomStep = currentZoom > targetZoom ? -1 : 1;
+
+              const smoothZoom = (current: number, target: number) => {
+                if (current !== target) {
+                  const next = current + zoomStep;
+                  map.setZoom(next);
+                  setTimeout(() => smoothZoom(next, target), 80);
+                }
+              };
+
+              smoothZoom(currentZoom, targetZoom);
+            }
+          }}
+          onViewDetails={() => {
+            if (onViewDetails) {
+              onViewDetails();
+            }
+          }}
+          position="right"
+        />
+      )}
 
       {/* Map Legend */}
       <div className="absolute bottom-6 left-6 bg-white rounded-lg shadow-lg p-4 border border-gray-200">
