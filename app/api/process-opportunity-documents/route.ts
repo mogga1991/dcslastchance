@@ -155,10 +155,17 @@ export async function POST(request: NextRequest) {
             `[Process Documents API] Total tokens: ${totalTokens}, Estimated cost: $${embeddingCost.toFixed(4)}`
           );
 
-          // Step 6: Generate embeddings and upsert to Pinecone
-          await embeddingService.upsertChunks(chunks, documentId, opportunityId);
+          // Step 6: Convert TextChunks to DocumentChunks
+          const documentChunks = chunks.map((chunk) => ({
+            ...chunk,
+            documentId,
+            opportunityId,
+          }));
 
-          // Step 7: Store metadata in Supabase
+          // Step 7: Generate embeddings and upsert to Pinecone
+          await embeddingService.upsertChunks(documentChunks, documentId, opportunityId);
+
+          // Step 8: Store metadata in Supabase
           try {
             const sectionMetadata = {
               sections: documentStructure.sections.map((s) => ({
