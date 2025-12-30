@@ -141,8 +141,8 @@ export async function GET(request: NextRequest) {
         matchScore: match.overall_score,
         grade: match.grade,
         factors: match.score_breakdown?.factors || {},
-        property: match.broker_listings,
-        opportunity: match.opportunities,
+        property: match.broker_listings as any,
+        opportunity: match.opportunities as any,
       }));
 
       try {
@@ -171,7 +171,8 @@ export async function GET(request: NextRequest) {
 
     // Perfect matches: Immediate push + in-app
     for (const match of perfectMatches) {
-      const property = match.broker_listings;
+      const property = match.broker_listings as any;
+      const opportunity = match.opportunities as any;
       const insightKey = `${match.property_id}:${match.opportunity_id}`;
       const aiInsight = insights.get(insightKey);
 
@@ -180,7 +181,7 @@ export async function GET(request: NextRequest) {
         type: 'perfect_match',
         priority: 'urgent',
         title: '🎯 Perfect Match Found!',
-        message: `Your property at ${property.street_address} is a ${match.overall_score}% match for "${match.opportunities.title}"`,
+        message: `Your property at ${property.street_address} is a ${match.overall_score}% match for "${opportunity.title}"`,
         actionLabel: 'View Match',
         actionUrl: `/dashboard/my-properties?match=${match.id}`,
         propertyId: match.property_id,
@@ -197,7 +198,8 @@ export async function GET(request: NextRequest) {
 
     // High-quality matches: In-app only (or push if user prefers)
     for (const match of highQualityMatches) {
-      const property = match.broker_listings;
+      const property = match.broker_listings as any;
+      const opportunity = match.opportunities as any;
       const insightKey = `${match.property_id}:${match.opportunity_id}`;
       const aiInsight = insights.get(insightKey);
 
@@ -206,7 +208,7 @@ export async function GET(request: NextRequest) {
         type: 'high_quality_match',
         priority: 'high',
         title: '🌟 High-Quality Match',
-        message: `${property.street_address} matches "${match.opportunities.title}" (${match.overall_score}%)`,
+        message: `${property.street_address} matches "${opportunity.title}" (${match.overall_score}%)`,
         actionLabel: 'View Details',
         actionUrl: `/dashboard/my-properties?match=${match.id}`,
         propertyId: match.property_id,
@@ -223,14 +225,15 @@ export async function GET(request: NextRequest) {
 
     // Standard matches: In-app only, low priority
     for (const match of standardMatches) {
-      const property = match.broker_listings;
+      const property = match.broker_listings as any;
+      const opportunity = match.opportunities as any;
 
       await notificationQueue.queue({
         userId: property.user_id,
         type: 'new_match',
         priority: 'normal',
         title: 'New Match Found',
-        message: `${property.street_address} matches "${match.opportunities.title}" (${match.overall_score}%)`,
+        message: `${property.street_address} matches "${opportunity.title}" (${match.overall_score}%)`,
         actionLabel: 'View',
         actionUrl: `/dashboard/my-properties?match=${match.id}`,
         propertyId: match.property_id,
