@@ -400,8 +400,8 @@ export function OpportunitiesMap({
         // Smooth zoom and pan to the listing location
         map.panTo(position);
 
-        // Smooth zoom transition to neighborhood level
-        const targetZoom = 14;
+        // Smooth zoom transition to city level
+        const targetZoom = 10; // City level zoom (changed from 14 for neighborhood)
         const currentZoom = map.getZoom() || 4;
         const zoomStep = currentZoom < targetZoom ? 1 : -1;
 
