@@ -126,6 +126,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/slug": "^5.0.9",
+    "@types/web-push": "^3.6.4",
     "drizzle-kit": "^0.31.4",
     "drizzle-zod": "^0.8.3",
     "eslint": "^9",
