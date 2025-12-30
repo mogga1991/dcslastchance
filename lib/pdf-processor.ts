@@ -4,8 +4,10 @@
  * Downloads, extracts, and chunks PDF documents from SAM.gov
  */
 
-import pdf from 'pdf-parse';
 import type { DocumentSection, DocumentStructure } from './document-structure-analyzer';
+
+// @ts-ignore - pdf-parse uses CommonJS export
+const pdf = require('pdf-parse');
 
 /**
  * Allowed domains for PDF downloads (security)
