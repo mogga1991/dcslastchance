@@ -324,8 +324,27 @@ function SettingsContent() {
 
       const data = await response.json();
 
+      // Extract stats from the response
+      const total = data.stats?.total || 0;
+      const inserted = data.stats?.inserted || 0;
+      const updated = data.stats?.updated || 0;
+      const errors = data.stats?.errors || 0;
+
+      // Create a detailed message
+      let description = `Checked ${total} opportunities from SAM.gov. `;
+
+      if (inserted > 0 || updated > 0) {
+        description += `${inserted} new, ${updated} updated.`;
+      } else {
+        description += "All opportunities are up to date.";
+      }
+
+      if (errors > 0) {
+        description += ` ${errors} errors occurred.`;
+      }
+
       toast.success("Sync Complete", {
-        description: `${data.imported || 0} new opportunities imported, ${data.updated || 0} updated`,
+        description,
       });
     } catch (error) {
       console.error("Error syncing opportunities:", error);
