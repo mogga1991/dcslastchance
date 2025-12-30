@@ -19,21 +19,32 @@ export async function uploadImages(
   const supabase = createClient();
   const results: UploadResult[] = [];
 
+  console.log(`[Image Upload] Starting upload of ${files.length} file(s) to folder: ${folder}`);
+
   // Get current user
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    throw new Error('Authentication required to upload images');
+    const errorMsg = 'Authentication required to upload images';
+    console.error('[Image Upload] Auth error:', authError?.message || 'No user');
+    throw new Error(errorMsg);
   }
 
-  for (const file of files) {
+  console.log(`[Image Upload] User authenticated: ${user.id}`);
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    console.log(`[Image Upload] Processing file ${i + 1}/${files.length}: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`);
+
     try {
       // Validate file type
       if (!file.type.startsWith('image/')) {
+        const error = `${file.name} is not an image file (type: ${file.type})`;
+        console.warn(`[Image Upload] ${error}`);
         results.push({
           url: '',
           path: '',
-          error: `${file.name} is not an image file`
+          error
         });
         continue;
       }
@@ -41,10 +52,12 @@ export async function uploadImages(
       // Validate file size (max 10MB)
       const maxSize = 10 * 1024 * 1024; // 10MB in bytes
       if (file.size > maxSize) {
+        const error = `${file.name} exceeds 10MB limit (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        console.warn(`[Image Upload] ${error}`);
         results.push({
           url: '',
           path: '',
-          error: `${file.name} exceeds 10MB limit`
+          error
         });
         continue;
       }
@@ -56,6 +69,8 @@ export async function uploadImages(
       const fileName = `${timestamp}-${randomString}.${fileExt}`;
       const filePath = `${folder}/${user.id}/${fileName}`;
 
+      console.log(`[Image Upload] Uploading to path: ${filePath}`);
+
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from('uploads')
@@ -65,7 +80,7 @@ export async function uploadImages(
         });
 
       if (error) {
-        console.error('Upload error:', error);
+        console.error(`[Image Upload] Upload failed for ${file.name}:`, error);
         results.push({
           url: '',
           path: '',
@@ -79,20 +94,27 @@ export async function uploadImages(
         .from('uploads')
         .getPublicUrl(filePath);
 
+      console.log(`[Image Upload] ✅ Success: ${file.name} -> ${publicUrl}`);
+
       results.push({
         url: publicUrl,
         path: filePath,
       });
 
     } catch (error) {
-      console.error('Error uploading file:', file.name, error);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[Image Upload] Unexpected error for ${file.name}:`, error);
       results.push({
         url: '',
         path: '',
-        error: `Unexpected error uploading ${file.name}`
+        error: `Unexpected error uploading ${file.name}: ${errorMsg}`
       });
     }
   }
+
+  const successCount = results.filter(r => r.url).length;
+  const failCount = results.filter(r => r.error).length;
+  console.log(`[Image Upload] Complete: ${successCount} succeeded, ${failCount} failed`);
 
   return results;
 }
