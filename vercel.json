@@ -3,16 +3,12 @@
   "buildCommand": "next build",
   "crons": [
     {
-      "path": "/api/sync-opportunities",
-      "schedule": "0 13 * * 1,4"
+      "path": "/api/cron/sync-match-notify",
+      "schedule": "0 13 * * *"
     },
     {
       "path": "/api/cron/sync-federal-data",
       "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/match-properties",
-      "schedule": "30 2 * * *"
     },
     {
       "path": "/api/cron/cleanup-cache",
