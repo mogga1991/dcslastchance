@@ -30,12 +30,12 @@ export default function PropertyActionsMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="ghost"
+          variant="secondary"
           size="sm"
           disabled={disabled}
-          className="h-8 w-8 p-0"
+          className="h-9 w-9 p-0 bg-white/90 hover:bg-white shadow-md border border-gray-200"
         >
-          <MoreVertical className="h-4 w-4" />
+          <MoreVertical className="h-5 w-5 text-gray-700" />
           <span className="sr-only">Open menu</span>
         </Button>
       </DropdownMenuTrigger>

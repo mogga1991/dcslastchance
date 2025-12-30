@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -19,10 +21,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
-import { Upload } from "lucide-react";
+import { Mail, Phone, MapPin, Upload, Lock, User, Bell, Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface UserData {
   id: string;
@@ -31,9 +34,11 @@ interface UserData {
     name?: string;
     full_name?: string;
     avatar_url?: string;
-    country?: string;
-    state?: string;
     phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
     lister_role?: 'owner' | 'broker' | 'agent' | 'salesperson';
     license_number?: string;
     brokerage_company?: string;
@@ -53,23 +58,46 @@ const US_STATES = [
   "West Virginia", "Wisconsin", "Wyoming"
 ];
 
+type TabType = 'profile' | 'security' | 'notifications';
+
+const tabs = [
+  { id: 'profile', label: 'My Profile', icon: User },
+  { id: 'security', label: 'Security', icon: Shield },
+  { id: 'notifications', label: 'Notifications', icon: Bell },
+];
+
 function SettingsContent() {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('profile');
   const router = useRouter();
   const supabase = createClient();
 
-  // Profile form states
-  const [fullName, setFullName] = useState("");
-  const [country, setCountry] = useState("United States");
-  const [state, setState] = useState("");
+  // Personal Info
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zipCode, setZipCode] = useState("");
+
+  // Broker Info
   const [listerRole, setListerRole] = useState<'owner' | 'broker' | 'agent' | 'salesperson' | ''>('');
   const [licenseNumber, setLicenseNumber] = useState("");
   const [brokerageCompany, setBrokerageCompany] = useState("");
 
-  // Profile picture upload states
+  // Password
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Notification Preferences
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [smsNotifications, setSmsNotifications] = useState(false);
+
+  // Profile Picture
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -84,10 +112,18 @@ function SettingsContent() {
         }
 
         setUser(user as UserData);
-        setFullName(user.user_metadata?.full_name || user.user_metadata?.name || "");
-        setCountry(user.user_metadata?.country || "United States");
-        setState(user.user_metadata?.state || "");
+
+        // Parse full name into first and last
+        const fullName = user.user_metadata?.full_name || user.user_metadata?.name || "";
+        const nameParts = fullName.split(" ");
+        setFirstName(nameParts[0] || "");
+        setLastName(nameParts.slice(1).join(" ") || "");
+
         setPhone(user.user_metadata?.phone || "");
+        setAddress(user.user_metadata?.address || "");
+        setCity(user.user_metadata?.city || "");
+        setState(user.user_metadata?.state || "");
+        setZipCode(user.user_metadata?.zip_code || "");
         setListerRole(user.user_metadata?.lister_role || '');
         setLicenseNumber(user.user_metadata?.license_number || "");
         setBrokerageCompany(user.user_metadata?.brokerage_company || "");
@@ -105,13 +141,17 @@ function SettingsContent() {
   const handleUpdateProfile = async () => {
     setSaving(true);
     try {
+      const fullName = `${firstName} ${lastName}`.trim();
+
       const { error } = await supabase.auth.updateUser({
         data: {
           full_name: fullName,
           name: fullName,
-          country: country,
-          state: state,
           phone: phone,
+          address: address,
+          city: city,
+          state: state,
+          zip_code: zipCode,
           lister_role: listerRole || undefined,
           license_number: licenseNumber || undefined,
           brokerage_company: brokerageCompany || undefined,
@@ -122,10 +162,9 @@ function SettingsContent() {
 
       toast.success("Profile updated successfully");
 
-      // Refresh user data
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUser(user as UserData);
+      const { data: { user: updatedUser } } = await supabase.auth.getUser();
+      if (updatedUser) {
+        setUser(updatedUser as UserData);
       }
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -138,7 +177,6 @@ function SettingsContent() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file size (max 1MB)
       if (file.size > 1024 * 1024) {
         toast.error("Image must be less than 1MB");
         return;
@@ -158,13 +196,12 @@ function SettingsContent() {
 
     setSaving(true);
     try {
-      // Upload to Supabase Storage
       const fileExt = profileImage.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      const filePath = `avatars/${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from('uploads')
         .upload(filePath, profileImage, {
           cacheControl: '3600',
           upsert: false
@@ -172,12 +209,10 @@ function SettingsContent() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
+        .from('uploads')
         .getPublicUrl(filePath);
 
-      // Update user metadata
       const { error: updateError } = await supabase.auth.updateUser({
         data: {
           avatar_url: publicUrl,
@@ -190,15 +225,78 @@ function SettingsContent() {
       setImagePreview(null);
       setProfileImage(null);
 
-      // Refresh user data
       const { data: { user: updatedUser } } = await supabase.auth.getUser();
       if (updatedUser) {
         setUser(updatedUser as UserData);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error uploading profile picture:", error);
-      toast.error(error.message || "Failed to upload profile picture");
+      toast.error(error instanceof Error ? error.message : "Failed to upload profile picture");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRemoveProfilePicture = async () => {
+    if (!user) return;
+
+    setSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          avatar_url: null,
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success("Profile picture removed successfully");
+      setImagePreview(null);
+      setProfileImage(null);
+
+      const { data: { user: updatedUser } } = await supabase.auth.getUser();
+      if (updatedUser) {
+        setUser(updatedUser as UserData);
+      }
+    } catch (error: unknown) {
+      console.error("Error removing profile picture:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to remove profile picture");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error("Please fill in all password fields");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast.success("Password updated successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      console.error("Error updating password:", error);
+      toast.error("Failed to update password");
     } finally {
       setSaving(false);
     }
@@ -206,250 +304,441 @@ function SettingsContent() {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-6 p-6">
-        {/* Header Skeleton */}
-        <div>
-          <Skeleton className="h-9 w-32 mb-2 bg-gray-200 dark:bg-gray-800" />
+      <div className="flex h-full">
+        <div className="w-64 border-r bg-gray-50 p-6">
+          <Skeleton className="h-8 w-full bg-gray-200 mb-4" />
+          <Skeleton className="h-8 w-full bg-gray-200 mb-2" />
+          <Skeleton className="h-8 w-full bg-gray-200 mb-2" />
         </div>
-
-        {/* Tabs Skeleton */}
-        <div className="w-full max-w-4xl">
-          <div className="flex space-x-1 mb-6">
-            <Skeleton className="h-10 w-20 bg-gray-200 dark:bg-gray-800" />
-            <Skeleton className="h-10 w-28 bg-gray-200 dark:bg-gray-800" />
-            <Skeleton className="h-10 w-16 bg-gray-200 dark:bg-gray-800" />
-          </div>
-
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-40 bg-gray-200 dark:bg-gray-800" />
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center gap-4">
-                <Skeleton className="h-20 w-20 rounded-full bg-gray-200 dark:bg-gray-800" />
-                <Skeleton className="h-10 w-32 bg-gray-200 dark:bg-gray-800" />
-              </div>
-              <Skeleton className="h-10 w-full bg-gray-200 dark:bg-gray-800" />
-              <Skeleton className="h-10 w-full bg-gray-200 dark:bg-gray-800" />
-            </CardContent>
-          </Card>
+        <div className="flex-1 p-6">
+          <Skeleton className="h-9 w-32 bg-gray-200 mb-6" />
+          <Skeleton className="h-96 w-full bg-gray-200" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
+    <div className="flex h-full">
+      {/* Left Sidebar Navigation */}
+      <div className="w-64 border-r bg-gray-50 p-6">
+        <div className="space-y-1">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as TabType)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all",
+                  activeTab === tab.id
+                    ? "bg-[#5B3FD9] text-white shadow-md"
+                    : "text-gray-700 hover:bg-gray-100"
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="font-medium">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="w-full max-w-4xl space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Avatar Upload */}
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage
-                    src={imagePreview || user?.user_metadata?.avatar_url || ""}
-                    alt="Profile picture"
-                  />
-                  <AvatarFallback className="bg-blue-100 text-blue-700">
-                    {fullName
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase() || user?.email?.[0]?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="space-y-2">
-                  <div className="flex gap-2">
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-auto">
+        <div className="max-w-4xl mx-auto p-8">
+          {/* My Profile Tab */}
+          {activeTab === 'profile' && (
+            <div className="space-y-8">
+              <div>
+                <h1 className="text-3xl font-semibold tracking-tight">My Profile</h1>
+              </div>
+
+              {/* Profile Picture Upload */}
+              <div className="border-b pb-8">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-20 w-20 ring-2 ring-gray-100">
+                    <AvatarImage
+                      src={imagePreview || user?.user_metadata?.avatar_url || ""}
+                      alt="Profile picture"
+                    />
+                    <AvatarFallback className="bg-purple-100 text-[#5B3FD9] text-2xl">
+                      {firstName[0]?.toUpperCase() || ""}{lastName[0]?.toUpperCase() || ""}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex items-center gap-3">
                     <Button
                       variant="default"
-                      size="sm"
-                      className="gap-2"
+                      size="default"
+                      className="gap-2 bg-[#5B3FD9] hover:bg-[#4A2FB8]"
                       onClick={() =>
                         document.getElementById("profile-image-input")?.click()
                       }
                       disabled={saving}
                     >
-                      <Upload className="h-4 w-4" />
-                      Upload photo
+                      + Change Image
                     </Button>
-                    {profileImage && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleUploadProfilePicture}
-                          disabled={saving}
-                        >
-                          {saving ? "Saving..." : "Save"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setImagePreview(null);
-                            setProfileImage(null);
-                          }}
-                          disabled={saving}
-                        >
-                          Cancel
-                        </Button>
-                      </>
+                    {user?.user_metadata?.avatar_url && (
+                      <Button
+                        variant="outline"
+                        size="default"
+                        className="text-gray-700"
+                        onClick={handleRemoveProfilePicture}
+                        disabled={saving}
+                      >
+                        Remove Image
+                      </Button>
                     )}
+                    <input
+                      id="profile-image-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
                   </div>
-                  <input
-                    id="profile-image-input"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
                 </div>
+                <p className="text-sm text-gray-500 mt-3 ml-24">
+                  We support PNGs, JPEGs and GIFs under 1MB
+                </p>
+                {profileImage && (
+                  <div className="flex gap-2 mt-4 ml-24">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={handleUploadProfilePicture}
+                      disabled={saving}
+                      className="bg-[#5B3FD9] hover:bg-[#4A2FB8]"
+                    >
+                      {saving ? "Saving..." : "Save Changes"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setProfileImage(null);
+                      }}
+                      disabled={saving}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
               </div>
 
-              {/* Full Name */}
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full name</Label>
-                <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Sarah Mitchell"
-                  className="bg-white border-gray-300"
-                />
-              </div>
+              {/* Personal Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Personal Information</CardTitle>
+                  <CardDescription>
+                    Update your personal details
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input
+                        id="firstName"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="John"
+                      />
+                    </div>
 
-              {/* Email (disabled) */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={user?.email || ""}
-                  disabled
-                  className="bg-gray-100 border-gray-300"
-                />
-              </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Doe"
+                      />
+                    </div>
+                  </div>
 
-              {/* Country */}
-              <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
-                <Select value={country} onValueChange={setCountry}>
-                  <SelectTrigger className="bg-white border-gray-300">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="United States">🇺🇸 United States</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      Email Address
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={user?.email || ""}
+                      disabled
+                      className="bg-gray-50"
+                    />
+                  </div>
 
-              {/* State */}
-              <div className="space-y-2">
-                <Label htmlFor="state">State</Label>
-                <Select value={state} onValueChange={setState}>
-                  <SelectTrigger className="bg-white border-gray-300">
-                    <SelectValue placeholder="Select a state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {US_STATES.map((stateName) => (
-                      <SelectItem key={stateName} value={stateName}>
-                        {stateName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="flex items-center gap-2">
+                      <Phone className="h-4 w-4" />
+                      Phone
+                    </Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+1 (555) 123-4567"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-              {/* Phone */}
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 (555) 123-4567"
-                  className="bg-white border-gray-300"
-                />
-              </div>
+              {/* Address */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    Address
+                  </CardTitle>
+                  <CardDescription>
+                    Your location information
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Street Address</Label>
+                    <Input
+                      id="address"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="123 Main Street"
+                    />
+                  </div>
 
-              {/* Lister Role */}
-              <div className="space-y-2">
-                <Label htmlFor="listerRole">Your Role</Label>
-                <Select value={listerRole} onValueChange={(value) => setListerRole(value as 'owner' | 'broker' | 'agent' | 'salesperson')}>
-                  <SelectTrigger className="bg-white border-gray-300">
-                    <SelectValue placeholder="Select your role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="owner">Property Owner</SelectItem>
-                    <SelectItem value="broker">Broker</SelectItem>
-                    <SelectItem value="agent">Real Estate Agent</SelectItem>
-                    <SelectItem value="salesperson">Salesperson</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-gray-500">
-                  This helps us auto-fill your information when listing properties
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder="Washington"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State</Label>
+                      <Select value={state} onValueChange={setState}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select state" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {US_STATES.map((stateName) => (
+                            <SelectItem key={stateName} value={stateName}>
+                              {stateName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="zipCode">ZIP Code</Label>
+                      <Input
+                        id="zipCode"
+                        value={zipCode}
+                        onChange={(e) => setZipCode(e.target.value)}
+                        placeholder="20001"
+                        maxLength={5}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Broker Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Professional Information</CardTitle>
+                  <CardDescription>
+                    Your broker and real estate credentials
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="listerRole">Your Role</Label>
+                    <Select value={listerRole} onValueChange={(value) => setListerRole(value as 'owner' | 'broker' | 'agent' | 'salesperson')}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="owner">Property Owner</SelectItem>
+                        <SelectItem value="broker">Broker</SelectItem>
+                        <SelectItem value="agent">Real Estate Agent</SelectItem>
+                        <SelectItem value="salesperson">Salesperson</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {listerRole && listerRole !== 'owner' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="licenseNumber">
+                          Real Estate License Number
+                          {(listerRole === 'broker' || listerRole === 'agent') && (
+                            <span className="text-red-500 ml-1">*</span>
+                          )}
+                        </Label>
+                        <Input
+                          id="licenseNumber"
+                          value={licenseNumber}
+                          onChange={(e) => setLicenseNumber(e.target.value)}
+                          placeholder="Enter your license number"
+                          required={listerRole === 'broker' || listerRole === 'agent'}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="brokerageCompany">
+                          Brokerage Company <span className="text-red-500 ml-1">*</span>
+                        </Label>
+                        <Input
+                          id="brokerageCompany"
+                          value={brokerageCompany}
+                          onChange={(e) => setBrokerageCompany(e.target.value)}
+                          placeholder="Enter your brokerage company name"
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <Button onClick={handleUpdateProfile} disabled={saving}>
+                    {saving ? "Saving..." : "Save Changes"}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Security Tab */}
+          {activeTab === 'security' && (
+            <div className="space-y-8">
+              <div>
+                <h1 className="text-3xl font-semibold tracking-tight">Security</h1>
+                <p className="text-sm text-gray-600 mt-1">
+                  Manage your password and security settings
                 </p>
               </div>
 
-              {/* License Number - Show only for broker/agent/salesperson */}
-              {listerRole && listerRole !== 'owner' && (
-                <div className="space-y-2">
-                  <Label htmlFor="licenseNumber">
-                    Real Estate License Number
-                    {(listerRole === 'broker' || listerRole === 'agent') && (
-                      <span className="text-red-500 ml-1">*</span>
-                    )}
-                  </Label>
-                  <Input
-                    id="licenseNumber"
-                    value={licenseNumber}
-                    onChange={(e) => setLicenseNumber(e.target.value)}
-                    placeholder="Enter your license number"
-                    className="bg-white border-gray-300"
-                    required={listerRole === 'broker' || listerRole === 'agent'}
-                  />
-                  <p className="text-sm text-gray-500">
-                    {listerRole === 'salesperson'
-                      ? 'Optional for salespersons'
-                      : 'Required for brokers and agents'}
-                  </p>
-                </div>
-              )}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Lock className="h-5 w-5" />
+                    Change Password
+                  </CardTitle>
+                  <CardDescription>
+                    Update your account password
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="currentPassword">Current Password</Label>
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Enter current password"
+                    />
+                  </div>
 
-              {/* Brokerage Company - Show only for broker/agent/salesperson */}
-              {listerRole && listerRole !== 'owner' && (
-                <div className="space-y-2">
-                  <Label htmlFor="brokerageCompany">
-                    Brokerage Company <span className="text-red-500 ml-1">*</span>
-                  </Label>
-                  <Input
-                    id="brokerageCompany"
-                    value={brokerageCompany}
-                    onChange={(e) => setBrokerageCompany(e.target.value)}
-                    placeholder="Enter your brokerage company name"
-                    className="bg-white border-gray-300"
-                    required
-                  />
-                  <p className="text-sm text-gray-500">
-                    Name of the company you work for
-                  </p>
-                </div>
-              )}
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                    />
+                  </div>
 
-              <Button onClick={handleUpdateProfile} disabled={saving}>
-                {saving ? "Saving..." : "Save information"}
-              </Button>
-            </CardContent>
-          </Card>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm new password"
+                    />
+                  </div>
+
+                  <Button
+                    onClick={handleChangePassword}
+                    disabled={saving || !currentPassword || !newPassword || !confirmPassword}
+                  >
+                    {saving ? "Updating..." : "Update Password"}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Notifications Tab */}
+          {activeTab === 'notifications' && (
+            <div className="space-y-8">
+              <div>
+                <h1 className="text-3xl font-semibold tracking-tight">Notifications</h1>
+                <p className="text-sm text-gray-600 mt-1">
+                  Manage how you receive updates and alerts
+                </p>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Notification Preferences</CardTitle>
+                  <CardDescription>
+                    Choose how you want to be notified about opportunities and matches
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="emailNotifications" className="text-base font-medium">
+                        Email Notifications
+                      </Label>
+                      <p className="text-sm text-gray-500">
+                        Receive updates about new GSA leasing opportunities
+                      </p>
+                    </div>
+                    <Switch
+                      id="emailNotifications"
+                      checked={emailNotifications}
+                      onCheckedChange={setEmailNotifications}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="smsNotifications" className="text-base font-medium">
+                        SMS Notifications
+                      </Label>
+                      <p className="text-sm text-gray-500">
+                        Get text alerts for high-priority matches
+                      </p>
+                    </div>
+                    <Switch
+                      id="smsNotifications"
+                      checked={smsNotifications}
+                      onCheckedChange={setSmsNotifications}
+                    />
+                  </div>
+
+                  <Button variant="default">
+                    Save Preferences
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -459,9 +748,12 @@ export default function SettingsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex flex-col gap-6 p-6">
-          <div>
-            <div className="h-9 w-32 mb-2 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-md" />
+        <div className="flex h-full">
+          <div className="w-64 border-r bg-gray-50 p-6">
+            <Skeleton className="h-8 w-full bg-gray-200" />
+          </div>
+          <div className="flex-1 p-6">
+            <Skeleton className="h-9 w-32 bg-gray-200" />
           </div>
         </div>
       }

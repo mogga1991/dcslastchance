@@ -15,9 +15,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, MapPin, Maximize2, DollarSign, ArrowLeft } from "lucide-react";
+import { Building2, MapPin, Maximize2, DollarSign, ArrowLeft, Upload, X, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import Image from "next/image";
+import { uploadImages } from "@/lib/upload-images";
 
 const US_STATES = [
   "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -87,6 +89,8 @@ export default function EditPropertyClient() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [newPhotos, setNewPhotos] = useState<File[]>([]);
   const [formData, setFormData] = useState<PropertyFormData>({
     title: "",
     description: "",
@@ -169,6 +173,9 @@ export default function EditPropertyClient() {
         notes: data.notes || "",
         status: data.status || "active",
       });
+
+      // Set existing images
+      setExistingImages(data.images || []);
     } catch (error) {
       console.error("Error fetching property:", error);
       toast.error("Failed to load property");
@@ -183,6 +190,17 @@ export default function EditPropertyClient() {
     setSaving(true);
 
     try {
+      // Upload new photos if any
+      let newImageUrls: string[] = [];
+      if (newPhotos.length > 0) {
+        toast.info("Uploading images...");
+        const uploadResults = await uploadImages(newPhotos, "broker-listings");
+        newImageUrls = uploadResults.filter((r) => r.url).map((r) => r.url);
+      }
+
+      // Combine existing images with new uploads
+      const allImages = [...existingImages, ...newImageUrls];
+
       // Prepare update data
       const updateData = {
         title: formData.title || null,
@@ -206,6 +224,7 @@ export default function EditPropertyClient() {
         leed_certified: formData.leed_certified,
         notes: formData.notes || null,
         status: formData.status,
+        images: allImages,
       };
 
       const response = await fetch(`/api/broker-listings/${propertyId}`, {
@@ -232,6 +251,21 @@ export default function EditPropertyClient() {
 
   const updateFormData = (field: keyof PropertyFormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setNewPhotos((prev) => [...prev, ...files]);
+    }
+  };
+
+  const removeNewPhoto = (index: number) => {
+    setNewPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingImage = (index: number) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   if (loading) {
@@ -598,6 +632,106 @@ export default function EditPropertyClient() {
                 rows={4}
               />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Photos */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ImageIcon className="h-5 w-5 text-indigo-600" />
+              Property Photos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Existing Images */}
+            {existingImages.length > 0 && (
+              <div>
+                <Label className="mb-3 block">Current Images</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {existingImages.map((url, index) => (
+                    <div key={index} className="relative group">
+                      <div className="relative h-32 rounded-lg overflow-hidden border-2 border-gray-200">
+                        <Image
+                          src={url}
+                          alt={`Property image ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute -top-2 -right-2 h-7 w-7 rounded-full p-0 shadow-md"
+                        onClick={() => removeExistingImage(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* New Photos Preview */}
+            {newPhotos.length > 0 && (
+              <div>
+                <Label className="mb-3 block">New Images to Upload</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {newPhotos.map((file, index) => (
+                    <div key={index} className="relative group">
+                      <div className="relative h-32 rounded-lg overflow-hidden border-2 border-indigo-200 bg-indigo-50">
+                        <Image
+                          src={URL.createObjectURL(file)}
+                          alt={`New image ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute -top-2 -right-2 h-7 w-7 rounded-full p-0 shadow-md"
+                        onClick={() => removeNewPhoto(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Upload Button */}
+            <div className="flex items-center justify-center w-full">
+              <Label
+                htmlFor="photo-upload"
+                className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <Upload className="w-8 h-8 mb-2 text-gray-500" />
+                  <p className="mb-2 text-sm text-gray-500">
+                    <span className="font-semibold">Click to upload</span> or drag and drop
+                  </p>
+                  <p className="text-xs text-gray-500">PNG, JPG or WEBP (MAX. 5MB)</p>
+                </div>
+                <Input
+                  id="photo-upload"
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  multiple
+                  onChange={handlePhotoSelect}
+                />
+              </Label>
+            </div>
+
+            <p className="text-sm text-gray-500">
+              Total images: {existingImages.length + newPhotos.length}
+              {newPhotos.length > 0 && ` (${newPhotos.length} new)`}
+            </p>
           </CardContent>
         </Card>
 

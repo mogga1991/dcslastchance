@@ -1,6 +1,5 @@
 import { ReactNode } from "react";
-import DashboardTopNav from "./_components/navbar";
-import DashboardSideBar from "./_components/sidebar";
+import HorizontalNav from "./_components/horizontal-nav";
 // MVP: Hidden for initial launch - uncomment when AI chat is ready
 // import Chatbot from "./_components/chatbot";
 
@@ -10,10 +9,10 @@ export default async function DashboardLayout({
   children: ReactNode;
 }) {
   return (
-    <div className="flex h-screen overflow-hidden w-full bg-white">
-      <DashboardSideBar />
+    <div className="flex flex-col h-screen overflow-hidden w-full bg-white">
+      <HorizontalNav />
       <main className="flex-1 overflow-y-auto bg-white">
-        <DashboardTopNav>{children}</DashboardTopNav>
+        {children}
       </main>
       {/* MVP: Hidden for initial launch - uncomment when AI chat is ready */}
       {/* <Chatbot /> */}

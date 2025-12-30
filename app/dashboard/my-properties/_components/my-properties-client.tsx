@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Building2 } from "lucide-react";
 import { toast } from "sonner";
-import EnhancedStatsCards from "./enhanced-stats-cards";
-import PropertiesTable from "./properties-table";
+import PropertyCard from "./property-card";
 
 interface BrokerListing {
   id: string;
@@ -26,6 +25,7 @@ interface BrokerListing {
   views_count: number | null;
   created_at: string;
   available_date: string;
+  images: string[] | null;
 }
 
 interface PropertyMatch {
@@ -207,46 +207,6 @@ export default function MyPropertiesClient() {
     }
   };
 
-
-  // Calculate stats
-  const stats = useMemo(() => {
-    const totalViews = properties.reduce(
-      (sum, p) => sum + (p.views_count || 0),
-      0
-    );
-    const totalMatches = Object.values(matches).reduce(
-      (sum, match) => sum + match.opportunity_count,
-      0
-    );
-    const matchScores = Object.values(matches)
-      .filter((m) => m.best_match_score > 0)
-      .map((m) => m.best_match_score);
-    const averageMatchScore =
-      matchScores.length > 0
-        ? Math.round(
-            matchScores.reduce((sum, score) => sum + score, 0) /
-              matchScores.length
-          )
-        : 0;
-
-    // Properties expiring in next 30 days
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    const expiringsSoon = properties.filter((p) => {
-      const availDate = new Date(p.available_date);
-      return availDate <= thirtyDaysFromNow && availDate >= new Date();
-    }).length;
-
-    return {
-      totalProperties: properties.length,
-      activeListings: properties.filter((p) => p.status === "active").length,
-      totalMatches,
-      totalViews,
-      averageMatchScore,
-      expiringsSoon,
-    };
-  }, [properties, matches]);
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -285,18 +245,18 @@ export default function MyPropertiesClient() {
           </p>
         </div>
 
-        {/* Enhanced Stats Cards */}
-        <div className="mb-8">
-          <EnhancedStatsCards stats={stats} />
+        {/* Properties Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {properties.map((property) => (
+            <PropertyCard
+              key={property.id}
+              property={property}
+              matches={matches[property.id]}
+              onDelete={handleDelete}
+              deletingId={deletingId}
+            />
+          ))}
         </div>
-
-        {/* Properties Table */}
-        <PropertiesTable
-          properties={properties}
-          matches={matches}
-          onDelete={handleDelete}
-          deletingId={deletingId}
-        />
       </div>
     </div>
   );

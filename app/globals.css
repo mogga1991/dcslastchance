@@ -60,7 +60,12 @@
     --color-command-blue: #1E3A5F;
     --color-command-blue-rgb: 30, 58, 95;
 
-    /* Signal Orange - Primary accent, CTAs, highlights */
+    /* FedSpace Purple - Primary brand color, CTAs, highlights */
+    --color-fedspace-purple: #5B3FD9;
+    --color-fedspace-purple-rgb: 91, 63, 217;
+    --color-fedspace-purple-dark: #4A2FB8;
+
+    /* Signal Orange - Secondary accent (legacy) */
     --color-signal-orange: #F97316;
     --color-signal-orange-rgb: 249, 115, 22;
     --color-signal-orange-dark: #EA580C;
@@ -97,32 +102,32 @@
     --card-foreground: var(--color-scout-navy);
     --popover: var(--color-white);
     --popover-foreground: var(--color-scout-navy);
-    --primary: var(--color-signal-orange);
+    --primary: var(--color-fedspace-purple);
     --primary-foreground: var(--color-white);
     --secondary: var(--color-slate-100);
     --secondary-foreground: var(--color-scout-navy);
     --muted: var(--color-slate-100);
     --muted-foreground: var(--color-slate-600);
-    --accent: var(--color-signal-orange);
+    --accent: var(--color-fedspace-purple);
     --accent-foreground: var(--color-white);
     --destructive: #EF4444;
     --destructive-foreground: var(--color-white);
     --border: var(--color-slate-200);
     --input: var(--color-white);
-    --ring: var(--color-signal-orange);
-    --chart-1: var(--color-signal-orange);
+    --ring: var(--color-fedspace-purple);
+    --chart-1: var(--color-fedspace-purple);
     --chart-2: var(--color-radar-green);
     --chart-3: #3B82F6;
     --chart-4: #F59E0B;
     --chart-5: var(--color-command-blue);
     --sidebar: var(--color-white);
     --sidebar-foreground: var(--color-scout-navy);
-    --sidebar-primary: var(--color-signal-orange);
+    --sidebar-primary: var(--color-fedspace-purple);
     --sidebar-primary-foreground: var(--color-white);
     --sidebar-accent: var(--color-slate-100);
     --sidebar-accent-foreground: var(--color-scout-navy);
     --sidebar-border: var(--color-slate-200);
-    --sidebar-ring: var(--color-signal-orange);
+    --sidebar-ring: var(--color-fedspace-purple);
 
     /* ============================================
        TYPOGRAPHY

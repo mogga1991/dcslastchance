@@ -81,11 +81,11 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sort_by') || 'created_at';
     const sortOrder = (searchParams.get('sort_order') || 'desc') as 'asc' | 'desc';
 
-    // Build query - Query the 'properties' table (Supabase uses plural)
+    // Build query - Query the 'broker_listings' table
     let query = supabase
-      .from('properties')
+      .from('broker_listings')
       .select('*', { count: 'exact' })
-      .eq('status', 'available'); // Only show available properties publicly
+      .eq('status', 'active'); // Only show active listings publicly
 
     // Apply filters
     const propertyType = searchParams.get('property_type');
@@ -156,45 +156,45 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Transform property data to match PublicBrokerListing format
-    const transformedData: PublicBrokerListing[] = (data || []).map((property: any) => ({
-      id: property.id,
-      user_id: property.broker_id,
-      lister_role: 'broker' as const,
-      title: property.property_name || `${property.address}, ${property.city}, ${property.state}`,
-      description: `${property.available_sf.toLocaleString()} SF available at ${property.address}`,
-      property_type: 'office' as const, // Default to office
-      status: 'active' as const,
-      street_address: property.address,
-      suite_unit: undefined,
-      city: property.city,
-      state: property.state,
-      zipcode: property.zip || '',
-      latitude: property.latitude ? parseFloat(property.latitude) : 0,
-      longitude: property.longitude ? parseFloat(property.longitude) : 0,
-      total_sf: property.total_sf,
-      available_sf: property.available_sf,
-      min_divisible_sf: property.min_divisible_sf,
-      asking_rent_sf: property.asking_rent_per_sf ? parseFloat(property.asking_rent_per_sf) : 0,
-      lease_type: 'full_service' as const,
-      available_date: property.available_date || new Date().toISOString(),
-      building_class: property.building_class || undefined,
-      ada_accessible: false, // Not in property table
-      parking_spaces: property.parking_spaces || 0,
-      leed_certified: property.leed_certified || false,
-      year_built: property.year_built,
-      notes: undefined,
-      features: [], // Not in property table
-      amenities: [], // Not in property table
-      gsa_eligible: false, // Not in property table
-      set_aside_eligible: [],
-      federal_score: undefined,
-      federal_score_data: undefined,
-      images: property.images || [],
-      views_count: 0,
-      created_at: property.created_at,
-      updated_at: property.updated_at,
-      published_at: property.created_at
+    // Data is already in the correct format from broker_listings table
+    const transformedData: PublicBrokerListing[] = (data || []).map((listing: any) => ({
+      id: listing.id,
+      user_id: listing.user_id,
+      lister_role: listing.lister_role || 'broker',
+      title: listing.title,
+      description: listing.description,
+      property_type: listing.property_type,
+      status: listing.status,
+      street_address: listing.street_address,
+      suite_unit: listing.suite_unit,
+      city: listing.city,
+      state: listing.state,
+      zipcode: listing.zipcode,
+      latitude: listing.latitude,
+      longitude: listing.longitude,
+      total_sf: listing.total_sf,
+      available_sf: listing.available_sf,
+      min_divisible_sf: listing.min_divisible_sf,
+      asking_rent_sf: listing.asking_rent_sf,
+      lease_type: listing.lease_type,
+      available_date: listing.available_date,
+      building_class: listing.building_class,
+      ada_accessible: listing.ada_accessible,
+      parking_spaces: listing.parking_spaces,
+      leed_certified: listing.leed_certified,
+      year_built: listing.year_built,
+      notes: listing.notes,
+      features: listing.features || [],
+      amenities: listing.amenities || [],
+      gsa_eligible: listing.gsa_eligible,
+      set_aside_eligible: listing.set_aside_eligible || [],
+      federal_score: listing.federal_score,
+      federal_score_data: listing.federal_score_data,
+      images: listing.images || [],
+      views_count: listing.views_count || 0,
+      created_at: listing.created_at,
+      updated_at: listing.updated_at,
+      published_at: listing.published_at
     }));
 
     return NextResponse.json({

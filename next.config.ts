@@ -31,6 +31,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "randomuser.me",
       },
+      {
+        protocol: "https",
+        hostname: "xgeigainkrobwgwapego.supabase.co",
+      },
     ],
   },
   webpack: (config, { isServer }) => {

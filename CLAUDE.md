@@ -94,6 +94,66 @@ After setting the SAM_API_KEY:
 
 ---
 
+## 🚨 CRITICAL: Shell Environment Variable Override Issue
+
+### Problem
+If `SAM_API_KEY` is set as a shell environment variable (in `.zshrc`, `.bashrc`, or current terminal session), it will **override** the value in `.env.local` and cause 401 API_KEY_INVALID errors.
+
+**Symptoms:**
+- `401 Unauthorized - API_KEY_INVALID` errors from SAM.gov
+- Works in production but fails locally
+- `.env.local` has correct key but wrong key is being used
+
+### Root Cause
+Shell environment variables take precedence over `.env.local` files in Next.js. An old/expired key stored in shell config will always override the correct key.
+
+### Permanent Solution
+
+**1. Remove from Shell Config Files**
+```bash
+# Check all shell configs
+grep -n "SAM_API_KEY" ~/.zshrc ~/.bashrc ~/.bash_profile ~/.zprofile
+
+# If found, edit the file and remove any lines like:
+# export SAM_API_KEY="..."
+```
+
+**2. Always Use `./dev.sh` Instead of `npm run dev`**
+
+The project includes a `dev.sh` script that unsets any shell environment variables before starting the dev server:
+
+```bash
+#!/bin/bash
+# Start dev server without SAM_API_KEY environment variable
+# This forces Next.js to use .env.local instead
+
+unset SAM_API_KEY
+npm run dev
+```
+
+**3. Verify the Fix**
+```bash
+# Check current shell session
+env | grep SAM_API_KEY
+
+# If set, close terminal and open a new one
+# Then verify:
+./dev.sh  # Should load key from .env.local
+```
+
+### Development Workflow
+```bash
+# ❌ WRONG - May use shell env var
+npm run dev
+
+# ✅ CORRECT - Always use this
+./dev.sh
+```
+
+**The `./dev.sh` script is now the official way to start the development server.**
+
+---
+
 ## Key Files Reference
 
 ### SAM.gov Integration
@@ -128,10 +188,12 @@ After setting the SAM_API_KEY:
 
 ### Local Development
 ```bash
-npm run dev          # Start Next.js dev server (port 3002)
+./dev.sh             # ✅ Start dev server (ALWAYS USE THIS - prevents env var conflicts)
 npm run build        # Production build
 npm run lint         # ESLint check
 ```
+
+**IMPORTANT:** Always use `./dev.sh` instead of `npm run dev` to avoid shell environment variable conflicts with SAM_API_KEY.
 
 ### Deployment to Vercel
 ```bash
